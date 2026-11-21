@@ -20,6 +20,7 @@ import {
   type StorageSettings,
   type SystemSettings,
 } from "@/lib/admin/admin.service"
+import { formatMoney } from "@/lib/format"
 import { useT } from "@/lib/i18n"
 
 import { FieldRow, SelectRow, SettingsCard, SwitchRow, useSettingsBlock } from "./settings-kit"
@@ -218,7 +219,6 @@ export function CurrencyTab() {
     })
   )
   const f = b.form
-  const sep = { DOT: ".", COMMA: "," } as const
   return (
     <SettingsCard title={t("settings.currency")} description={t("settings.currencyDesc")} {...cardProps(b)}>
       {f && (
@@ -272,28 +272,13 @@ export function CurrencyTab() {
           <p className="text-muted-foreground text-sm">
             {t("settings.preview")}:{" "}
             <span className="text-foreground font-medium" data-testid="currency-preview">
-              {currencyPreview(1234567.891, f, sep)}
+              {formatMoney(1234567.891, f)}
             </span>
           </p>
         </>
       )}
     </SettingsCard>
   )
-}
-
-/** Same rule the backend's CurrencyFormatSettings describes: separators, decimals, symbol position, optional space. */
-export function currencyPreview(
-  amount: number,
-  f: CurrencyForm,
-  sep: Record<"DOT" | "COMMA", string>
-) {
-  const places = f.showDecimals ? f.decimalPlaces : 0
-  const [int, dec] = amount.toFixed(places).split(".")
-  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, sep[f.thousandsSeparator])
-  const num = dec ? `${grouped}${sep[f.decimalSeparator]}${dec}` : grouped
-  const symbol = f.symbol ?? ""
-  const space = f.addSpace ? " " : ""
-  return f.symbolPosition === "BEFORE" ? `${symbol}${space}${num}` : `${num}${space}${symbol}`
 }
 
 // ---------------------------------------------------------------- SEO

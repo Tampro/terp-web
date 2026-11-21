@@ -35,6 +35,12 @@ export interface PublicSettings {
   system?: { defaultLanguage?: string; userRegistration?: boolean; emailVerification?: boolean; termsUrl?: string | null }
   brand?: { logoLightUrl?: string | null; logoDarkUrl?: string | null; titleText?: string; footerText?: string | null }
   recaptcha?: { enabled?: boolean; version?: "V2" | "V3"; siteKey?: string | null }
+  currency?: {
+    format?: import("@/lib/format").MoneyFormat
+    defaultCurrencyCode?: string | null
+    defaultCurrencySymbol?: string | null
+  }
+  payments?: { bankTransfer?: boolean; stripe?: boolean; stripePublishableKey?: string | null }
 }
 
 export interface MediaFileDto {

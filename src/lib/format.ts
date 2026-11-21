@@ -20,6 +20,35 @@ export function formatNumber(value: number | null | undefined, language: string,
   return value.toLocaleString(loc(language), { maximumFractionDigits: digits })
 }
 
+export interface MoneyFormat {
+  decimalPlaces?: number
+  symbolPosition?: "BEFORE" | "AFTER"
+  decimalSeparator?: "DOT" | "COMMA"
+  thousandsSeparator?: "DOT" | "COMMA"
+  showDecimals?: boolean
+  addSpace?: boolean
+  symbol?: string | null
+}
+
+const SEP = { DOT: ".", COMMA: "," } as const
+
+/**
+ * Amount in the platform currency format (Currency Settings: separators, decimals, symbol position, space).
+ * Defaults to the backend's VND default: "490.000 ₫".
+ */
+export function formatMoney(amount: number | null | undefined, f: MoneyFormat = {}) {
+  if (amount === null || amount === undefined || Number.isNaN(amount)) return "-"
+  const places = f.showDecimals ? (f.decimalPlaces ?? 0) : 0
+  const negative = amount < 0
+  const [int, dec] = Math.abs(amount).toFixed(places).split(".")
+  const grouped = int.replace(/\B(?=(\d{3})+(?!\d))/g, SEP[f.thousandsSeparator ?? "DOT"])
+  const num = (negative ? "-" : "") + (dec ? `${grouped}${SEP[f.decimalSeparator ?? "COMMA"]}${dec}` : grouped)
+  const symbol = f.symbol ?? ""
+  if (!symbol) return num
+  const space = (f.addSpace ?? true) ? " " : ""
+  return (f.symbolPosition ?? "AFTER") === "BEFORE" ? `${symbol}${space}${num}` : `${num}${space}${symbol}`
+}
+
 export function formatBytes(bytes: number | null | undefined) {
   if (bytes === null || bytes === undefined || Number.isNaN(bytes)) return "-"
   const units = ["B", "KB", "MB", "GB", "TB"]

@@ -88,14 +88,14 @@ export async function mockPublic(page, system) {
 /**
  * Logged-in state: fake tokens in localStorage + /me and /me/profile mocked.
  * @param {import('@playwright/test').Page} page
- * @param {{ superAdmin?: boolean }} [opts]
+ * @param {{ superAdmin?: boolean, permissions?: string[] }} [opts]
  */
-export async function mockLoggedIn(page, { superAdmin = false } = {}) {
+export async function mockLoggedIn(page, { superAdmin = false, permissions = undefined } = {}) {
   await page.addInitScript((t) => {
     localStorage.setItem("erp.token", t.accessToken)
     localStorage.setItem("erp.refreshToken", t.refreshToken)
   }, FAKE_TOKENS)
-  const me = superAdmin ? FAKE_SUPER_ME : FAKE_ME
+  const me = superAdmin ? FAKE_SUPER_ME : { ...FAKE_ME, permissions: permissions ?? FAKE_ME.permissions }
   const profile = superAdmin ? FAKE_SUPER_PROFILE : FAKE_PROFILE
   await mockApi(page, "/v1/me", { body: ok(me) })
   await mockApi(page, "/v1/me/profile", { body: ok(profile), method: "GET" })
