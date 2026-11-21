@@ -1,3 +1,4 @@
+import dashboard from "./dashboard/ko"
 import saas from "./saas/ko"
 import admin from "./admin/ko"
 import type en from "./en"
@@ -103,6 +104,7 @@ const ko: Record<keyof typeof en, string> = {
   "menu.logout": "로그아웃",
   ...admin,
   ...saas,
+  ...dashboard,
 }
 
 export default ko

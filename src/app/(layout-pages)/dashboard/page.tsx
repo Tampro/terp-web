@@ -1,20 +1,23 @@
 "use client"
 
-import { useCurrentUser } from "@/components/user-menu-content"
 import { useAuthStore } from "@/lib/auth/auth.store"
-import { useT } from "@/lib/i18n"
 
+import { CompanyDashboard } from "./_components/company-dashboard"
+import { StaffDashboard } from "./_components/staff-dashboard"
 import { SuperAdminDashboard } from "./_components/super-admin-dashboard"
 
-/** Landing page after login: the Super Admin dashboard (manual §3.1); company dashboards (§5) come later. */
+const HRM_PERMISSIONS = ["EMPLOYEE_VIEW", "ATTENDANCE_VIEW", "LEAVE_VIEW"]
+
+/**
+ * Landing page after login: Super Admin dashboard (§3.1); company HRM / Recruitment dashboards by permission (§5);
+ * otherwise the Staff view. The backend re-checks every card.
+ */
 export default function DashboardPage() {
-  const t = useT()
-  const user = useCurrentUser()
-  const superAdmin = useAuthStore((s) => s.me?.superAdmin)
-  if (superAdmin) return <SuperAdminDashboard />
-  return (
-    <div className="p-4 md:p-6">
-      <h1 className="text-2xl font-semibold tracking-tight">{t("dashboard.welcome", { name: user.name })}</h1>
-    </div>
-  )
+  const me = useAuthStore((s) => s.me)
+  if (me?.superAdmin) return <SuperAdminDashboard />
+  const permissions = me?.permissions ?? []
+  const hrm = HRM_PERMISSIONS.some((p) => permissions.includes(p))
+  const recruitment = permissions.includes("RECRUITMENT_VIEW")
+  if (hrm || recruitment) return <CompanyDashboard hrm={hrm} recruitment={recruitment} />
+  return <StaffDashboard />
 }

@@ -22,6 +22,13 @@ const browser = {
   contextOptions: { reducedMotion: /** @type {const} */ ("reduce") },
 }
 export const SUPERADMIN_STATE = ".auth/superadmin.json"
+// Company accounts (E2E_COMPANY_ADMIN_*, E2E_MANAGER_*, E2E_HR_*, E2E_EMPLOYEE_*), one session each, made by e2e/company.setup.js.
+export const COMPANY_STATES = {
+  companyAdmin: ".auth/company-admin.json",
+  manager: ".auth/manager.json",
+  hr: ".auth/hr.json",
+  employee: ".auth/employee.json",
+}
 
 export default defineConfig({
   testDir: "./e2e",
