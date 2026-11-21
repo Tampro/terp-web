@@ -1,7 +1,21 @@
 "use client"
 
 import * as React from "react"
-import { Building2, CircleUserRound, House, Images, Inbox, Layers, Receipt, Settings, TicketPercent } from "lucide-react"
+import {
+  Building2,
+  CircleUserRound,
+  FileCheck2,
+  FilePen,
+  FileText,
+  House,
+  Images,
+  Inbox,
+  Layers,
+  Receipt,
+  Settings,
+  TicketPercent,
+  Undo2,
+} from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -31,6 +45,15 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: t("menu.settings"), url: "/settings", icon: Settings },
         ]
       : [
+          // §6 Sales & revenue (commerce-service): SALES_VIEW for proposals, invoices, returns; QUOTATION_VIEW for quotations
+          ...(can("QUOTATION_VIEW") ? [{ title: t("menu.sales.quotation"), url: "/sales/quotations", icon: FilePen }] : []),
+          ...(can("SALES_VIEW")
+            ? [
+                { title: t("menu.sales.proposal"), url: "/sales/proposals", icon: FileText },
+                { title: t("menu.sales.invoice"), url: "/sales/invoices", icon: FileCheck2 },
+                { title: t("menu.sales.return"), url: "/sales/returns", icon: Undo2 },
+              ]
+            : []),
           ...(can("SAAS_SUBSCRIPTION_VIEW") ? [{ title: t("menu.plans"), url: "/plans", icon: Layers }] : []),
           ...(can("SAAS_ORDER_VIEW")
             ? [
