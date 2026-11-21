@@ -1,3 +1,4 @@
+import dashboard from "./dashboard/en"
 import saas from "./saas/en"
 import admin from "./admin/en"
 const en = {
@@ -101,6 +102,7 @@ const en = {
   "menu.logout": "Logout",
   ...admin,
   ...saas,
+  ...dashboard,
 }
 
 export default en

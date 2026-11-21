@@ -1,3 +1,4 @@
+import dashboard from "./dashboard/vi"
 import saas from "./saas/vi"
 import admin from "./admin/vi"
 import type en from "./en"
@@ -103,6 +104,7 @@ const vi: Record<keyof typeof en, string> = {
   "menu.logout": "Đăng xuất",
   ...admin,
   ...saas,
+  ...dashboard,
 }
 
 export default vi
