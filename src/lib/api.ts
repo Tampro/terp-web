@@ -23,6 +23,57 @@ export class ApiError extends Error {
   }
 }
 
+/** List page (ResponseListDto): `page` is zero-based. */
+export interface IPage<T> {
+  content?: T[]
+  page?: number
+  size?: number
+  totalElements?: number
+  totalPages?: number
+  last?: boolean
+}
+
+/** Appends defined, non-empty params as a query string. */
+export function withQuery(path: string, params: Record<string, string | number | boolean | null | undefined>) {
+  const qs = new URLSearchParams()
+  for (const [k, v] of Object.entries(params)) if (v !== undefined && v !== null && v !== "") qs.set(k, String(v))
+  const s = qs.toString()
+  return s ? `${path}?${s}` : path
+}
+
+/**
+ * "Login As Company" (super admin): the session key from POST /iam/companies/{id}/impersonation is sent as
+ * X-Act-As-Company on every request until ended. Kept in sessionStorage (this tab only, ends with it).
+ */
+export interface ActAsSession {
+  sessionKey: string
+  companyId?: string
+  companyName?: string
+  expiresAt?: string
+}
+const ACT_AS_KEY = "erp.actAs"
+export const actAsStore = {
+  get(): ActAsSession | null {
+    if (typeof window === "undefined") return null
+    try {
+      const s = JSON.parse(sessionStorage.getItem(ACT_AS_KEY) ?? "null") as ActAsSession | null
+      if (s?.expiresAt && Date.parse(s.expiresAt) < Date.now()) {
+        sessionStorage.removeItem(ACT_AS_KEY)
+        return null
+      }
+      return s?.sessionKey ? s : null
+    } catch {
+      return null
+    }
+  },
+  set(s: ActAsSession) {
+    sessionStorage.setItem(ACT_AS_KEY, JSON.stringify(s))
+  },
+  clear() {
+    sessionStorage.removeItem(ACT_AS_KEY)
+  },
+}
+
 export interface TokenPair {
   accessToken?: string
   refreshToken?: string
@@ -53,6 +104,7 @@ export const tokenStore = {
     if (t?.refreshToken) store.setItem(REFRESH_KEY, t.refreshToken)
   },
   clear() {
+    sessionStorage.removeItem(ACT_AS_KEY)
     for (const s of [localStorage, sessionStorage]) {
       s.removeItem(TOKEN_KEY)
       s.removeItem(REFRESH_KEY)
@@ -99,6 +151,9 @@ export async function request<T>(
   if (body !== undefined && !isForm) headers["Content-Type"] = "application/json"
   const token = auth ? tokenStore.access : null
   if (token) headers.Authorization = `Bearer ${token}`
+  const actAs = token ? actAsStore.get() : null
+  // Starting/ending a session must be called without the header (ImpersonationController).
+  if (actAs && !path.includes("/impersonation")) headers["X-Act-As-Company"] = actAs.sessionKey
 
   const res = await fetch(`/api${path}`, {
     method,

@@ -1,7 +1,27 @@
 // @ts-check
 import { defineConfig, devices } from "@playwright/test"
 
+// Credentials for the real-backend projects (setup / int) come from .env or .env.local:
+// E2E_SUPERADMIN_USERNAME, E2E_SUPERADMIN_PASSWORD. Loaded here only; never printed, never in code.
+for (const file of [".env", ".env.local"]) {
+  try {
+    process.loadEnvFile(file)
+  } catch {
+    // file missing: the real-backend tests skip themselves
+  }
+}
+
 const PORT = 4173 // not 5173: the dev server (and another local app) use it
+const BASE_URL = `http://127.0.0.1:${PORT}`
+const browser = {
+  ...devices["Desktop Chrome"],
+  viewport: { width: 1440, height: 900 },
+  baseURL: BASE_URL,
+  locale: "vi-VN",
+  timezoneId: "Asia/Ho_Chi_Minh",
+  contextOptions: { reducedMotion: /** @type {const} */ ("reduce") },
+}
+export const SUPERADMIN_STATE = ".auth/superadmin.json"
 
 export default defineConfig({
   testDir: "./e2e",
@@ -16,16 +36,10 @@ export default defineConfig({
   },
   projects: [
     {
+      // UI with every /api call mocked (no backend needed).
       name: "ui",
-      testIgnore: /\.api\.spec\.js$/,
-      use: {
-        ...devices["Desktop Chrome"],
-        viewport: { width: 1440, height: 900 },
-        baseURL: `http://127.0.0.1:${PORT}`,
-        locale: "vi-VN",
-        timezoneId: "Asia/Ho_Chi_Minh",
-        contextOptions: { reducedMotion: "reduce" },
-      },
+      testIgnore: [/\.api\.spec\.js$/, /\.int\.spec\.js$/, /\.setup\.js$/],
+      use: browser,
     },
     {
       // Contract tests against the running ERP gateway (backend must be up).
@@ -33,11 +47,25 @@ export default defineConfig({
       testMatch: /\.api\.spec\.js$/,
       use: { baseURL: process.env.E2E_API_URL ?? "http://localhost:18080/api/v1/" },
     },
+    {
+      // One real Super Admin login through the UI for the whole run (repeated logins trip AUTH_008 lockout).
+      name: "setup",
+      testMatch: /\.setup\.js$/,
+      use: browser,
+    },
+    {
+      // UI against the real backend (through next start's /api proxy), logged in as Super Admin. Read-only checks.
+      name: "int",
+      testMatch: /\.int\.spec\.js$/,
+      dependencies: ["setup"],
+      fullyParallel: false,
+      use: { ...browser, storageState: SUPERADMIN_STATE },
+    },
   ],
-  // UI tests run against a fresh production build; /api is mocked per test.
+  // UI tests run against a fresh production build.
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
-    url: `http://127.0.0.1:${PORT}/login`,
+    url: `${BASE_URL}/login`,
     reuseExistingServer: false,
     timeout: 300_000,
   },

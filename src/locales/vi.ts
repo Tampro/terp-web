@@ -1,3 +1,4 @@
+import admin from "./admin/vi"
 import type en from "./en"
 
 const vi: Record<keyof typeof en, string> = {
@@ -99,6 +100,7 @@ const vi: Record<keyof typeof en, string> = {
   "dashboard.welcome": "Xin chào, {name}",
   "menu.profile": "Hồ sơ",
   "menu.logout": "Đăng xuất",
+  ...admin,
 }
 
 export default vi
