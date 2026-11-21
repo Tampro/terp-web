@@ -1,3 +1,4 @@
+import admin from "./admin/ko"
 import type en from "./en"
 
 const ko: Record<keyof typeof en, string> = {
@@ -99,6 +100,7 @@ const ko: Record<keyof typeof en, string> = {
   "dashboard.welcome": "{name}님, 환영합니다",
   "menu.profile": "프로필",
   "menu.logout": "로그아웃",
+  ...admin,
 }
 
 export default ko

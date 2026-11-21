@@ -1,18 +1,15 @@
+"use client"
+
+import { usePublicSettings } from "@/hooks/use-public-settings"
+
+/** Footer text from Brand Settings (footerText), else "© <year> <title>". */
 export default function Footer() {
+  const brand = usePublicSettings()?.brand
+  const title = brand?.titleText || "ERP"
   return (
     <footer className="border-t">
-      <div className="container flex h-14 items-center justify-between text-sm text-muted-foreground px-4 bg-card/60">
-        <a href="https://codervent.com/" rel="noopener noreferrer" className="hover:underline">
-         <span>
-            © {new Date().getFullYear()}{" "}
-            <span className="font-medium text-foreground">Codervent</span>. All
-            rights reserved.
-          </span>
-        </a>
-        <span>
-          Built with ❤️ by{" "}
-          <span className="font-medium text-foreground"><a href="https://codervent.com/" rel="noopener noreferrer" className="hover:underline">Codervent</a></span>
-        </span>
+      <div className="text-muted-foreground bg-card/60 flex h-14 items-center px-4 text-sm">
+        {brand?.footerText || `© ${new Date().getFullYear()} ${title}`}
       </div>
     </footer>
   )

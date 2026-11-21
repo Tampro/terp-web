@@ -1,20 +1,30 @@
 "use client"
 
 import * as React from "react"
-import { CircleUserRound, House } from "lucide-react"
+import { Building2, CircleUserRound, House, Images, Settings } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar"
 import { usePublicSettings } from "@/hooks/use-public-settings"
+import { useAuthStore } from "@/lib/auth/auth.store"
 import { useT } from "@/lib/i18n"
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
   const brand = usePublicSettings()?.brand?.titleText || "ERP"
+  const superAdmin = useAuthStore((s) => s.me?.superAdmin)
+  // Super Admin menu (manual §3); the backend re-checks every call.
   const navMain = [
     { title: t("menu.dashboard"), url: "/dashboard", icon: House },
+    ...(superAdmin
+      ? [
+          { title: t("menu.companies"), url: "/companies", icon: Building2 },
+          { title: t("menu.media"), url: "/media", icon: Images },
+          { title: t("menu.settings"), url: "/settings", icon: Settings },
+        ]
+      : []),
     { title: t("menu.profile"), url: "/profile", icon: CircleUserRound },
   ]
 

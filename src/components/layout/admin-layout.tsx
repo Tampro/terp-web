@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 
 import { AppSidebar } from "@/components/app-sidebar"
+import { ActAsBanner } from "@/components/common/act-as-banner"
 import Header from "@/components/layout/Header"
 import Footer from "@/components/layout/Footer"
 
@@ -27,6 +28,7 @@ export default function AdminLayout({
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar />
       <SidebarInset>
+        <ActAsBanner />
         <Header />
         <div className="flex flex-1 flex-col p-4">{children}</div>
         <Footer />

@@ -49,12 +49,23 @@ export const LANGUAGES = ok([
  * @param {{ status?: number, body: unknown, method?: string }} res
  */
 export async function mockApi(page, path, { status = 200, body, method }) {
-  /** @type {unknown[]} */
-  const calls = []
-  await page.route(`**/api${path}`, async (route) => {
+  /** @type {unknown[] & { requests: { url: URL, method: string, headers: Record<string, string>, body: unknown }[] }} */
+  const calls = /** @type {any} */ ([])
+  // Non-enumerable: toEqual on the bodies must not see it.
+  Object.defineProperty(calls, "requests", { value: [], enumerable: false })
+  // Exact path, any query string ("/v1/iam/companies" does not match "/v1/iam/companies/status-counts").
+  const escaped = path.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  await page.route(new RegExp(`/api${escaped}(\\?.*)?$`), async (route) => {
     const req = route.request()
     if (method && req.method() !== method) return route.fallback()
-    calls.push(req.postDataJSON?.() ?? null)
+    let parsed = null
+    try {
+      parsed = req.postDataJSON()
+    } catch {
+      parsed = req.postData() // multipart / non-JSON bodies
+    }
+    calls.push(parsed)
+    calls.requests.push({ url: new URL(req.url()), method: req.method(), headers: req.headers(), body: parsed })
     await route.fulfill({ status, contentType: "application/json", body: JSON.stringify(body) })
   })
   return calls
@@ -77,12 +88,38 @@ export async function mockPublic(page, system) {
 /**
  * Logged-in state: fake tokens in localStorage + /me and /me/profile mocked.
  * @param {import('@playwright/test').Page} page
+ * @param {{ superAdmin?: boolean }} [opts]
  */
-export async function mockLoggedIn(page) {
+export async function mockLoggedIn(page, { superAdmin = false } = {}) {
   await page.addInitScript((t) => {
     localStorage.setItem("erp.token", t.accessToken)
     localStorage.setItem("erp.refreshToken", t.refreshToken)
   }, FAKE_TOKENS)
-  await mockApi(page, "/v1/me", { body: ok(FAKE_ME) })
-  await mockApi(page, "/v1/me/profile", { body: ok(FAKE_PROFILE), method: "GET" })
+  const me = superAdmin ? FAKE_SUPER_ME : FAKE_ME
+  const profile = superAdmin ? FAKE_SUPER_PROFILE : FAKE_PROFILE
+  await mockApi(page, "/v1/me", { body: ok(me) })
+  await mockApi(page, "/v1/me/profile", { body: ok(profile), method: "GET" })
 }
+
+export const FAKE_SUPER_ME = {
+  userId: "1",
+  username: "e2e.superadmin",
+  companyId: null,
+  superAdmin: true,
+  roles: ["SUPER_ADMIN"],
+  permissions: [],
+}
+
+export const FAKE_SUPER_PROFILE = {
+  username: "e2e.superadmin",
+  fullName: "E2E Super Admin",
+  email: "e2e.superadmin@example.com",
+  mobile: null,
+  avatarFileId: null,
+  avatarUrl: null,
+  superAdmin: true,
+}
+
+/** @param {unknown[]} content @param {{ page?: number, size?: number, total?: number }} [o] */
+export const pageOf = (content, { page = 0, size = 20, total = content.length } = {}) =>
+  ok({ content, page, size, totalElements: total, totalPages: Math.ceil(total / size), last: (page + 1) * size >= total })

@@ -1,3 +1,4 @@
+import admin from "./admin/en"
 const en = {
   "common.email": "Email",
   "common.password": "Password",
@@ -97,6 +98,7 @@ const en = {
   "dashboard.welcome": "Welcome, {name}",
   "menu.profile": "Profile",
   "menu.logout": "Logout",
+  ...admin,
 }
 
 export default en
