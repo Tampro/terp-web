@@ -1,3 +1,4 @@
+import saas from "./saas/en"
 import admin from "./admin/en"
 const en = {
   "common.email": "Email",
@@ -99,6 +100,7 @@ const en = {
   "menu.profile": "Profile",
   "menu.logout": "Logout",
   ...admin,
+  ...saas,
 }
 
 export default en

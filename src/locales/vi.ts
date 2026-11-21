@@ -1,3 +1,4 @@
+import saas from "./saas/vi"
 import admin from "./admin/vi"
 import type en from "./en"
 
@@ -101,6 +102,7 @@ const vi: Record<keyof typeof en, string> = {
   "menu.profile": "Hồ sơ",
   "menu.logout": "Đăng xuất",
   ...admin,
+  ...saas,
 }
 
 export default vi

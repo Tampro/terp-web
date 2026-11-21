@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Building2, CircleUserRound, House, Images, Settings } from "lucide-react"
+import { Building2, CircleUserRound, House, Images, Inbox, Layers, Receipt, Settings, TicketPercent } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -15,16 +15,30 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
   const brand = usePublicSettings()?.brand?.titleText || "ERP"
   const superAdmin = useAuthStore((s) => s.me?.superAdmin)
-  // Super Admin menu (manual §3); the backend re-checks every call.
+  const permissions = useAuthStore((s) => s.me?.permissions)
+  const can = (code: string) => !!permissions?.includes(code)
+  // Super Admin menu (manual §3–4) and company SaaS menu (SAAS_* permissions); the backend re-checks every call.
   const navMain = [
     { title: t("menu.dashboard"), url: "/dashboard", icon: House },
     ...(superAdmin
       ? [
           { title: t("menu.companies"), url: "/companies", icon: Building2 },
+          { title: t("menu.plans"), url: "/plans", icon: Layers },
+          { title: t("menu.orders"), url: "/orders", icon: Receipt },
+          { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
+          { title: t("menu.coupons"), url: "/coupons", icon: TicketPercent },
           { title: t("menu.media"), url: "/media", icon: Images },
           { title: t("menu.settings"), url: "/settings", icon: Settings },
         ]
-      : []),
+      : [
+          ...(can("SAAS_SUBSCRIPTION_VIEW") ? [{ title: t("menu.plans"), url: "/plans", icon: Layers }] : []),
+          ...(can("SAAS_ORDER_VIEW")
+            ? [
+                { title: t("menu.orders"), url: "/orders", icon: Receipt },
+                { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
+              ]
+            : []),
+        ]),
     { title: t("menu.profile"), url: "/profile", icon: CircleUserRound },
   ]
 
