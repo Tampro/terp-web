@@ -1,3 +1,4 @@
+import products from "./products/ko"
 import purchase from "./purchase/ko"
 import crm from "./crm/ko"
 import sales from "./sales/ko"
@@ -111,6 +112,7 @@ const ko: Record<keyof typeof en, string> = {
   ...sales,
   ...crm,
   ...purchase,
+  ...products,
 }
 
 export default ko
