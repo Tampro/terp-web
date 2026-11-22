@@ -25,6 +25,8 @@ import {
   PackageMinus,
   Warehouse,
   ArrowLeftRight,
+  Package,
+  Tags,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -73,8 +75,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             : []),
           ...(can("INVENTORY_VIEW")
             ? [
+                { title: t("menu.inventory.items"), url: "/inventory/items", icon: Package },
                 { title: t("menu.inventory.warehouses"), url: "/inventory/warehouses", icon: Warehouse },
                 { title: t("menu.inventory.transfers"), url: "/inventory/transfers", icon: ArrowLeftRight },
+                { title: t("menu.inventory.setup"), url: "/inventory/setup", icon: Tags },
               ]
             : []),
           // §7 CRM & contracts (crm-service): CRM_VIEW for pipelines, leads, deals, reports; CRM_CONTRACT_VIEW for contracts
