@@ -466,6 +466,22 @@ const hrmEn = {
   "hr.payrollKind.ALLOWANCE": "Allowance types",
   "hr.payrollKind.DEDUCTION": "Deduction types",
   "hr.payrollKind.LOAN": "Loan types",
+  "menu.hr.events": "Events",
+  "hr.ev.subtitle": "Company events for departments: Pending, Approved, Rejected",
+  "hr.ev.calendar": "Calendar",
+  "hr.ev.types": "Event types",
+  "hr.ev.type": "Event type",
+  "hr.ev.when": "When",
+  "hr.ev.location": "Location",
+  "hr.ev.allDay": "All day",
+  "hr.ev.create": "Add event",
+  "hr.ev.createType": "Add event type",
+  "hr.ev.totalEvents": "Total events",
+  "hr.ev.bothTimes": "Enter both start and end time, or neither for an all-day event",
+  "hr.ev.editHint": "New events wait for approval; editing an approved or rejected event sends it back to Pending.",
+  "hr.ev.calendarHint": "Only approved events are shown.",
+  "hr.ev.prevMonth": "Previous month",
+  "hr.ev.nextMonth": "Next month",
 }
 
 export default hrmEn

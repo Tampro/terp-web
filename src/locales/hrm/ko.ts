@@ -467,6 +467,22 @@ const hrmKo: Record<keyof typeof hrmEn, string> = {
   "hr.payrollKind.ALLOWANCE": "수당 유형",
   "hr.payrollKind.DEDUCTION": "공제 유형",
   "hr.payrollKind.LOAN": "대출 유형",
+  "menu.hr.events": "이벤트",
+  "hr.ev.subtitle": "부서별 회사 이벤트: 대기, 승인, 반려",
+  "hr.ev.calendar": "캘린더",
+  "hr.ev.types": "이벤트 유형",
+  "hr.ev.type": "이벤트 유형",
+  "hr.ev.when": "일시",
+  "hr.ev.location": "장소",
+  "hr.ev.allDay": "종일",
+  "hr.ev.create": "이벤트 추가",
+  "hr.ev.createType": "이벤트 유형 추가",
+  "hr.ev.totalEvents": "전체 이벤트",
+  "hr.ev.bothTimes": "시작/종료 시간을 모두 입력하거나 종일 이벤트면 모두 비워 두세요",
+  "hr.ev.editHint": "새 이벤트는 승인 대기 상태이며, 승인/반려된 이벤트를 수정하면 다시 대기 상태가 됩니다.",
+  "hr.ev.calendarHint": "승인된 이벤트만 표시됩니다.",
+  "hr.ev.prevMonth": "이전 달",
+  "hr.ev.nextMonth": "다음 달",
 }
 
 export default hrmKo

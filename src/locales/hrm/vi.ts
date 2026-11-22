@@ -467,6 +467,22 @@ const hrmVi: Record<keyof typeof hrmEn, string> = {
   "hr.payrollKind.ALLOWANCE": "Loại phụ cấp",
   "hr.payrollKind.DEDUCTION": "Loại khấu trừ",
   "hr.payrollKind.LOAN": "Loại khoản vay",
+  "menu.hr.events": "Sự kiện",
+  "hr.ev.subtitle": "Sự kiện công ty cho các phòng ban: Chờ duyệt, Đã duyệt, Từ chối",
+  "hr.ev.calendar": "Lịch",
+  "hr.ev.types": "Loại sự kiện",
+  "hr.ev.type": "Loại sự kiện",
+  "hr.ev.when": "Thời gian",
+  "hr.ev.location": "Địa điểm",
+  "hr.ev.allDay": "Cả ngày",
+  "hr.ev.create": "Thêm sự kiện",
+  "hr.ev.createType": "Thêm loại sự kiện",
+  "hr.ev.totalEvents": "Tổng sự kiện",
+  "hr.ev.bothTimes": "Nhập cả giờ bắt đầu và kết thúc, hoặc bỏ trống cả hai nếu là sự kiện cả ngày",
+  "hr.ev.editHint": "Sự kiện mới chờ duyệt; sửa sự kiện đã duyệt hoặc bị từ chối sẽ đưa nó về Chờ duyệt.",
+  "hr.ev.calendarHint": "Chỉ hiển thị sự kiện đã duyệt.",
+  "hr.ev.prevMonth": "Tháng trước",
+  "hr.ev.nextMonth": "Tháng sau",
 }
 
 export default hrmVi

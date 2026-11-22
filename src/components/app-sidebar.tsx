@@ -56,6 +56,7 @@ import {
   Wallet,
   FolderOpen,
   Megaphone,
+  PartyPopper,
   Award,
   ShieldAlert,
   ArrowRightLeft,
@@ -155,6 +156,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ...(can("PAYROLL_VIEW") ? [{ title: t("menu.hr.payroll"), url: "/hrm/payroll", icon: Wallet }] : []),
           ...(can("DOCUMENT_VIEW") ? [{ title: t("menu.hr.documents"), url: "/hrm/documents", icon: FolderOpen }] : []),
           ...(can("ANNOUNCEMENT_VIEW") ? [{ title: t("menu.hr.announcements"), url: "/hrm/announcements", icon: Megaphone }] : []),
+          ...(can("EVENT_VIEW") ? [{ title: t("menu.hr.events"), url: "/hrm/events", icon: PartyPopper }] : []),
           ...(can("LIFECYCLE_VIEW")
             ? [
                 { title: t("menu.hr.recognition"), url: "/hrm/recognition", icon: Award },
