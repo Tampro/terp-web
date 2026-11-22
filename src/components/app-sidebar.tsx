@@ -27,6 +27,10 @@ import {
   ArrowLeftRight,
   Package,
   Tags,
+  Store,
+  ReceiptText,
+  Barcode,
+  ChartPie,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -66,6 +70,11 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.sales.return"), url: "/sales/returns", icon: Undo2 },
               ]
             : []),
+          // §10 POS (commerce-service): POS_SELL checkout + barcodes, POS_VIEW orders, POS_REPORT reports
+          ...(can("POS_SELL") ? [{ title: t("menu.pos.checkout"), url: "/pos", icon: Store }] : []),
+          ...(can("POS_VIEW") ? [{ title: t("menu.pos.orders"), url: "/pos/orders", icon: ReceiptText }] : []),
+          ...(can("POS_SELL") ? [{ title: t("menu.pos.barcodes"), url: "/pos/barcodes", icon: Barcode }] : []),
+          ...(can("POS_REPORT") ? [{ title: t("menu.pos.reports"), url: "/pos/reports", icon: ChartPie }] : []),
           // §8 Purchase & inventory: PURCHASE_VIEW (commerce-service), INVENTORY_VIEW (inventory-service)
           ...(can("PURCHASE_VIEW")
             ? [
