@@ -1,28 +1,29 @@
 "use client"
 
 import * as React from "react"
-import { Info } from "lucide-react"
 
 import { PageHeader } from "@/components/common/page-header"
-import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { useCurrentUser } from "@/components/user-menu-content"
+import { useAuthStore } from "@/lib/auth/auth.store"
 import { DashboardService, type AnnouncementRow, type Part } from "@/lib/dashboard/dashboard.service"
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT } from "@/lib/i18n"
 
+import { ClockCard } from "./clock-card"
 import { SectionCard } from "./dashboard-kit"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
 /**
  * §5 role view for a user without HRM / Recruitment rights (Staff). Only what the backend serves to every signed-in
  * user: my announcements (GET /org/announcements/my) and the calendar kinds I may see (GET /reports/calendar).
- * Clock In and the user's own attendance/leave need a self-service API the backend does not have yet.
+ * plus Clock In / Clock Out of today (ATTENDANCE_SELF, GET/POST /attendance/me/*).
  */
 export function StaffDashboard() {
   const t = useT()
   const language = useLanguageStore((s) => s.language)
   const user = useCurrentUser()
+  const selfService = !!useAuthStore((s) => s.me?.permissions)?.includes("ATTENDANCE_SELF")
   const calendar = useUpcomingCalendar()
   const [news, setNews] = React.useState<{ part: Part<AnnouncementRow[]>; message?: string; loading: boolean }>({
     part: {},
@@ -43,10 +44,7 @@ export function StaffDashboard() {
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
       <PageHeader title={t("dashboard.welcome", { name: user.name })} description={t("cdash.staffSubtitle")} />
-      <Alert>
-        <Info />
-        <AlertDescription>{t("cdash.selfServiceSoon")}</AlertDescription>
-      </Alert>
+      {selfService && <ClockCard />}
       <div className="grid gap-4 lg:grid-cols-2">
         <SectionCard
           title={t("cdash.myAnnouncements")}

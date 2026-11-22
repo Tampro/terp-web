@@ -33,9 +33,11 @@ import {
   type ELeaveStatus,
 } from "@/lib/dashboard/dashboard.service"
 import { formatDate, formatNumber } from "@/lib/format"
+import { useAuthStore } from "@/lib/auth/auth.store"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 import { SectionCard, StatCard } from "./dashboard-kit"
+import { ClockCard } from "./clock-card"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i)
@@ -52,6 +54,7 @@ const LEAVE_VARIANT: Record<ELeaveStatus, "secondary" | "outline" | "destructive
  */
 export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitment: boolean }) {
   const t = useT()
+  const selfService = !!useAuthStore((s) => s.me?.permissions)?.includes("ATTENDANCE_SELF")
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)
   const [tab, setTab] = React.useState(hrm ? "hrm" : "recruitment")
@@ -84,6 +87,7 @@ export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitme
           </SelectContent>
         </Select>
       </PageHeader>
+      {selfService && <ClockCard />}
 
       {state.error && (
         <Alert variant="destructive">

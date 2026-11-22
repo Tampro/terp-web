@@ -61,7 +61,17 @@ const dashboardVi: Record<keyof typeof dashboardEn, string> = {
   "cdash.noPermission": "Bạn không có quyền xem mục này.",
   "cdash.unavailable": "Hiện chưa lấy được dữ liệu.",
   "cdash.staffSubtitle": "Thông báo và sự kiện sắp tới của bạn",
-  "cdash.selfServiceSoon": "Chấm công (Clock In), chấm công và nghỉ phép của riêng bạn sẽ hiện ở đây khi backend hỗ trợ tự phục vụ.",
+  "clock.title": "Chấm công hôm nay",
+  "clock.in": "Vào ca",
+  "clock.out": "Ra ca",
+  "clock.inDone": "Đã chấm công vào",
+  "clock.outDone": "Đã chấm công ra",
+  "clock.notes": "Ghi chú (tùy chọn)",
+  "clock.overtime": "Tăng ca {h} giờ",
+  "clock.autoOut": "Tự đóng khi hết ca",
+  "clock.grace": "Được trễ {n} phút sau giờ bắt đầu ca",
+  "clock.doneToday": "Hôm nay bạn đã chấm công vào và ra.",
+  "clock.noProfile": "Tài khoản của bạn chưa gắn với hồ sơ nhân viên nên chưa chấm công được. Hãy nhờ bộ phận nhân sự liên kết.",
 }
 
 export default dashboardVi
