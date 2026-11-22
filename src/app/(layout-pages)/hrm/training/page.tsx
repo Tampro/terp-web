@@ -7,7 +7,7 @@ import { HrOptions, PerfOptions, TRAINING, type Row } from "@/lib/hrm/hrm.servic
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig } from "../_components/crud-kit"
+import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../_components/crud-kit"
 
 export default function TrainingPage() {
   return (
@@ -30,7 +30,9 @@ function Training() {
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("TRAINING_MANAGE")
   const employees = toSelect(useOptions("employees", HrOptions.employees))
   const branches = toSelect(useOptions("branches", HrOptions.branches))
-  const departments = toSelect(useOptions("departments", () => HrOptions.departments()))
+  const departmentOpts = useOptions("departments", () => HrOptions.departments())
+  const departments = toSelect(departmentOpts)
+  const chain = orgChain(departmentOpts, [])
   const types = toSelect(useOptions("training:types", PerfOptions.trainingTypes))
   const trainers = toSelect(useOptions("training:trainers", PerfOptions.trainers))
   const programs = toSelect(useOptions("training:programs", PerfOptions.programs))
@@ -163,8 +165,8 @@ function Training() {
       { name: "email", label: "hr.f.email", type: "email", max: 150, pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/, patternMsg: "hr.v.email" },
       { name: "contactPhone", label: "hr.f.phone", max: 30 },
       { name: "experienceYears", label: "tr.experienceYears", type: "number", min: 0, max: 80 },
-      { name: "branchId", label: "hr.f.branch", type: "select", numeric: true, none: true, options: branches },
-      { name: "departmentId", label: "hr.f.department", type: "select", numeric: true, none: true, options: departments },
+      { name: "branchId", label: "hr.f.branch", type: "select", numeric: true, none: true, options: branches, resets: ["departmentId"] },
+      { name: "departmentId", label: "hr.f.department", type: "select", numeric: true, none: true, optionsFor: chain.departmentsOf("branchId") },
       { name: "active", label: "hr.f.active", type: "switch" },
       { name: "expertise", label: "tr.expertise", type: "textarea", max: 500 },
       { name: "qualification", label: "tr.qualification", type: "textarea", max: 500 },

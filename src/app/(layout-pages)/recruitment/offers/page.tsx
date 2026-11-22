@@ -9,7 +9,7 @@ import { REC, RecOptions, RecruitmentService } from "@/lib/recruitment/recruitme
 import { useT, type TranslationKey } from "@/lib/i18n"
 import { saveBlob } from "@/lib/pos/pos.service"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig } from "../../hrm/_components/crud-kit"
+import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../../hrm/_components/crud-kit"
 
 const OFFER_STATUSES = ["DRAFT", "SENT", "NEGOTIATING", "ACCEPTED", "DECLINED", "EXPIRED"] as const
 const APPROVAL_VARIANT: Record<string, "default" | "outline" | "destructive"> = { APPROVED: "default", PENDING: "outline", REJECTED: "destructive" }
@@ -28,11 +28,13 @@ function Offers() {
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("RECRUITMENT_MANAGE")
   const candidates = toSelect(useOptions("rec:candidates", RecOptions.candidates))
   const postings = toSelect(useOptions("rec:postings", RecOptions.postings))
-  const departments = toSelect(useOptions("departments", () => HrOptions.departments()))
+  const departmentOpts = useOptions("departments", () => HrOptions.departments())
+  const departments = toSelect(departmentOpts)
   const employees = toSelect(useOptions("employees", HrOptions.employees))
   const templates = toSelect(useOptions("rec:templates", RecOptions.templates))
   const branches = toSelect(useOptions("branches", HrOptions.branches))
-  const designations = toSelect(useOptions("designations", () => HrOptions.designations()))
+  const designationOpts = useOptions("designations", () => HrOptions.designations())
+  const chain = orgChain(departmentOpts, designationOpts)
   const is = (...s: string[]) => (r: Row) => s.includes(String(r.status))
   const approved = (r: Row) => r.approvalStatus === "APPROVED"
   const setStatus = (status: string) => (r: Row) => REC.offers.put(r.id ?? "", "status", { status })
@@ -95,9 +97,9 @@ function Offers() {
           { name: "employmentType", label: "hr.f.employmentType", type: "select", required: true, options: EMPLOYMENT_TYPES.map((x) => ({ value: x, label: t(`hr.type.${x}`) })) },
           { name: "employeeStatus", label: "hr.f.status", type: "select", options: (["PROBATION", "ACTIVE"] as const).map((x) => ({ value: x, label: t(`hr.status.${x}`) })) },
           { name: "dateOfJoining", label: "hr.f.dateOfJoining", type: "date" },
-          { name: "branchId", label: "hr.f.branch", type: "select", numeric: true, none: true, options: branches },
-          { name: "departmentId", label: "hr.f.department", type: "select", numeric: true, none: true, options: departments },
-          { name: "designationId", label: "hr.f.designation", type: "select", numeric: true, none: true, options: designations },
+          { name: "branchId", label: "hr.f.branch", type: "select", numeric: true, none: true, options: branches, resets: ["departmentId"] },
+          { name: "departmentId", label: "hr.f.department", type: "select", numeric: true, none: true, optionsFor: chain.departmentsOf("branchId"), resets: ["designationId"] },
+          { name: "designationId", label: "hr.f.designation", type: "select", numeric: true, none: true, optionsFor: chain.designationsOf("departmentId") },
           { name: "employeeCode", label: "hr.f.employeeCode", max: 50, pattern: /^[A-Za-z0-9._-]*$/, patternMsg: "hr.v.code" },
           { name: "password", label: "hr.f.password", type: "password", max: 128, check: (v) => (v.password && String(v.password).length < 8 ? "hr.v.password" : undefined) },
         ],

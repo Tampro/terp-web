@@ -6,7 +6,7 @@ import { Check, X } from "lucide-react"
 import { HR, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { useT } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig } from "../_components/crud-kit"
+import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../_components/crud-kit"
 
 export default function RecognitionPage() {
   return (
@@ -23,8 +23,9 @@ function Recognition() {
   const employees = toSelect(useOptions("employees", HrOptions.employees))
   const awardTypes = toSelect(useOptions("awardTypes", HrOptions.awardTypes))
   const branches = toSelect(useOptions("branches", HrOptions.branches))
-  const departments = toSelect(useOptions("departments", () => HrOptions.departments()))
-  const designations = toSelect(useOptions("designations", () => HrOptions.designations()))
+  const departmentOpts = useOptions("departments", () => HrOptions.departments())
+  const designationOpts = useOptions("designations", () => HrOptions.designations())
+  const chain = orgChain(departmentOpts, designationOpts)
   const pending = (r: Row) => r.status === "PENDING"
 
   const awards: CrudConfig = {
@@ -80,9 +81,9 @@ function Recognition() {
     fields: [
       { name: "employeeId", label: "hr.f.employee", type: "select", required: true, numeric: true, options: employees },
       { name: "previousDesignation", label: "hr.f.previousDesignation", max: 150 },
-      { name: "newDesignationId", label: "hr.f.newDesignation", type: "select", required: true, numeric: true, options: designations },
-      { name: "newDepartmentId", label: "hr.f.newDepartment", type: "select", numeric: true, none: true, options: departments },
-      { name: "newBranchId", label: "hr.f.newBranch", type: "select", numeric: true, none: true, options: branches },
+      { name: "newBranchId", label: "hr.f.newBranch", type: "select", numeric: true, none: true, options: branches, resets: ["newDepartmentId"] },
+      { name: "newDepartmentId", label: "hr.f.newDepartment", type: "select", numeric: true, none: true, optionsFor: chain.departmentsOf("newBranchId"), resets: ["newDesignationId"] },
+      { name: "newDesignationId", label: "hr.f.newDesignation", type: "select", required: true, numeric: true, optionsFor: chain.designationsOf("newDepartmentId") },
       { name: "promotionDate", label: "hr.f.promotionDate", type: "date", required: true },
       { name: "effectiveDate", label: "hr.f.effectiveDate", type: "date", required: true },
       { name: "documentMediaId", label: "hr.f.document", type: "file" },

@@ -6,7 +6,7 @@ import { Ban, Check, MessageSquare, Play, X } from "lucide-react"
 import { HR, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { useT } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef } from "../_components/crud-kit"
+import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef, orgChain } from "../_components/crud-kit"
 
 export default function CareerPage() {
   return (
@@ -28,8 +28,9 @@ function Career() {
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("LIFECYCLE_MANAGE")
   const employees = toSelect(useOptions("employees", HrOptions.employees))
   const branches = toSelect(useOptions("branches", HrOptions.branches))
-  const departments = toSelect(useOptions("departments", () => HrOptions.departments()))
-  const designations = toSelect(useOptions("designations", () => HrOptions.designations()))
+  const departmentOpts = useOptions("departments", () => HrOptions.departments())
+  const designationOpts = useOptions("designations", () => HrOptions.designations())
+  const chain = orgChain(departmentOpts, designationOpts)
   const terminationTypes = toSelect(useOptions("catalog:termination-types", () => HrOptions.catalog("termination-types")))
   const is = (...s: string[]) => (r: Row) => s.includes(String(r.status))
   const docField: FieldDef = { name: "documentMediaId", label: "hr.f.document", type: "file" }
@@ -54,9 +55,9 @@ function Career() {
     createLabel: "hr.transfer.create",
     fields: [
       { name: "employeeId", label: "hr.f.employee", type: "select", required: true, numeric: true, options: employees, full: true },
-      { name: "toBranchId", label: "hr.f.toBranch", type: "select", numeric: true, none: true, options: branches },
-      { name: "toDepartmentId", label: "hr.f.toDepartment", type: "select", numeric: true, none: true, options: departments },
-      { name: "toDesignationId", label: "hr.f.toDesignation", type: "select", numeric: true, none: true, options: designations, check: (v) => (!v.toBranchId && !v.toDepartmentId && !v.toDesignationId ? "hr.v.transferTarget" : undefined) },
+      { name: "toBranchId", label: "hr.f.toBranch", type: "select", numeric: true, none: true, options: branches, resets: ["toDepartmentId"] },
+      { name: "toDepartmentId", label: "hr.f.toDepartment", type: "select", numeric: true, none: true, optionsFor: chain.departmentsOf("toBranchId"), resets: ["toDesignationId"] },
+      { name: "toDesignationId", label: "hr.f.toDesignation", type: "select", numeric: true, none: true, optionsFor: chain.designationsOf("toDepartmentId"), check: (v) => (!v.toBranchId && !v.toDepartmentId && !v.toDesignationId ? "hr.v.transferTarget" : undefined) },
       { name: "transferDate", label: "hr.f.transferDate", type: "date", required: true },
       { name: "effectiveDate", label: "hr.f.effectiveDate", type: "date", required: true },
       docField,
