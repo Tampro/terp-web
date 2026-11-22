@@ -27,7 +27,8 @@ export default function AdminLayout({
   return (
     <SidebarProvider open={open} onOpenChange={setOpen}>
       <AppSidebar />
-      <SidebarInset>
+      {/* min-w-0: wide content (Kanban boards, tables) scrolls inside its own box instead of widening the page */}
+      <SidebarInset className="min-w-0">
         <ActAsBanner />
         <Header />
         <div className="flex flex-1 flex-col p-4">{children}</div>

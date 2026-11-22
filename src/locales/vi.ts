@@ -1,3 +1,4 @@
+import crm from "./crm/vi"
 import sales from "./sales/vi"
 import dashboard from "./dashboard/vi"
 import saas from "./saas/vi"
@@ -107,6 +108,7 @@ const vi: Record<keyof typeof en, string> = {
   ...saas,
   ...dashboard,
   ...sales,
+  ...crm,
 }
 
 export default vi
