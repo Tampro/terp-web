@@ -62,6 +62,11 @@ import {
   Wrench,
   TrendingUpDown,
   GraduationCap,
+  BriefcaseBusiness,
+  UserSearch,
+  CalendarClock,
+  ListChecks,
+  SlidersHorizontal,
   Target,
   Scale,
   Sheet,
@@ -153,6 +158,17 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           // §16 Performance & training
           ...(can("PERFORMANCE_VIEW") ? [{ title: t("menu.pf.performance"), url: "/hrm/performance", icon: TrendingUpDown }] : []),
           ...(can("TRAINING_VIEW") ? [{ title: t("menu.tr.training"), url: "/hrm/training", icon: GraduationCap }] : []),
+          // §17 Recruitment
+          ...(can("RECRUITMENT_VIEW")
+            ? [
+                { title: t("menu.rc.jobs"), url: "/recruitment/jobs", icon: BriefcaseBusiness },
+                { title: t("menu.rc.candidates"), url: "/recruitment/candidates", icon: UserSearch },
+                { title: t("menu.rc.interviews"), url: "/recruitment/interviews", icon: CalendarClock },
+                { title: t("menu.rc.offers"), url: "/recruitment/offers", icon: FileSignature },
+                { title: t("menu.rc.onboarding"), url: "/recruitment/onboarding", icon: ListChecks },
+                { title: t("menu.rc.setup"), url: "/recruitment/setup", icon: SlidersHorizontal },
+              ]
+            : []),
           ...(can("ORG_VIEW") ? [{ title: t("menu.hr.setup"), url: "/hrm/setup", icon: Wrench }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)

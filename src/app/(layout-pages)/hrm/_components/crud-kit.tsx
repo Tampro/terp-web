@@ -125,6 +125,8 @@ export interface FieldDef {
   max?: number
   min?: number
   options?: { value: string; label: string }[]
+  /** options that depend on other values of the form (e.g. rounds of the chosen candidate's job) */
+  optionsFor?: (v: Values) => { value: string; label: string }[]
   /** a select whose value is sent as a number (ids) */
   numeric?: boolean
   pattern?: RegExp
@@ -224,7 +226,7 @@ export function FormFields({ fields, values, onChange, errors, prefix }: { field
               {f.type === "textarea" ? (
                 <Textarea id={id} rows={3} maxLength={f.max} value={String(val ?? "")} onChange={(e) => set(f.name, e.target.value)} />
               ) : f.type === "select" ? (
-                <PlainSelect id={id} label={t(f.label)} value={String(val ?? "")} onChange={(x) => set(f.name, x)} options={f.options ?? []} none={f.none ? t("hr.none") : undefined} />
+                <PlainSelect id={id} label={t(f.label)} value={String(val ?? "")} onChange={(x) => set(f.name, x)} options={f.optionsFor?.(values) ?? f.options ?? []} none={f.none ? t("hr.none") : undefined} />
               ) : f.type === "multi" ? (
                 <div className="flex flex-wrap gap-x-4 gap-y-2 rounded-md border p-2" role="group" aria-label={t(f.label)}>
                   {(f.options ?? []).length === 0 && <span className="text-muted-foreground text-sm">{t("hr.noOptions")}</span>}
