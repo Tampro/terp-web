@@ -304,3 +304,60 @@ export const DocumentService = {
   /** {url}: a short-lived link to the file (DOC_025 before approval) */
   download: (id: string) => request<{ url?: string }>(`/v1/document/documents/${id}/download`),
 }
+
+// ------------------------------------------------------------------ performance & training (manual §16)
+// employee-service performance/* (PERFORMANCE_VIEW / PERFORMANCE_MANAGE) and training/* (TRAINING_VIEW / TRAINING_MANAGE).
+// Catalogs: /performance/{goal-types|indicator-categories}. A review is Pending → In Progress → Completed; conduct saves
+// ratings (1..5 per indicator) and `submit` completes it once every indicator is rated (EMP_079); completed is final
+// (EMP_077); nobody reviews themselves (EMP_076). Reviewer = an employee id.
+
+export const PERF = {
+  reviews: crud("/v1/performance/reviews"),
+  goals: crud("/v1/performance/goals"),
+  cycles: crud("/v1/performance/review-cycles"),
+  indicators: crud("/v1/performance/indicators"),
+  catalog: (kind: "goal-types" | "indicator-categories") => crud(`/v1/performance/${kind}`),
+}
+export const TRAINING = {
+  types: crud("/v1/training/types"),
+  trainers: crud("/v1/training/trainers"),
+  programs: crud("/v1/training/programs"),
+  sessions: crud("/v1/training/sessions"),
+  trainings: crud("/v1/training/employee-trainings"),
+}
+export const PerfOptions = {
+  cycles: () => request<Option[]>("/v1/performance/review-cycles/options"),
+  catalog: (kind: "goal-types" | "indicator-categories") => request<Option[]>(`/v1/performance/${kind}/options`),
+  trainingTypes: () => request<Option[]>("/v1/training/types/options"),
+  trainers: () => request<Option[]>("/v1/training/trainers/options"),
+  programs: () => request<Option[]>("/v1/training/programs/options"),
+}
+export interface RatingDto {
+  indicatorId?: string
+  indicatorName?: string
+  description?: string | null
+  measurementUnit?: string | null
+  targetValue?: string | null
+  weight?: number | null
+  rating?: number | null
+  comments?: string | null
+}
+export interface ReviewDto {
+  id?: string
+  employee?: { id?: string; fullName?: string }
+  reviewer?: { id?: string; fullName?: string }
+  reviewCycle?: Ref
+  reviewDate?: string
+  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED"
+  overallRating?: number | null
+  overallComments?: string | null
+  pros?: string | null
+  cons?: string | null
+  groups?: { category?: string; indicators?: RatingDto[] }[]
+}
+/** ConductForm {ratings[{indicatorId, rating 1..5, comments}], overallComments, pros, cons, submit}. */
+export const ReviewService = {
+  get: (id: string) => request<ReviewDto>(`/v1/performance/reviews/${id}`),
+  conduct: (id: string, body: { ratings: { indicatorId: number; rating?: number; comments?: string }[]; overallComments?: string; pros?: string; cons?: string; submit: boolean }) =>
+    put<ReviewDto>(`/v1/performance/reviews/${id}/conduct`, body),
+}

@@ -1,3 +1,4 @@
+import performance from "./performance/ko"
 import hrm from "./hrm/ko"
 import budget from "./budget/ko"
 import ledger from "./ledger/ko"
@@ -125,6 +126,7 @@ const ko: Record<keyof typeof en, string> = {
   ...ledger,
   ...budget,
   ...hrm,
+  ...performance,
 }
 
 export default ko
