@@ -1,3 +1,4 @@
+import recruitment from "./recruitment/en"
 import performance from "./performance/en"
 import hrm from "./hrm/en"
 import budget from "./budget/en"
@@ -125,6 +126,7 @@ const en = {
   ...budget,
   ...hrm,
   ...performance,
+  ...recruitment,
 }
 
 export default en
