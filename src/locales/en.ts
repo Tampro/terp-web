@@ -1,3 +1,4 @@
+import budget from "./budget/en"
 import ledger from "./ledger/en"
 import accounting from "./accounting/en"
 import projects from "./projects/en"
@@ -119,6 +120,7 @@ const en = {
   ...projects,
   ...accounting,
   ...ledger,
+  ...budget,
 }
 
 export default en

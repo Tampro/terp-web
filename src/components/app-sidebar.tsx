@@ -49,6 +49,8 @@ import {
   ChartNoAxesCombined,
   BookOpen,
   NotebookPen,
+  PiggyBank,
+  Target,
   Scale,
   Sheet,
 } from "lucide-react"
@@ -119,6 +121,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ...(can("LEDGER_VIEW") ? [{ title: t("menu.le.journal"), url: "/accounting/journal-entries", icon: NotebookPen }] : []),
           ...(can("LEDGER_REPORT_VIEW") ? [{ title: t("menu.le.reports"), url: "/accounting/ledger", icon: Sheet }] : []),
           ...(can("LEDGER_REPORT_VIEW") || can("LEDGER_CLOSE") ? [{ title: t("menu.le.closing"), url: "/accounting/balance-sheets", icon: Scale }] : []),
+          // §14 Financial goals & budget
+          ...(can("GOAL_VIEW") ? [{ title: t("menu.bg.goals"), url: "/accounting/goals", icon: Target }] : []),
+          ...(can("BUDGET_VIEW") ? [{ title: t("menu.bg.budgets"), url: "/accounting/budgets", icon: PiggyBank }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
           ...(can("PROJECT_VIEW")
