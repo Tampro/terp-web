@@ -67,6 +67,11 @@ import {
   CalendarClock,
   ListChecks,
   SlidersHorizontal,
+  LifeBuoy,
+  LibraryBig,
+  MailOpen,
+  Settings2,
+  MessagesSquare,
   Target,
   Scale,
   Sheet,
@@ -158,6 +163,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           // §16 Performance & training
           ...(can("PERFORMANCE_VIEW") ? [{ title: t("menu.pf.performance"), url: "/hrm/performance", icon: TrendingUpDown }] : []),
           ...(can("TRAINING_VIEW") ? [{ title: t("menu.tr.training"), url: "/hrm/training", icon: GraduationCap }] : []),
+          // §18 Support & communication
+          ...(can("SUPPORT_TICKET_VIEW") ? [{ title: t("menu.sp.tickets"), url: "/support/tickets", icon: LifeBuoy }] : []),
+          ...(can("SUPPORT_KB_VIEW") ? [{ title: t("menu.sp.knowledge"), url: "/support/knowledge", icon: LibraryBig }] : []),
+          ...(can("SUPPORT_CONTACT_VIEW") ? [{ title: t("menu.sp.contacts"), url: "/support/contacts", icon: MailOpen }] : []),
+          ...(can("SUPPORT_SETTINGS_MANAGE") ? [{ title: t("menu.sp.setup"), url: "/support/setup", icon: Settings2 }] : []),
+          ...(can("MESSENGER_USE") ? [{ title: t("menu.sp.messenger"), url: "/messenger", icon: MessagesSquare }] : []),
           // §17 Recruitment
           ...(can("RECRUITMENT_VIEW")
             ? [
