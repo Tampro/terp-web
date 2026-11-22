@@ -1,3 +1,4 @@
+import ledger from "./ledger/en"
 import accounting from "./accounting/en"
 import projects from "./projects/en"
 import pos from "./pos/en"
@@ -117,6 +118,7 @@ const en = {
   ...pos,
   ...projects,
   ...accounting,
+  ...ledger,
 }
 
 export default en

@@ -1,3 +1,4 @@
+import ledger from "./ledger/ko"
 import accounting from "./accounting/ko"
 import projects from "./projects/ko"
 import pos from "./pos/ko"
@@ -119,6 +120,7 @@ const ko: Record<keyof typeof en, string> = {
   ...pos,
   ...projects,
   ...accounting,
+  ...ledger,
 }
 
 export default ko
