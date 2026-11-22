@@ -48,6 +48,9 @@ import {
   FilePlus,
   ChartNoAxesCombined,
   BookOpen,
+  NotebookPen,
+  Scale,
+  Sheet,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -112,6 +115,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             : []),
           ...(can("ACCOUNTING_REPORT_VIEW") ? [{ title: t("menu.acc.reports"), url: "/accounting/reports", icon: ChartNoAxesCombined }] : []),
           ...(can("COA_VIEW") ? [{ title: t("menu.acc.coa"), url: "/accounting/chart-of-accounts", icon: BookOpen }] : []),
+          // §13 Double entry
+          ...(can("LEDGER_VIEW") ? [{ title: t("menu.le.journal"), url: "/accounting/journal-entries", icon: NotebookPen }] : []),
+          ...(can("LEDGER_REPORT_VIEW") ? [{ title: t("menu.le.reports"), url: "/accounting/ledger", icon: Sheet }] : []),
+          ...(can("LEDGER_REPORT_VIEW") || can("LEDGER_CLOSE") ? [{ title: t("menu.le.closing"), url: "/accounting/balance-sheets", icon: Scale }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
           ...(can("PROJECT_VIEW")
