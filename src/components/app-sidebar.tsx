@@ -31,6 +31,12 @@ import {
   ReceiptText,
   Barcode,
   ChartPie,
+  FolderKanban,
+  Columns3,
+  ClipboardList,
+  CalendarDays,
+  Video,
+  Timer,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -75,6 +81,18 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ...(can("POS_VIEW") ? [{ title: t("menu.pos.orders"), url: "/pos/orders", icon: ReceiptText }] : []),
           ...(can("POS_SELL") ? [{ title: t("menu.pos.barcodes"), url: "/pos/barcodes", icon: Barcode }] : []),
           ...(can("POS_REPORT") ? [{ title: t("menu.pos.reports"), url: "/pos/reports", icon: ChartPie }] : []),
+          // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
+          // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
+          ...(can("PROJECT_VIEW")
+            ? [
+                { title: t("menu.projects"), url: "/projects", icon: FolderKanban },
+                { title: t("menu.projects.stages"), url: "/projects/stages", icon: Columns3 },
+              ]
+            : []),
+          ...(can("FORM_VIEW") ? [{ title: t("menu.forms"), url: "/forms", icon: ClipboardList }] : []),
+          { title: t("menu.calendar"), url: "/calendar", icon: CalendarDays },
+          ...(can("ZOOM_VIEW") ? [{ title: t("menu.meetings"), url: "/meetings", icon: Video }] : []),
+          ...(can("ATTENDANCE_VIEW") ? [{ title: t("menu.timesheets"), url: "/timesheets", icon: Timer }] : []),
           // §8 Purchase & inventory: PURCHASE_VIEW (commerce-service), INVENTORY_VIEW (inventory-service)
           ...(can("PURCHASE_VIEW")
             ? [
