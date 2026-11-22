@@ -363,6 +363,8 @@ export interface RowAction {
   when: (row: Row) => boolean
   /** a form shown before running; without one a confirmation is asked */
   fields?: FieldDef[]
+  /** pre-filled values of the action form */
+  initial?: (row: Row) => Values
   confirmDesc?: TranslationKey
   destructive?: boolean
   run: (row: Row, body: Record<string, unknown>) => Promise<unknown>
@@ -630,7 +632,7 @@ export function CrudSection({ config }: { config: CrudConfig }) {
               title={`${t(pending.action.label)}: ${config.rowName(pending.row)}`}
               description={pending.action.confirmDesc ? t(pending.action.confirmDesc) : undefined}
               fields={pending.action.fields}
-              initial={initialValues(pending.action.fields, null)}
+              initial={initialValues(pending.action.fields, pending.action.initial?.(pending.row) ?? null)}
               submitLabel={t(pending.action.label)}
               onClose={() => setPending(undefined)}
               onSubmit={async (body) => {
