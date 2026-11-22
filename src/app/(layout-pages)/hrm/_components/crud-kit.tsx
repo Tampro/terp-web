@@ -74,6 +74,16 @@ export function useOptions(key: string, loader: () => Promise<Option[]>, enabled
   }, [key, enabled, version])
   return state.key === key ? state.options : []
 }
+/**
+ * §20 dependent selects branch → department → designation: department / designation options filtered by the chosen
+ * parent field (options carry branchId / departmentId, see /org/{departments,designations}/options).
+ */
+export function orgChain(departments: Option[], designations: Option[]) {
+  return {
+    departmentsOf: (branchField: string) => (v: Values) => toSelect(departments.filter((d) => !v[branchField] || String(d.branchId) === String(v[branchField]))),
+    designationsOf: (departmentField: string) => (v: Values) => toSelect(designations.filter((d) => !v[departmentField] || String(d.departmentId) === String(v[departmentField]))),
+  }
+}
 export const toSelect = (options: Option[]) => options.map((o) => ({ value: str(o.id), label: str(o.name ?? o.title ?? o.id) }))
 
 // ------------------------------------------------------------------ status badge
@@ -127,6 +137,8 @@ export interface FieldDef {
   options?: { value: string; label: string }[]
   /** options that depend on other values of the form (e.g. rounds of the chosen candidate's job) */
   optionsFor?: (v: Values) => { value: string; label: string }[]
+  /** fields cleared when this one changes (branch → department → designation) */
+  resets?: string[]
   /** a select whose value is sent as a number (ids) */
   numeric?: boolean
   pattern?: RegExp
@@ -203,7 +215,16 @@ export function FormFields({ fields, values, onChange, errors, prefix }: { field
   const [touched, setTouched] = React.useState<Record<string, boolean>>({})
   const set = (name: string, val: unknown) => {
     setTouched((x) => ({ ...x, [name]: true }))
-    onChange({ ...values, [name]: val })
+    const next: Values = { ...values, [name]: val }
+    // a changed parent clears its dependants, recursively (branch → department → designation)
+    const clear = (n: string) => {
+      for (const r of fields.find((f) => f.name === n)?.resets ?? []) {
+        if (next[r]) next[r] = ""
+        clear(r)
+      }
+    }
+    if (val !== values[name]) clear(name)
+    onChange(next)
   }
   return (
     <div className="grid gap-4 sm:grid-cols-2">
