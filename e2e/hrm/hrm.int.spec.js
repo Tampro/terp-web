@@ -28,6 +28,9 @@ for (const [route, path, key] of /** @type {const} */ ([
   ["/hrm/payroll", "/v1/payroll/runs?page=0&size=20", "title"],
   ["/hrm/documents", "/v1/document/documents?page=0&size=20", "title"],
   ["/hrm/issues", "/v1/lifecycle/complaints?page=0&size=20", "subject"],
+  ["/hrm/performance?tab=goals", "/v1/performance/goals?page=0&size=20", "title"],
+  ["/hrm/training", "/v1/training/sessions?page=0&size=20", "name"],
+  ["/hrm/training?tab=programs", "/v1/training/programs?page=0&size=20", "name"],
 ])) {
   test(`INT-HR ${route}: dòng đầu khớp backend`, async ({ page }) => {
     await page.goto(route)

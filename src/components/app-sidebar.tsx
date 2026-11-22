@@ -60,6 +60,8 @@ import {
   ShieldAlert,
   ArrowRightLeft,
   Wrench,
+  TrendingUpDown,
+  GraduationCap,
   Target,
   Scale,
   Sheet,
@@ -148,6 +150,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.hr.career"), url: "/hrm/career", icon: ArrowRightLeft },
               ]
             : []),
+          // §16 Performance & training
+          ...(can("PERFORMANCE_VIEW") ? [{ title: t("menu.pf.performance"), url: "/hrm/performance", icon: TrendingUpDown }] : []),
+          ...(can("TRAINING_VIEW") ? [{ title: t("menu.tr.training"), url: "/hrm/training", icon: GraduationCap }] : []),
           ...(can("ORG_VIEW") ? [{ title: t("menu.hr.setup"), url: "/hrm/setup", icon: Wrench }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)

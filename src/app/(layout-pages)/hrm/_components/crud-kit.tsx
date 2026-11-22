@@ -115,7 +115,7 @@ export function HrStatus({ status }: { status?: unknown }) {
 
 // ------------------------------------------------------------------ form fields
 
-export type FieldType = "text" | "textarea" | "number" | "date" | "time" | "select" | "switch" | "color" | "multi" | "email" | "password" | "file"
+export type FieldType = "text" | "textarea" | "number" | "date" | "time" | "select" | "switch" | "color" | "multi" | "email" | "password" | "file" | "datetime"
 export interface FieldDef {
   name: string
   label: TranslationKey
@@ -146,6 +146,7 @@ export function initialValues(fields: FieldDef[], row?: Values | null, defaults?
     if (f.type === "switch") v[f.name] = raw == null ? !!defaults?.[f.name] : !!raw
     else if (f.type === "multi") v[f.name] = Array.isArray(raw) ? raw.map(String) : []
     else if (f.type === "color") v[f.name] = raw == null ? "#3B82F6" : String(raw)
+    else if (f.type === "datetime") v[f.name] = raw == null ? "" : String(raw).slice(0, 16)
     else v[f.name] = raw == null ? "" : String(raw)
   }
   return v
@@ -247,7 +248,7 @@ export function FormFields({ fields, values, onChange, errors, prefix }: { field
               ) : (
                 <Input
                   id={id}
-                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "time" ? "time" : f.type === "email" ? "email" : f.type === "password" ? "password" : "text"}
+                  type={f.type === "number" ? "number" : f.type === "date" ? "date" : f.type === "datetime" ? "datetime-local" : f.type === "time" ? "time" : f.type === "email" ? "email" : f.type === "password" ? "password" : "text"}
                   step={f.type === "number" ? "any" : undefined}
                   maxLength={f.type === "number" ? undefined : f.max}
                   value={String(val ?? "")}

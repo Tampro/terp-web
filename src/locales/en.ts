@@ -1,3 +1,4 @@
+import performance from "./performance/en"
 import hrm from "./hrm/en"
 import budget from "./budget/en"
 import ledger from "./ledger/en"
@@ -123,6 +124,7 @@ const en = {
   ...ledger,
   ...budget,
   ...hrm,
+  ...performance,
 }
 
 export default en
