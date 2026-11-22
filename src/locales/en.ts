@@ -1,3 +1,4 @@
+import accounting from "./accounting/en"
 import projects from "./projects/en"
 import pos from "./pos/en"
 import products from "./products/en"
@@ -115,6 +116,7 @@ const en = {
   ...products,
   ...pos,
   ...projects,
+  ...accounting,
 }
 
 export default en

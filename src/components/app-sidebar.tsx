@@ -37,6 +37,17 @@ import {
   CalendarDays,
   Video,
   Timer,
+  Contact,
+  Truck,
+  TrendingUp,
+  TrendingDown,
+  Landmark,
+  HandCoins,
+  Banknote,
+  FileMinus,
+  FilePlus,
+  ChartNoAxesCombined,
+  BookOpen,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -81,6 +92,26 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ...(can("POS_VIEW") ? [{ title: t("menu.pos.orders"), url: "/pos/orders", icon: ReceiptText }] : []),
           ...(can("POS_SELL") ? [{ title: t("menu.pos.barcodes"), url: "/pos/barcodes", icon: Barcode }] : []),
           ...(can("POS_REPORT") ? [{ title: t("menu.pos.reports"), url: "/pos/reports", icon: ChartPie }] : []),
+          // §12 Accounting (accounting-service), each entry by its own permission
+          ...(can("CUSTOMER_VIEW") ? [{ title: t("menu.acc.customers"), url: "/accounting/customers", icon: Contact }] : []),
+          ...(can("VENDOR_VIEW") ? [{ title: t("menu.acc.vendors"), url: "/accounting/vendors", icon: Truck }] : []),
+          ...(can("REVENUE_VIEW") ? [{ title: t("menu.acc.revenues"), url: "/accounting/revenues", icon: TrendingUp }] : []),
+          ...(can("EXPENSE_VIEW") ? [{ title: t("menu.acc.expenses"), url: "/accounting/expenses", icon: TrendingDown }] : []),
+          ...(can("BANK_VIEW") ? [{ title: t("menu.acc.banking"), url: "/accounting/banking", icon: Landmark }] : []),
+          ...(can("PAYMENT_VIEW")
+            ? [
+                { title: t("menu.acc.customer-payments"), url: "/accounting/customer-payments", icon: HandCoins },
+                { title: t("menu.acc.vendor-payments"), url: "/accounting/vendor-payments", icon: Banknote },
+              ]
+            : []),
+          ...(can("NOTE_VIEW")
+            ? [
+                { title: t("menu.acc.credit-notes"), url: "/accounting/credit-notes", icon: FileMinus },
+                { title: t("menu.acc.debit-notes"), url: "/accounting/debit-notes", icon: FilePlus },
+              ]
+            : []),
+          ...(can("ACCOUNTING_REPORT_VIEW") ? [{ title: t("menu.acc.reports"), url: "/accounting/reports", icon: ChartNoAxesCombined }] : []),
+          ...(can("COA_VIEW") ? [{ title: t("menu.acc.coa"), url: "/accounting/chart-of-accounts", icon: BookOpen }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
           ...(can("PROJECT_VIEW")
