@@ -1,3 +1,4 @@
+import budget from "./budget/vi"
 import ledger from "./ledger/vi"
 import accounting from "./accounting/vi"
 import projects from "./projects/vi"
@@ -121,6 +122,7 @@ const vi: Record<keyof typeof en, string> = {
   ...projects,
   ...accounting,
   ...ledger,
+  ...budget,
 }
 
 export default vi
