@@ -61,7 +61,17 @@ const dashboardKo: Record<keyof typeof dashboardEn, string> = {
   "cdash.noPermission": "이 항목을 볼 권한이 없습니다.",
   "cdash.unavailable": "지금은 사용할 수 없습니다.",
   "cdash.staffSubtitle": "내 공지사항과 다가오는 일정",
-  "cdash.selfServiceSoon": "백엔드가 셀프 서비스를 지원하면 출근 체크와 내 근태·휴가가 여기에 표시됩니다.",
+  "clock.title": "오늘의 근태",
+  "clock.in": "출근",
+  "clock.out": "퇴근",
+  "clock.inDone": "출근 처리되었습니다",
+  "clock.outDone": "퇴근 처리되었습니다",
+  "clock.notes": "메모(선택)",
+  "clock.overtime": "초과 근무 {h}시간",
+  "clock.autoOut": "근무 종료 시 자동 마감",
+  "clock.grace": "근무 시작 후 {n}분 유예",
+  "clock.doneToday": "오늘 출근과 퇴근을 모두 기록했습니다.",
+  "clock.noProfile": "계정이 직원 정보와 연결되어 있지 않아 출근할 수 없습니다. 인사 담당자에게 연결을 요청하세요.",
 }
 
 export default dashboardKo

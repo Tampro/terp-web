@@ -60,7 +60,17 @@ const dashboardEn = {
   "cdash.noPermission": "You don't have permission to see this.",
   "cdash.unavailable": "Not available right now.",
   "cdash.staffSubtitle": "Your announcements and upcoming events",
-  "cdash.selfServiceSoon": "Clock in and your own attendance and leave will appear here once the backend supports self-service.",
+  "clock.title": "Today's attendance",
+  "clock.in": "Clock in",
+  "clock.out": "Clock out",
+  "clock.inDone": "Clocked in",
+  "clock.outDone": "Clocked out",
+  "clock.notes": "Note (optional)",
+  "clock.overtime": "Overtime {h} h",
+  "clock.autoOut": "Closed at shift end",
+  "clock.grace": "Grace period {n} minutes after the shift start",
+  "clock.doneToday": "You have clocked in and out today.",
+  "clock.noProfile": "Your account is not linked to an employee profile, so you cannot clock in. Ask HR to link it.",
 }
 
 export default dashboardEn
