@@ -72,6 +72,8 @@ import {
   MailOpen,
   Settings2,
   MessagesSquare,
+  UserCog,
+  Building,
   Target,
   Scale,
   Sheet,
@@ -163,6 +165,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           // §16 Performance & training
           ...(can("PERFORMANCE_VIEW") ? [{ title: t("menu.pf.performance"), url: "/hrm/performance", icon: TrendingUpDown }] : []),
           ...(can("TRAINING_VIEW") ? [{ title: t("menu.tr.training"), url: "/hrm/training", icon: GraduationCap }] : []),
+          // §19 Company system settings
+          ...(can("IAM_USER_VIEW") || can("IAM_ROLE_VIEW") ? [{ title: t("menu.co.access"), url: "/company/access", icon: UserCog }] : []),
+          ...(can("IAM_SETTINGS_MANAGE") || can("NOTIFICATION_SETTINGS_UPDATE") ? [{ title: t("menu.co.settings"), url: "/company/settings", icon: Building }] : []),
           // §18 Support & communication
           ...(can("SUPPORT_TICKET_VIEW") ? [{ title: t("menu.sp.tickets"), url: "/support/tickets", icon: LifeBuoy }] : []),
           ...(can("SUPPORT_KB_VIEW") ? [{ title: t("menu.sp.knowledge"), url: "/support/knowledge", icon: LibraryBig }] : []),

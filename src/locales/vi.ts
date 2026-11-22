@@ -1,3 +1,4 @@
+import company from "./company/vi"
 import support from "./support/vi"
 import recruitment from "./recruitment/vi"
 import performance from "./performance/vi"
@@ -131,6 +132,7 @@ const vi: Record<keyof typeof en, string> = {
   ...performance,
   ...recruitment,
   ...support,
+  ...company,
 }
 
 export default vi

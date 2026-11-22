@@ -1,3 +1,4 @@
+import company from "./company/en"
 import support from "./support/en"
 import recruitment from "./recruitment/en"
 import performance from "./performance/en"
@@ -129,6 +130,7 @@ const en = {
   ...performance,
   ...recruitment,
   ...support,
+  ...company,
 }
 
 export default en
