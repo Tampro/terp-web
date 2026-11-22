@@ -50,6 +50,16 @@ import {
   BookOpen,
   NotebookPen,
   PiggyBank,
+  UsersRound,
+  CalendarCheck,
+  CalendarOff,
+  Wallet,
+  FolderOpen,
+  Megaphone,
+  Award,
+  ShieldAlert,
+  ArrowRightLeft,
+  Wrench,
   Target,
   Scale,
   Sheet,
@@ -124,6 +134,21 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           // §14 Financial goals & budget
           ...(can("GOAL_VIEW") ? [{ title: t("menu.bg.goals"), url: "/accounting/goals", icon: Target }] : []),
           ...(can("BUDGET_VIEW") ? [{ title: t("menu.bg.budgets"), url: "/accounting/budgets", icon: PiggyBank }] : []),
+          // §15 HRM, each page by its own permission
+          ...(can("EMPLOYEE_VIEW") ? [{ title: t("menu.hr.employees"), url: "/hrm/employees", icon: UsersRound }] : []),
+          ...(can("ATTENDANCE_VIEW") ? [{ title: t("menu.hr.attendance"), url: "/hrm/attendance", icon: CalendarCheck }] : []),
+          ...(can("LEAVE_VIEW") ? [{ title: t("menu.hr.leave"), url: "/hrm/leave", icon: CalendarOff }] : []),
+          ...(can("PAYROLL_VIEW") ? [{ title: t("menu.hr.payroll"), url: "/hrm/payroll", icon: Wallet }] : []),
+          ...(can("DOCUMENT_VIEW") ? [{ title: t("menu.hr.documents"), url: "/hrm/documents", icon: FolderOpen }] : []),
+          ...(can("ANNOUNCEMENT_VIEW") ? [{ title: t("menu.hr.announcements"), url: "/hrm/announcements", icon: Megaphone }] : []),
+          ...(can("LIFECYCLE_VIEW")
+            ? [
+                { title: t("menu.hr.recognition"), url: "/hrm/recognition", icon: Award },
+                { title: t("menu.hr.issues"), url: "/hrm/issues", icon: ShieldAlert },
+                { title: t("menu.hr.career"), url: "/hrm/career", icon: ArrowRightLeft },
+              ]
+            : []),
+          ...(can("ORG_VIEW") ? [{ title: t("menu.hr.setup"), url: "/hrm/setup", icon: Wrench }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
           ...(can("PROJECT_VIEW")

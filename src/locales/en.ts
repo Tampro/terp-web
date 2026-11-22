@@ -1,3 +1,4 @@
+import hrm from "./hrm/en"
 import budget from "./budget/en"
 import ledger from "./ledger/en"
 import accounting from "./accounting/en"
@@ -121,6 +122,7 @@ const en = {
   ...accounting,
   ...ledger,
   ...budget,
+  ...hrm,
 }
 
 export default en
