@@ -361,3 +361,16 @@ export const ReviewService = {
   conduct: (id: string, body: { ratings: { indicatorId: number; rating?: number; comments?: string }[]; overallComments?: string; pros?: string; cons?: string; submit: boolean }) =>
     put<ReviewDto>(`/v1/performance/reviews/${id}/conduct`, body),
 }
+
+// ------------------------------------------------------------------ §15 events (meeting-service)
+// Spec: meeting-service EventController under /v1/meeting (EVENT_VIEW / EVENT_MANAGE / EVENT_APPROVE).
+// EventForm {title≤200, eventTypeId, startDate, endDate, startTime?, endTime? (both omitted = all day), location≤500,
+// color #RRGGBB, departmentIds (≥1, active departments), description≤4000}; created PENDING, an edit sends an approved or
+// rejected event back to PENDING; approve / reject only while PENDING (MTG_019). Calendar = approved events overlapping
+// from..to (≤92 days, MTG_021). Event types {name≤150, description≤1000, status}; a type with events can't be deleted (MTG_004).
+export const EVENTS = {
+  events: crud("/v1/meeting/events"),
+  types: crud("/v1/meeting/event-types"),
+  typeOptions: () => request<Option[]>("/v1/meeting/event-types/options"),
+  calendar: (from: string, to: string) => request<Row[]>(withQuery("/v1/meeting/events/calendar", { from, to })),
+}
