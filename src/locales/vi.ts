@@ -1,3 +1,4 @@
+import support from "./support/vi"
 import recruitment from "./recruitment/vi"
 import performance from "./performance/vi"
 import hrm from "./hrm/vi"
@@ -129,6 +130,7 @@ const vi: Record<keyof typeof en, string> = {
   ...hrm,
   ...performance,
   ...recruitment,
+  ...support,
 }
 
 export default vi
