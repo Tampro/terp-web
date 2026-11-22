@@ -21,6 +21,10 @@ import {
   Shapes,
   UserRoundSearch,
   Workflow,
+  ShoppingCart,
+  PackageMinus,
+  Warehouse,
+  ArrowLeftRight,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -58,6 +62,19 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.sales.proposal"), url: "/sales/proposals", icon: FileText },
                 { title: t("menu.sales.invoice"), url: "/sales/invoices", icon: FileCheck2 },
                 { title: t("menu.sales.return"), url: "/sales/returns", icon: Undo2 },
+              ]
+            : []),
+          // §8 Purchase & inventory: PURCHASE_VIEW (commerce-service), INVENTORY_VIEW (inventory-service)
+          ...(can("PURCHASE_VIEW")
+            ? [
+                { title: t("menu.purchase.invoices"), url: "/purchase/invoices", icon: ShoppingCart },
+                { title: t("menu.purchase.returns"), url: "/purchase/returns", icon: PackageMinus },
+              ]
+            : []),
+          ...(can("INVENTORY_VIEW")
+            ? [
+                { title: t("menu.inventory.warehouses"), url: "/inventory/warehouses", icon: Warehouse },
+                { title: t("menu.inventory.transfers"), url: "/inventory/transfers", icon: ArrowLeftRight },
               ]
             : []),
           // §7 CRM & contracts (crm-service): CRM_VIEW for pipelines, leads, deals, reports; CRM_CONTRACT_VIEW for contracts
