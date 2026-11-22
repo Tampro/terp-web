@@ -96,7 +96,14 @@ function Coa() {
         : tab === "types"
           ? CoaService.types({ page, size: PAGE_SIZE })
           : categoryService(tab === "revenue" ? "revenues" : "expenses").list({ page, size: PAGE_SIZE })
-    load.then((p) => !cancelled && setData({ tab, page: p })).catch((e: Error) => !cancelled && toast.error(e.message))
+    load
+      .then((p) => !cancelled && setData({ tab, page: p }))
+      .catch((e: Error) => {
+        if (cancelled) return
+        toast.error(e.message)
+        // end the loading state on an error too (the skeleton otherwise stays forever)
+        setData({ tab, page: { content: [] } })
+      })
     return () => {
       cancelled = true
     }
