@@ -1,3 +1,4 @@
+import sales from "./sales/en"
 import dashboard from "./dashboard/en"
 import saas from "./saas/en"
 import admin from "./admin/en"
@@ -103,6 +104,7 @@ const en = {
   ...admin,
   ...saas,
   ...dashboard,
+  ...sales,
 }
 
 export default en
