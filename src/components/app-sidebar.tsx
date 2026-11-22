@@ -15,6 +15,12 @@ import {
   Settings,
   TicketPercent,
   Undo2,
+  ChartColumn,
+  FileSignature,
+  Handshake,
+  Shapes,
+  UserRoundSearch,
+  Workflow,
 } from "lucide-react"
 
 import { NavMain } from "@/components/nav-main"
@@ -52,6 +58,21 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.sales.proposal"), url: "/sales/proposals", icon: FileText },
                 { title: t("menu.sales.invoice"), url: "/sales/invoices", icon: FileCheck2 },
                 { title: t("menu.sales.return"), url: "/sales/returns", icon: Undo2 },
+              ]
+            : []),
+          // §7 CRM & contracts (crm-service): CRM_VIEW for pipelines, leads, deals, reports; CRM_CONTRACT_VIEW for contracts
+          ...(can("CRM_VIEW")
+            ? [
+                { title: t("menu.crm.leads"), url: "/crm/leads", icon: UserRoundSearch },
+                { title: t("menu.crm.deals"), url: "/crm/deals", icon: Handshake },
+                { title: t("menu.crm.reports"), url: "/crm/reports", icon: ChartColumn },
+                { title: t("menu.crm.setup"), url: "/crm/setup", icon: Workflow },
+              ]
+            : []),
+          ...(can("CRM_CONTRACT_VIEW") || can("CRM_CONTRACT_MANAGE")
+            ? [
+                { title: t("menu.crm.contracts"), url: "/crm/contracts", icon: FileSignature },
+                { title: t("menu.crm.contractTypes"), url: "/crm/contract-types", icon: Shapes },
               ]
             : []),
           ...(can("SAAS_SUBSCRIPTION_VIEW") ? [{ title: t("menu.plans"), url: "/plans", icon: Layers }] : []),
