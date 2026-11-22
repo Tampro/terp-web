@@ -161,6 +161,8 @@ export interface ItemOption {
   /** % ; null = no tax */
   taxRate?: number | null
   salePrice?: number | null
+  /** default unit price of purchase invoice lines */
+  purchasePrice?: number | null
 }
 
 export interface WarehouseOption {
