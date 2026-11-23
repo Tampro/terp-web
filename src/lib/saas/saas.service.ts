@@ -255,3 +255,28 @@ export const SubscriptionService = {
   requests: (p: Paging) => request<IPage<PlanRequestDto>>(withQuery("/v1/saas/plan-requests", { ...p, sort: "id,desc" })),
   cancelRequest: (id: string) => request<PlanRequestDto>(`/v1/saas/plan-requests/${id}/cancel`, { method: "POST" }),
 }
+
+/** Currency page (super admin, SaasCurrencyController): SAAS_022 missing, SAAS_023 code taken, SAAS_024 delete default,
+ *  SAAS_025 un-default the default. PUT is a full replacement. */
+export interface CurrencyDto {
+  id?: string
+  code?: string
+  name?: string
+  symbol?: string | null
+  description?: string | null
+  defaultCurrency?: boolean
+  [k: string]: unknown
+}
+export interface CurrencyBody {
+  code: string
+  name: string
+  symbol?: string
+  description?: string
+  defaultCurrency: boolean
+}
+export const CurrencyService = {
+  list: (q: Record<string, string | number | boolean | undefined>) => request<IPage<CurrencyDto>>(withQuery("/v1/saas/admin/currencies", q)),
+  create: (b: CurrencyBody) => request<CurrencyDto>("/v1/saas/admin/currencies", { method: "POST", body: b }),
+  update: (id: string, b: CurrencyBody) => request<CurrencyDto>(`/v1/saas/admin/currencies/${id}`, { method: "PUT", body: b }),
+  remove: (id: string) => request<void>(`/v1/saas/admin/currencies/${id}`, { method: "DELETE" }),
+}
