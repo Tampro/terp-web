@@ -15,6 +15,7 @@ import type { Row } from "@/lib/hrm/hrm.service"
 import { useT, type TranslationKey } from "@/lib/i18n"
 
 import { attempt, CrudSection, errorMessage, fieldErrors, FormFields, initialValues, TabbedPage, toBody, useAuthStore, type CrudConfig, type FieldDef, type Values } from "../../hrm/_components/crud-kit"
+import { EmailTemplatesTab } from "./_components/email-templates-tab"
 
 const url = /^https?:\/\/\S+$/
 const opts = (t: (k: TranslationKey) => string, prefix: string, list: readonly string[]) => list.map((x) => ({ value: x, label: t(`${prefix}.${x}` as TranslationKey) }))
@@ -91,6 +92,7 @@ function CompanySettings() {
         { key: "currency", label: "co.tab.currency", content: () => <Block title="co.tab.currency" hint="co.inherit.hint" fields={currency} load={S.currency} save={S.saveCurrency} manage={manage} /> },
         { key: "email", label: "co.tab.email", content: () => <EmailBlock manage={manage} /> },
         { key: "notifications", label: "co.tab.notifications", content: () => <Notifications manage={notif} /> },
+        { key: "email-templates", label: "etpl.tab", content: () => <EmailTemplatesTab manage={notif} />, visible: notif },
         { key: "integrations", label: "co.tab.integrations", content: () => <IntegrationsTab manage={manage} /> },
         { key: "webhooks", label: "co.tab.webhooks", content: () => <Webhooks manage={manage} /> },
       ]}
