@@ -307,6 +307,22 @@ export interface ContractDetail {
   notes?: NoteDto[]
   attachments?: AttachmentDto[]
 }
+// Contract signatures (crm-service ContractSignatureController): one hand-drawn PNG per side (COMPANY here, CLIENT on the
+// client portal); PENDING only (CTR_017); either side first, both → ACTIVE; after the first signature no edit / delete
+// (CTR_018); image CTR_013 bad PNG data URL, CTR_014 > 200 KB, CTR_015 > 2000 x 1000 px, CTR_016 side already signed.
+export type ESignerType = "COMPANY" | "CLIENT"
+export interface SignatureDto {
+  signerType?: ESignerType
+  signerUserId?: string | null
+  signerName?: string | null
+  signerEmail?: string | null
+  signedAt?: string
+  contentSha256?: string
+  /** the contract's current content hash equals the one stored when this side signed */
+  contentMatches?: boolean
+  ip?: string | null
+  userAgent?: string | null
+}
 export interface ContractForm {
   subject: string
   customerId: number
@@ -467,6 +483,12 @@ export const ContractService = {
   addAttachment: (id: string, mediaFileId: string) =>
     post<AttachmentDto>(`/v1/crm/contracts/${id}/attachments`, { mediaFileId: Number(mediaFileId) }),
   removeAttachment: (id: string, aid: string) => del(`/v1/crm/contracts/${id}/attachments/${aid}`),
+  signatures: (id: string) => request<SignatureDto[]>(`/v1/crm/contracts/${id}/signatures`),
+  /** company side; signerName omitted = my name from the token */
+  sign: (id: string, body: { signatureDataUrl: string; signerName?: string }) => post<SignatureDto[]>(`/v1/crm/contracts/${id}/signatures`, body),
+  signatureImage: (id: string, type: ESignerType) => request<Blob>(`/v1/crm/contracts/${id}/signatures/${type}/image`, { as: "blob" }),
+  /** contract PDF with both signatures (or empty signature boxes) */
+  pdf: (id: string) => request<Blob>(`/v1/crm/contracts/${id}/pdf`, { as: "blob" }),
 }
 
 export const ContractTypeService = {
