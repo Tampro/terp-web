@@ -147,5 +147,15 @@ const siteVi: Record<keyof typeof siteEn, string> = {
   "site.v.failed": "Đã có lỗi, vui lòng thử lại.",
   "site.v.off": "Website hiện không khả dụng.",
   "site.v.home": "Trang chủ",
+  "cookie.title": "Đồng ý cookie",
+  "cookie.description": "Chúng tôi dùng cookie để website hoạt động và, nếu bạn đồng ý, để hiểu cách website được sử dụng.",
+  "cookie.necessary": "Cookie bắt buộc",
+  "cookie.cat.analytics": "Phân tích",
+  "cookie.cat.marketing": "Tiếp thị",
+  "cookie.contact": "Liên hệ",
+  "cookie.acceptAll": "Chấp nhận tất cả",
+  "cookie.necessaryOnly": "Chỉ cookie bắt buộc",
+  "cookie.customize": "Tùy chỉnh",
+  "cookie.save": "Lưu lựa chọn",
 }
 export default siteVi

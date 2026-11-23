@@ -41,6 +41,8 @@ export interface PublicSettings {
     defaultCurrencySymbol?: string | null
   }
   payments?: { bankTransfer?: boolean; stripe?: boolean; stripePublishableKey?: string | null }
+  /** cookie banner of the public website (SettingsDtos.CookieSettings) */
+  cookie?: { enableLogging?: boolean; cookieTitle?: string | null; cookieDescription?: string | null; strictlyTitle?: string | null; strictlyDescription?: string | null; contactDescription?: string | null; contactUrl?: string | null }
 }
 
 export interface MediaFileDto {

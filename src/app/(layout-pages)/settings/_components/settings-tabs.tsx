@@ -1,17 +1,20 @@
 "use client"
 
 import * as React from "react"
-import { Send } from "lucide-react"
+import { Download, Send } from "lucide-react"
 import { toast } from "sonner"
 
-import { PasswordInput } from "@/components/auth/password-input"
+import { FieldError, PasswordInput } from "@/components/auth/password-input"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useLanguages } from "@/hooks/use-public-settings"
 import {
   PlatformSettingsService as S,
   type BrandSettings,
+  type CookieSettings,
   type CurrencyFormat,
   type CurrencySettingsView,
   type EmailSettingsView,
@@ -21,7 +24,8 @@ import {
   type SystemSettings,
 } from "@/lib/admin/admin.service"
 import { formatMoney } from "@/lib/format"
-import { useT } from "@/lib/i18n"
+import { useT, type TranslationKey } from "@/lib/i18n"
+import { saveBlob } from "@/lib/pos/pos.service"
 
 import { FieldRow, SelectRow, SettingsCard, SwitchRow, useSettingsBlock } from "./settings-kit"
 
@@ -515,4 +519,98 @@ export function StorageTab() {
 
 function cardProps(b: { form: unknown; error?: string; saving: boolean; submit: (e?: React.FormEvent) => void }) {
   return { loading: !b.form, error: b.error, saving: b.saving, onSubmit: (e: React.FormEvent) => b.submit(e) }
+}
+
+// ---------------------------------------------------------------- Cookie
+
+const COOKIE_TEXTS: { key: keyof CookieSettings; label: TranslationKey; max: number; long?: boolean }[] = [
+  { key: "cookieTitle", label: "settings.cookieTitle", max: 200 },
+  { key: "cookieDescription", label: "settings.cookieDescription", max: 2000, long: true },
+  { key: "strictlyTitle", label: "settings.strictlyTitle", max: 200 },
+  { key: "strictlyDescription", label: "settings.strictlyDescription", max: 2000, long: true },
+  { key: "contactDescription", label: "settings.contactDescription", max: 2000, long: true },
+]
+const URL_RE = /^https?:\/\/.+/
+const isoDay = (d: Date) => d.toISOString().slice(0, 10)
+
+/**
+ * Cookie consent banner of the public website (/site) and logging of visitors' choices (GET/PUT /settings/admin/cookie,
+ * full replacement), plus the accepted-cookies CSV of a period (≤366 days, SITE_007; only while logging was on).
+ */
+export function CookieTab() {
+  const t = useT()
+  const b = useSettingsBlock<CookieSettings>(S.cookie, S.saveCookie, id)
+  const f = b.form
+  const urlBad = !!f?.contactUrl && !URL_RE.test(f.contactUrl)
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (urlBad) return
+    void b.submit()
+  }
+  return (
+    <div className="grid gap-4">
+      <SettingsCard title={t("settings.cookie")} description={t("settings.cookieDesc")} {...cardProps(b)} onSubmit={submit}>
+        {f && (
+          <>
+            <SwitchRow label={t("settings.cookieLogging")} hint={t("settings.cookieLoggingHint")} checked={!!f.enableLogging} onChange={(v) => b.patch({ enableLogging: v })} />
+            {COOKIE_TEXTS.map((x) => (
+              <FieldRow key={x.key} id={x.key} label={t(x.label)}>
+                {x.long ? (
+                  <Textarea id={x.key} maxLength={x.max} value={(f[x.key] as string | null) ?? ""} onChange={(e) => b.patch({ [x.key]: e.target.value })} />
+                ) : (
+                  <Input id={x.key} maxLength={x.max} value={(f[x.key] as string | null) ?? ""} onChange={(e) => b.patch({ [x.key]: e.target.value })} />
+                )}
+              </FieldRow>
+            ))}
+            <FieldRow id="contactUrl" label={t("settings.contactUrl")} hint={t("settings.contactUrlHint")}>
+              <Input id="contactUrl" maxLength={500} value={f.contactUrl ?? ""} aria-invalid={urlBad} onChange={(e) => b.patch({ contactUrl: e.target.value.trim() })} />
+              <FieldError message={urlBad ? t("settings.contactUrlBad") : undefined} />
+            </FieldRow>
+          </>
+        )}
+      </SettingsCard>
+      <ConsentExport />
+    </div>
+  )
+}
+
+function ConsentExport() {
+  const t = useT()
+  const [to, setTo] = React.useState(() => isoDay(new Date()))
+  const [from, setFrom] = React.useState(() => isoDay(new Date(Date.now() - 29 * 86400_000)))
+  const [busy, setBusy] = React.useState(false)
+  const days = Math.round((Date.parse(to) - Date.parse(from)) / 86400_000) + 1
+  const bad = !from || !to ? t("settings.consentRange") : days < 1 ? t("settings.consentReversed") : days > 366 ? t("settings.consentTooLong") : undefined
+  const download = async () => {
+    setBusy(true)
+    try {
+      saveBlob(await S.cookieConsentsCsv(from, to), `cookie-consents-${from}_${to}.csv`)
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("settings.consentExport")}</CardTitle>
+        <CardDescription>{t("settings.consentExportDesc")}</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-wrap items-end gap-3">
+        <div className="grid gap-1.5">
+          <Label htmlFor="consent-from">{t("settings.consentFrom")}</Label>
+          <Input id="consent-from" type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)} />
+        </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="consent-to">{t("settings.consentTo")}</Label>
+          <Input id="consent-to" type="date" value={to} min={from} onChange={(e) => setTo(e.target.value)} />
+        </div>
+        <Button type="button" variant="outline" disabled={busy || !!bad} onClick={download}>
+          <Download /> {t("settings.consentDownload")}
+        </Button>
+        <FieldError message={bad} />
+      </CardContent>
+    </Card>
+  )
 }

@@ -3,6 +3,7 @@
 import * as React from "react"
 
 import { LandingView } from "@/components/site/landing-view"
+import { CookieBanner } from "@/components/site/cookie-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ApiError } from "@/lib/api"
 import { useT } from "@/lib/i18n"
@@ -38,6 +39,7 @@ export default function PublicSitePage() {
     <>
       {css && <style>{css}</style>}
       <LandingView sections={data.sections ?? {}} order={data.order ?? []} plans={data.plans ?? []} pages={data.pages ?? []} />
+      <CookieBanner />
     </>
   )
 }
