@@ -1,7 +1,7 @@
 "use client"
 
 import { request, withQuery, type IPage } from "@/lib/api"
-import type { EDocumentStatus, EReturnStatus, LineDto, ReturnableLine, ReturnForm } from "@/lib/sales/sales.service"
+import type { EDocumentStatus, EJournalStatus, EReturnStatus, LineDto, ReturnableLine, ReturnForm } from "@/lib/sales/sales.service"
 
 // Purchase (manual §8.1, §8.2). Spec: commerce-service PurchaseInvoiceController / PurchaseInvoiceService
 // (InvoiceForm, InvoiceRow, InvoiceDetail) and PurchaseReturnController / PurchaseReturnService (ReturnForm, ReturnRow,
@@ -27,6 +27,9 @@ export interface PurchaseInvoiceRow {
   status?: EPurchaseStatus
   /** posted or partly paid past its due date */
   overdue?: boolean
+  /** accounting journal after posting (null = draft / nothing to journal); journalErrorCode when FAILED */
+  journalStatus?: EJournalStatus | null
+  journalErrorCode?: string | null
 }
 
 export interface PurchaseInvoiceDetail {
@@ -58,6 +61,7 @@ export interface PurchaseFilter {
   keyword?: string
   page?: number
   size?: number
+  journalStatus?: EJournalStatus
 }
 
 export interface PurchaseReturnRow {
@@ -73,6 +77,8 @@ export interface PurchaseReturnRow {
   total?: number
   items?: number
   status?: EReturnStatus
+  journalStatus?: EJournalStatus | null
+  journalErrorCode?: string | null
 }
 
 export interface PurchaseReturnDetail {
@@ -105,6 +111,8 @@ export const PurchaseInvoiceService = {
   remove: (id: string) => request<void>(`/v1/purchase/invoices/${id}`, { method: "DELETE" }),
   /** DRAFT → POSTED: stock enters the receiving warehouse */
   post: (id: string) => request<PurchaseInvoiceDetail>(`/v1/purchase/invoices/${id}/post`, { method: "POST" }),
+  /** FAILED journal only (PUR_017), PURCHASE_POST: FAILED → PENDING, no stock move */
+  retryJournal: (id: string) => request<PurchaseInvoiceDetail>(`/v1/purchase/invoices/${id}/journal/retry`, { method: "POST" }),
 }
 
 export const PurchaseReturnService = {
@@ -119,6 +127,8 @@ export const PurchaseReturnService = {
   approve: (id: string) => request<PurchaseReturnDetail>(`/v1/purchase/returns/${id}/approve`, { method: "POST" }),
   /** goods sent back: stock leaves the sending warehouse */
   complete: (id: string) => request<PurchaseReturnDetail>(`/v1/purchase/returns/${id}/complete`, { method: "POST" }),
+  /** FAILED journal only (PUR_017), PURCHASE_POST */
+  retryJournal: (id: string) => request<PurchaseReturnDetail>(`/v1/purchase/returns/${id}/journal/retry`, { method: "POST" }),
 }
 
 export const VendorLookupService = {
