@@ -37,6 +37,7 @@ import { CatalogService, ItemService, WarehouseService, type ItemDto } from "@/l
 import { toNumber } from "@/lib/sales/sales.schema"
 
 import { ItemFormDialog, type ItemLookups } from "../_components/item-form-dialog"
+import { ItemStockDialog } from "../_components/item-stock-dialog"
 import { MediaThumb } from "../_components/media-thumb"
 
 const PAGE_SIZE = 20
@@ -72,6 +73,7 @@ function Items() {
   const [search, setSearch] = React.useState(keyword)
   const [editing, setEditing] = React.useState<{ item?: ItemDto } | null>(null)
   const [stocking, setStocking] = React.useState<ItemDto>()
+  const [viewingStock, setViewingStock] = React.useState<ItemDto>()
   const [deleting, setDeleting] = React.useState<ItemDto>()
 
   React.useEffect(() => {
@@ -226,7 +228,20 @@ function Items() {
                         )}
                       </TableCell>
                       <TableCell>{r.unitName ?? "-"}</TableCell>
-                      <TableCell className="text-right">{r.type === "SERVICE" ? "-" : formatNumber(r.quantity, language, 2)}</TableCell>
+                      <TableCell className="text-right">
+                        {r.type === "SERVICE" ? (
+                          "-"
+                        ) : (
+                          <Button
+                            variant="link"
+                            className="h-auto p-0"
+                            onClick={() => setViewingStock(r)}
+                            aria-label={t("inventory.stock.byWarehouseOf", { name: r.name ?? "" })}
+                          >
+                            {formatNumber(r.quantity, language, 2)}
+                          </Button>
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline">{r.type ? t(`sales.itemType.${r.type}` as TranslationKey) : "-"}</Badge>
                       </TableCell>
@@ -271,6 +286,7 @@ function Items() {
       </Card>
 
       <ItemFormDialog state={editing} lookups={lookups} onClose={() => setEditing(null)} onSaved={reload} />
+      <ItemStockDialog item={viewingStock} onClose={() => setViewingStock(undefined)} />
       <AddStockDialog key={stocking?.id ?? "none"} item={stocking} lookups={lookups} onClose={() => setStocking(undefined)} onSaved={reload} />
       <ConfirmDialog
         open={!!deleting}

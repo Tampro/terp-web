@@ -242,3 +242,31 @@ test("PRD-010 thiết lập: thuế suất 0..100, gửi TaxForm; xóa danh mụ
   await expect.poll(() => tax.length).toBe(1)
   expect(tax[0]).toEqual({ name: "E2E VAT 8", rate: 8 })
 })
+
+// GET /inventory/stock?itemId= (StockDto per warehouse); zero rows are left out, footer = sum
+test("ITEM-030 bấm số lượng: tồn kho theo kho (bỏ kho 0) và tổng; dịch vụ không bấm được; người chỉ xem cũng dùng được", async ({ page }) => {
+  await openItems(page, ["INVENTORY_VIEW"])
+  const stock = await mockApi(page, "/v1/inventory/stock", {
+    body: ok([
+      { itemId: "601", warehouseId: "801", warehouseName: "E2E Kho Hà Nội", quantity: 60 },
+      { itemId: "601", warehouseId: "803", warehouseName: "E2E Kho HCM", quantity: 7 },
+      { itemId: "601", warehouseId: "802", warehouseName: "E2E Kho cũ", quantity: 0 },
+    ]),
+  })
+  await expect(page.getByRole("button", { name: "Tồn kho theo kho của E2E Setup" })).toHaveCount(0)
+  await page.getByRole("button", { name: "Tồn kho theo kho của E2E Keyboard" }).click()
+  const dialog = page.getByRole("dialog")
+  await expect(dialog).toContainText("E2E Keyboard · KB-01")
+  const table = dialog.getByTestId("item-stock")
+  await expect(table.locator("tbody tr")).toHaveCount(2)
+  await expect(table.getByRole("row").filter({ hasText: "E2E Kho HCM" })).toContainText("7")
+  await expect(table.locator("tfoot")).toContainText("67")
+  expect(stock.requests[0].url.searchParams.get("itemId")).toBe("601")
+})
+
+test("ITEM-031 chưa có tồn kho ở kho nào", async ({ page }) => {
+  await openItems(page)
+  await mockApi(page, "/v1/inventory/stock", { body: ok([]) })
+  await page.getByRole("button", { name: "Tồn kho theo kho của E2E Keyboard" }).click()
+  await expect(page.getByRole("dialog")).toContainText("Chưa có tồn kho ở kho nào.")
+})

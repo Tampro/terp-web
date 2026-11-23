@@ -160,6 +160,8 @@ export const ItemService = {
   /** soft delete */
   remove: (id: string) => request<void>(`/v1/inventory/items/${id}`, { method: "DELETE" }),
   images: (id: string) => request<ImagesDto>(`/v1/inventory/items/${id}/images`),
+  /** stock of one item per warehouse (GET /inventory/stock?itemId=) */
+  stockOfItem: (itemId: string) => request<StockDto[]>(withQuery("/v1/inventory/stock", { itemId })),
   /** full replacement of the main + additional images */
   setImages: (id: string, body: { mainImageId?: number | null; additionalImageIds: number[] }) =>
     request<ImagesDto>(`/v1/inventory/items/${id}/images`, { method: "PUT", body }),
