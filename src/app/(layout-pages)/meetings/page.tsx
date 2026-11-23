@@ -1,8 +1,9 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Ban, Copy, MoreHorizontal, Pencil, Play, Plus, Settings, Trash2, Video } from "lucide-react"
+import { Ban, CalendarDays, Copy, MoreHorizontal, Pencil, Play, Plus, Settings, Trash2, Video } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -140,6 +141,12 @@ function Meetings() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       <PageHeader title={t("menu.meetings")} description={t("zoom.subtitle")}>
+        {/* manual 11.4 calendar: the unified calendar (report-service, fed by /zoom/meetings/calendar) filtered on Zoom meetings */}
+        <Button variant="outline" asChild>
+          <Link href="/calendar?kinds=ZOOM_MEETING">
+            <CalendarDays className="size-4" /> {t("zoom.calendar")}
+          </Link>
+        </Button>
         {manage && (
           <Button variant="outline" onClick={() => setSettingsOpen(true)}>
             <Settings className="size-4" /> {t("zoom.settings")}
