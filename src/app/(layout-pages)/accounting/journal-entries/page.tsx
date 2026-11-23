@@ -1,6 +1,7 @@
 "use client"
 
 import * as React from "react"
+import Link from "next/link"
 import { ChevronDown, ChevronRight, MoreHorizontal, Pencil, Plus, Stamp, Trash2, Undo2, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -42,6 +43,20 @@ export default function JournalEntriesPage() {
 }
 
 /** Source of an automatic entry (backend SOURCE constants); unknown ones show the raw code. */
+/** sourceType values written by the services (accounting JournalEntry.sourceType; payroll-service PAYROLL_ACCRUAL / RUN) */
+const SOURCES = [
+  "SALES_INVOICE", "SALES_RETURN", "PURCHASE_INVOICE", "PURCHASE_RETURN", "REVENUE", "EXPENSE", "CUSTOMER_PAYMENT", "VENDOR_PAYMENT",
+  "CREDIT_NOTE", "DEBIT_NOTE", "BANK_TRANSFER", "POS_ORDER", "POS_ORDER_VOID", "PAYROLL_ACCRUAL", "PAYROLL_RUN", "REVERSAL", "YEAR_END_CLOSE",
+] as const
+/** source document with a detail view (?view=<sourceId>) → link back from the entry */
+const SOURCE_PAGE: Partial<Record<string, string>> = {
+  SALES_INVOICE: "/sales/invoices",
+  SALES_RETURN: "/sales/returns",
+  PURCHASE_INVOICE: "/purchase/invoices",
+  PURCHASE_RETURN: "/purchase/returns",
+  POS_ORDER: "/pos/orders",
+}
+
 function sourceLabel(t: ReturnType<typeof useT>, s: string) {
   const k = `le.source.${s}` as TranslationKey
   const label = t(k)
@@ -64,6 +79,7 @@ function JournalEntries() {
   const { searchParams, update } = useUrlQuery()
   const status = searchParams.get("status") ?? ALL
   const type = searchParams.get("type") ?? ""
+  const sourceType = searchParams.get("sourceType") ?? ""
   const from = searchParams.get("from") ?? undefined
   const to = searchParams.get("to") ?? undefined
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
@@ -78,14 +94,14 @@ function JournalEntries() {
 
   React.useEffect(() => {
     let cancelled = false
-    JournalService.list({ status: status === ALL ? undefined : status, type: type || undefined, from, to, page, size: PAGE_SIZE })
+    JournalService.list({ status: status === ALL ? undefined : status, type: type || undefined, sourceType: sourceType || undefined, from, to, page, size: PAGE_SIZE })
       .then((p) => !cancelled && (setData(p), setOpen({})))
       .catch((e: Error) => !cancelled && toast.error(e.message))
       .finally(() => !cancelled && setLoading(false))
     return () => {
       cancelled = true
     }
-  }, [status, type, from, to, page, reloadKey])
+  }, [status, type, sourceType, from, to, page, reloadKey])
 
   async function toggle(id: string) {
     if (open[id]) return setOpen((o) => without(o, id))
@@ -136,6 +152,14 @@ function JournalEntries() {
               onChange={(v) => update({ type: v, page: 0 })}
               none={t("le.allTypes")}
               options={(["AUTOMATIC", "MANUAL"] as const).map((x) => ({ value: x, label: t(`le.type.${x}`) }))}
+            />
+            <PlainSelect
+              label={t("le.source")}
+              className="w-52"
+              value={sourceType}
+              onChange={(v) => update({ sourceType: v, page: 0 })}
+              none={t("le.allSources")}
+              options={SOURCES.map((x) => ({ value: x, label: sourceLabel(t, x) }))}
             />
             <Input type="date" className="w-40" aria-label={t("sales.from")} value={from ?? ""} onChange={(e) => update({ from: e.target.value, page: 0 })} />
             <Input type="date" className="w-40" aria-label={t("sales.to")} value={to ?? ""} onChange={(e) => update({ to: e.target.value, page: 0 })} />
@@ -190,7 +214,18 @@ function JournalEntries() {
                           <TableCell>{formatDate(e.date, language)}</TableCell>
                           <TableCell>
                             {t(`le.type.${e.type ?? "MANUAL"}` as TranslationKey)}
-                            {e.sourceType && <span className="text-muted-foreground block text-xs">{sourceLabel(t, e.sourceType)}</span>}
+                            {e.sourceType &&
+                              (SOURCE_PAGE[e.sourceType] && e.sourceId ? (
+                                <Link
+                                  href={`${SOURCE_PAGE[e.sourceType]}?view=${encodeURIComponent(e.sourceId)}`}
+                                  className="text-primary block text-xs hover:underline"
+                                  aria-label={t("le.openSource", { source: sourceLabel(t, e.sourceType), number: e.number ?? "" })}
+                                >
+                                  {sourceLabel(t, e.sourceType)}
+                                </Link>
+                              ) : (
+                                <span className="text-muted-foreground block text-xs">{sourceLabel(t, e.sourceType)}</span>
+                              ))}
                           </TableCell>
                           <TableCell>{e.reference || "-"}</TableCell>
                           <TableCell className="max-w-64 truncate" title={e.description}>

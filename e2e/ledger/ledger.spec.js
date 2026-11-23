@@ -205,3 +205,25 @@ test("LE-040 khóa sổ cuối năm: xác nhận không hoàn tác, gửi CloseF
   await expect.poll(() => close.length).toBe(1)
   expect(close[0]).toEqual({ financialYear: 2025, closingDate: "2025-12-31" })
 })
+
+// GET /accounting/journal-entries?sourceType= ; an automatic entry links back to its document (?view=sourceId)
+test("LE-002 lọc theo nguồn gửi sourceType; nguồn có trang chi tiết thành liên kết về chứng từ gốc", async ({ page }) => {
+  await base(page)
+  const list = await mockApi(page, "/v1/accounting/journal-entries", {
+    method: "GET",
+    body: pageOf([
+      { id: "201", number: "JE-2026-201", date: "2026-11-20", type: "AUTOMATIC", sourceType: "PURCHASE_RETURN", sourceId: "48", status: "POSTED", totalDebit: 880000, totalCredit: 880000, description: "E2E return" },
+      { id: "202", number: "JE-2026-202", date: "2026-11-21", type: "AUTOMATIC", sourceType: "VENDOR_PAYMENT", sourceId: "7", status: "POSTED", totalDebit: 1000, totalCredit: 1000, description: "E2E payment" },
+    ]),
+  })
+  await page.goto("/accounting/journal-entries")
+  const link = page.getByRole("link", { name: "Mở Trả hàng mua của JE-2026-201" })
+  await expect(link).toHaveAttribute("href", "/purchase/returns?view=48")
+  // no detail page for vendor payments: plain label
+  await expect(page.getByRole("row").filter({ hasText: "JE-2026-202" }).getByRole("link")).toHaveCount(0)
+  await expect(page.getByRole("row").filter({ hasText: "JE-2026-202" })).toContainText("Trả tiền nhà cung cấp")
+  await page.getByRole("combobox", { name: "Nguồn" }).click()
+  await page.getByRole("option", { name: "Trả tiền nhà cung cấp" }).click()
+  await expect(page).toHaveURL(/sourceType=VENDOR_PAYMENT/)
+  await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("sourceType")).toBe("VENDOR_PAYMENT")
+})
