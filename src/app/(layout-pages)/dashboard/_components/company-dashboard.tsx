@@ -40,6 +40,7 @@ import { SectionCard, StatCard } from "./dashboard-kit"
 import { AccountDashboard, CrmDashboard, PosDashboard, ProjectDashboard, SupportDashboard, type DashboardModule } from "./module-dashboards"
 import { ClockCard } from "./clock-card"
 import { HrOverview } from "./hr-overview"
+import { MyDashboard } from "./my-dashboard"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i)
@@ -67,7 +68,8 @@ export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: bool
   const selfService = !!useAuthStore((s) => s.me?.permissions)?.includes("ATTENDANCE_SELF")
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)
-  const tabs = [...(hrm ? ["hrm"] : []), ...(recruitment ? ["recruitment"] : []), ...modules]
+  // "mine" (GET /reports/my-dashboard) is open to every company user
+  const tabs = [...(hrm ? ["hrm"] : []), ...(recruitment ? ["recruitment"] : []), ...modules, "mine"]
   const [tab, setTab] = React.useState(tabs[0] ?? "hrm")
   const [state, setState] = React.useState<{ data?: TDashboard; error?: string; loading: boolean }>({ loading: true })
   const calendar = useUpcomingCalendar()
@@ -119,6 +121,7 @@ export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: bool
                 {t(`mdash.tab.${m}`)}
               </TabsTrigger>
             ))}
+            <TabsTrigger value="mine">{t("cdash.tabMine")}</TabsTrigger>
           </TabsList>
         )}
         {hrm && (
@@ -146,6 +149,7 @@ export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: bool
             </TabsContent>
           )
         })}
+        <TabsContent value="mine">{tab === "mine" && <MyDashboard />}</TabsContent>
       </Tabs>
     </div>
   )
