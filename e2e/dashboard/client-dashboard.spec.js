@@ -37,7 +37,7 @@ test("CLDASH-001 khách hàng: tổng đã thanh toán, credit note, cơ hội, 
   const client = await open(page, CLIENT)
   await expect(page.getByTestId("client-dashboard")).toBeVisible()
   await expect(page.getByTestId("portal-total-paid")).toContainText("2.500.000")
-  await expect(page.getByTestId("portal-credit-notes")).toContainText("300.000")
+  await expect(page.getByTestId("portal-notes")).toContainText("300.000")
   await expect(page.getByText("2 phiếu")).toBeVisible()
   await expect(page.getByTestId("portal-deals")).toHaveText("5")
   await expect(page.getByTestId("portal-open-tickets")).toHaveText("1")

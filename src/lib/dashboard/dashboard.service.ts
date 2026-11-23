@@ -222,13 +222,16 @@ export interface SupportStats {
   faqs?: number
   monthly?: { month?: number; created?: number; closed?: number }[]
 }
-// Client portal (manual 5, role view Client), report-service /v1/reports/client-dashboard?year (PORTAL_CLIENT): parts
-// payments = accounting /portal/client/payments/summary (ACC_098 = account not linked to a customer: Customer.userId),
-// deals / openTickets = {count}. Only rows of the customer linked to the caller.
-export interface PortalClientParts {
+// Portal (manual 5, role views Client / Vendor), report-service /v1/reports/{client,vendor}-dashboard?year
+// (PORTAL_CLIENT / PORTAL_VENDOR): payments = accounting /portal/{client,vendor}/payments/summary (ACC_098 = account
+// not linked to a customer / vendor: Customer.userId / Vendor.userId; vendor totalSettled = received, notes = debit
+// notes); client deals / openTickets and vendor purchaseInvoices = {count}; vendor requests is always NOT_AVAILABLE.
+export interface PortalParts {
   payments?: Part<{ year?: number; totalSettled?: number; monthly?: { month?: number; amount?: number }[]; notesTotal?: number; notesCount?: number }>
   deals?: Part<{ count?: number }>
   openTickets?: Part<{ count?: number }>
+  purchaseInvoices?: Part<{ count?: number }>
+  requests?: Part<unknown>
 }
 
 const moduleDashboard = <P,>(name: string) => (year: number) => request<ModuleDashboard<P>>(withQuery(`/v1/reports/${name}-dashboard`, { year }))
@@ -239,7 +242,8 @@ export const ModuleDashboardService = {
   pos: moduleDashboard<{ sales?: Part<PosSales>; stock?: Part<PosStock> }>("pos"),
   crm: moduleDashboard<{ stats?: Part<CrmStats> }>("crm"),
   support: moduleDashboard<{ stats?: Part<SupportStats> }>("support"),
-  client: moduleDashboard<PortalClientParts>("client"),
+  client: moduleDashboard<PortalParts>("client"),
+  vendor: moduleDashboard<PortalParts>("vendor"),
 }
 
 export const DashboardService = {

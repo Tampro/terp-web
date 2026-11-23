@@ -2,9 +2,9 @@
 
 import { useAuthStore } from "@/lib/auth/auth.store"
 
-import { ClientDashboard } from "./_components/client-dashboard"
 import { CompanyDashboard } from "./_components/company-dashboard"
 import type { DashboardModule } from "./_components/module-dashboards"
+import { PortalDashboard, type PortalKind } from "./_components/portal-dashboard"
 import { StaffDashboard } from "./_components/staff-dashboard"
 import { SuperAdminDashboard } from "./_components/super-admin-dashboard"
 
@@ -25,7 +25,7 @@ const MODULE_PERMISSIONS: [DashboardModule, string[]][] = [
 ]
 
 /**
- * Landing page after login: Super Admin dashboard (§3.1); portal Client dashboard for a portal-only user; company HRM /
+ * Landing page after login: Super Admin dashboard (§3.1); portal Client / Vendor dashboard for a portal-only user; company HRM /
  * Recruitment / module dashboards by permission (§5);
  * otherwise the Staff view. The backend re-checks every card.
  */
@@ -34,7 +34,13 @@ export default function DashboardPage() {
   if (me?.superAdmin) return <SuperAdminDashboard />
   const permissions = me?.permissions ?? []
   const portalOnly = permissions.length > 0 && permissions.every((p) => PORTAL_ONLY.includes(p))
-  if (portalOnly && permissions.includes("PORTAL_CLIENT")) return <ClientDashboard />
+  if (portalOnly) {
+    const kinds: PortalKind[] = [
+      ...(permissions.includes("PORTAL_CLIENT") ? (["client"] as const) : []),
+      ...(permissions.includes("PORTAL_VENDOR") ? (["vendor"] as const) : []),
+    ]
+    if (kinds.length) return <PortalDashboard kinds={kinds} />
+  }
   const hrm = HRM_PERMISSIONS.some((p) => permissions.includes(p))
   const recruitment = permissions.includes("RECRUITMENT_VIEW")
   const modules = MODULE_PERMISSIONS.filter(([, perms]) => perms.some((p) => permissions.includes(p))).map(([m]) => m)
