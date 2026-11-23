@@ -68,6 +68,7 @@ import {
   CalendarClock,
   ListChecks,
   SlidersHorizontal,
+  Headset,
   LifeBuoy,
   LibraryBig,
   MailOpen,
@@ -104,6 +105,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: t("menu.orders"), url: "/orders", icon: Receipt },
           { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
           { title: t("menu.coupons"), url: "/coupons", icon: TicketPercent },
+          { title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset },
           { title: t("menu.media"), url: "/media", icon: Images },
           { title: t("menu.settings"), url: "/settings", icon: Settings },
         ]
@@ -230,6 +232,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.crm.contractTypes"), url: "/crm/contract-types", icon: Shapes },
               ]
             : []),
+          ...(can("HELPDESK_VIEW") ? [{ title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset }] : []),
           ...(can("SAAS_SUBSCRIPTION_VIEW") ? [{ title: t("menu.plans"), url: "/plans", icon: Layers }] : []),
           ...(can("SAAS_ORDER_VIEW")
             ? [
