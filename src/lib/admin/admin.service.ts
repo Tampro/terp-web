@@ -255,6 +255,18 @@ export interface PlatformEmailNotifications {
   helpdeskNotifyEmails?: string[]
 }
 
+/** Platform webhook (PlatformWebhookController): rows carry hasSecret, never the secret. */
+export interface PlatformWebhookBody {
+  eventCode: string
+  url: string
+  method: "POST"
+  active: boolean
+  /** write-only, 16..200; update: omitted keeps the stored one */
+  secret?: string
+  /** update only: true removes the secret */
+  removeSecret?: boolean
+}
+
 export interface EmailSettingsView {
   host?: string | null
   port?: number | null
@@ -302,6 +314,12 @@ export const PlatformSettingsService = {
   email: () => request<EmailSettingsView>(admin("email")),
   /** password: omitted = keep the stored one; "" = remove it (write-only). */
   saveEmail: (b: Omit<EmailSettingsView, "passwordSet"> & { password?: string }) => put<EmailSettingsView>("email", b),
+  webhookEvents: () => request<{ code?: string; name?: string; eventType?: string }[]>(admin("webhooks/events")),
+  webhooks: (q: Record<string, string | number | boolean | undefined>) => request<IPage<Record<string, unknown>>>(withQuery(admin("webhooks"), q)),
+  createWebhook: (b: PlatformWebhookBody) => request<unknown>(admin("webhooks"), { method: "POST", body: b }),
+  updateWebhook: (id: string, b: PlatformWebhookBody) => put<unknown>(`webhooks/${id}`, b),
+  removeWebhook: (id: string) => request<void>(admin(`webhooks/${id}`), { method: "DELETE" }),
+  testWebhook: (id: string) => request<import("@/lib/webhook-test").WebhookTestResult>(admin(`webhooks/${id}/test`), { method: "POST" }),
   emailNotifications: () => request<PlatformEmailNotifications>(admin("email-notifications")),
   saveEmailNotifications: (b: Required<PlatformEmailNotifications>) => put<PlatformEmailNotifications>("email-notifications", b),
   testEmail: (to: string) => request<void>(admin("email/test"), { method: "POST", body: { to } }),

@@ -5,6 +5,7 @@ const notificationVi: Record<keyof typeof notificationEn, string> = {
   "ntf.subtitle": "Email, Slack, Telegram, webhook và SMS được gửi cho các sự kiện nghiệp vụ",
   "ntf.company": "Công ty",
   "ntf.chooseCompany": "Chọn công ty",
+  "ntf.platform": "Nền tảng (webhook nền tảng)",
   "ntf.pickCompany": "Chọn một công ty để xem nhật ký thông báo.",
   "ntf.channel": "Kênh",
   "ntf.allChannels": "Tất cả kênh",
