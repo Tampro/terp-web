@@ -281,3 +281,83 @@ export interface HrDashboard {
 export const HrDashboardService = {
   get: () => request<HrDashboard>("/v1/reports/hr-dashboard"),
 }
+
+// My dashboard (FR-ERP-DSH-001), report-service GET /v1/reports/my-dashboard: { today, parts, unavailable }, each part
+// read from the owning service's self endpoint with the caller's token. Errors: EMP_001 / EMP_041 / ATT_060 / REC_069 =
+// no employee profile linked to the account, COMMON_004 = no permission, NOT_AVAILABLE = no self endpoint yet
+// (myAttendanceThisMonth, myComplaints). Shapes: HrDashboardService.myDashboard (report-service) and the source DTOs.
+type MyRef = { id?: string; name?: string } | null
+export interface MyProfile {
+  employeeId?: string
+  employeeNo?: string
+  fullName?: string
+  profileImageUrl?: string | null
+  branch?: MyRef
+  department?: MyRef
+  designation?: MyRef
+}
+export interface MyShift {
+  id?: string
+  name?: string
+  startTime?: string
+  endTime?: string
+  nightShift?: boolean
+}
+export interface MyLeaveBalance {
+  leaveType?: { id?: string; name?: string; color?: string | null }
+  total?: number
+  used?: number
+  available?: number
+}
+export interface MyLeaveApplication {
+  id?: string
+  leaveType?: { id?: string; name?: string; color?: string | null }
+  startDate?: string
+  endDate?: string
+  totalDays?: number
+  status?: string
+}
+export interface MyWarning {
+  id?: string
+  subject?: string
+  warningType?: MyRef
+  severity?: MyRef
+  warningDate?: string
+  status?: string
+}
+export interface MyAward {
+  id?: string
+  awardType?: MyRef
+  awardDate?: string
+  gift?: string | null
+}
+export interface MyInterview {
+  id?: string
+  candidate?: { id?: string; fullName?: string; jobTitle?: string } | null
+  round?: MyRef
+  date?: string
+  startTime?: string
+  location?: string | null
+  meetingLink?: string | null
+  status?: string
+}
+export interface MyDashboardParts {
+  myProfile?: Part<MyProfile>
+  myShift?: Part<MyShift | null>
+  myWarnings?: Part<MyWarning[]>
+  myAnnouncements?: Part<AnnouncementRow[]>
+  myLeaveBalances?: Part<MyLeaveBalance[] | null>
+  myLeaveApplications?: Part<{ pendingApplications?: number; recentApplications?: MyLeaveApplication[] }>
+  myAwards?: Part<MyAward[]>
+  myInterviews?: Part<MyInterview[]>
+  myDeals?: Part<{ deals?: number; recentDeals?: { id?: string; name?: string; price?: number; status?: string }[] }>
+  myTickets?: Part<{ total?: number; open?: number; closed?: number }>
+}
+export interface MyDashboard {
+  today?: string
+  parts?: MyDashboardParts
+  unavailable?: Record<string, string>
+}
+export const MyDashboardService = {
+  get: () => request<MyDashboard>("/v1/reports/my-dashboard"),
+}

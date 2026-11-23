@@ -7,7 +7,7 @@
  * RECRUITMENT_VIEW from the dashboard controllers' @PreAuthorize.
  */
 import { expect, test } from "../fixtures/index.js"
-import { mockApi, mockLoggedIn, ok, pageOf } from "../utils/mock-api.js"
+import { mockApi, mockLoggedIn, ok } from "../utils/mock-api.js"
 
 const YEAR = new Date().getFullYear()
 
@@ -95,8 +95,8 @@ test("CDASH-001 HRM: banner tỷ lệ hôm nay, thẻ số liệu, danh sách; g
   await expect(page.getByText("E2E O'Brien")).toBeVisible()
   await expect(page.getByText("E2E 김민수")).toBeVisible()
   await expect(page.getByText("E2E Ngày Nhà giáo")).toBeVisible()
-  // only HRM: no tab bar, no recruitment figures
-  await expect(page.getByRole("tab")).toHaveCount(0)
+  // only HRM: tabs Nhân sự + Của tôi (open to every company user), no recruitment figures
+  await expect(page.getByRole("tab")).toHaveText(["Nhân sự", "Của tôi"])
   await expect(page.getByTestId("cdash.activeJobs")).toHaveCount(0)
   expect(dash.requests[0].url.searchParams.get("year")).toBe(String(YEAR))
   const from = cal.requests[0].url.searchParams.get("from") ?? ""
@@ -143,27 +143,28 @@ test("STAFF-001 không có quyền HRM/Tuyển dụng → view Staff: thông bá
   await mockLoggedIn(page, { permissions: [] })
   const dash = await mockApi(page, "/v1/reports/dashboard", { body: ok(DASHBOARD) })
   await mockApi(page, "/v1/reports/calendar", { body: ok(CALENDAR) })
-  const my = await mockApi(page, "/v1/org/announcements/my", {
-    body: pageOf([{ id: "2", title: "E2E Lịch nghỉ cuối năm", shortDescription: "E2E mô tả", startDate: "2026-11-01" }]),
+  const my = await mockApi(page, "/v1/reports/my-dashboard", {
+    body: ok({ parts: { myAnnouncements: { data: [{ id: "2", title: "E2E Lịch nghỉ cuối năm", shortDescription: "E2E mô tả", startDate: "2026-11-01" }] } } }),
   })
   await page.goto("/dashboard")
   await expect(page.getByRole("heading", { name: "Xin chào, E2E Tester" })).toBeVisible()
   await expect(page.getByText("E2E Lịch nghỉ cuối năm")).toBeVisible()
   await expect(page.getByText("E2E Ngày Nhà giáo")).toBeVisible()
-  expect(my.requests[0].url.searchParams.get("tab")).toBe("ALL")
+  expect(my.requests).toHaveLength(1)
   expect(dash.requests).toHaveLength(0)
 })
 
 // Found against the real backend: an account without an employee profile got a generic "not available".
-test("STAFF-002 không có hồ sơ nhân viên (403 EMP_041) → hiện message của backend", async ({ page }) => {
+test("STAFF-002 không có hồ sơ nhân viên (EMP_041 / EMP_001) → báo một lần, không hiện các thẻ nhân sự", async ({ page }) => {
   await mockLoggedIn(page, { permissions: [] })
   await mockApi(page, "/v1/reports/calendar", { body: ok(CALENDAR) })
-  await mockApi(page, "/v1/org/announcements/my", {
-    status: 403,
-    body: { result: false, code: "EMP_041", message: "E2E Bạn chưa có hồ sơ nhân viên trong công ty này." },
+  const none = { data: null, error: "EMP_041" }
+  await mockApi(page, "/v1/reports/my-dashboard", {
+    body: ok({ parts: { myProfile: { data: null, error: "EMP_001" }, myAnnouncements: none, myWarnings: none, myAwards: none } }),
   })
   await page.goto("/dashboard")
-  await expect(page.getByRole("note").filter({ hasText: "E2E Bạn chưa có hồ sơ nhân viên trong công ty này." })).toBeVisible()
+  await expect(page.getByTestId("my-no-profile")).toContainText("chưa được liên kết với hồ sơ nhân viên")
+  await expect(page.getByText("Thông báo của tôi")).toHaveCount(0)
   await expect(page.getByText("Hiện chưa lấy được dữ liệu.")).toHaveCount(0)
   await expect(page.getByText("E2E Ngày Nhà giáo")).toBeVisible() // the calendar card still shows
 })
