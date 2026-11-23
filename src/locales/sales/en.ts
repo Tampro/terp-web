@@ -88,6 +88,8 @@ const salesEn = {
   "sales.reason": "Reason",
   "sales.choose": "Choose…",
   "sales.detail": "Details",
+  "sales.print": "Print / PDF",
+  "sales.printBlocked": "The browser blocked the print window. Allow pop-ups for this site and try again.",
   "sales.formDesc": "Only a draft can be edited. Empty unit price = the item's sale price.",
   "sales.previewHint": "Preview; the server recalculates discount, tax and totals.",
   "sales.actionsFor": "Actions for {number}",

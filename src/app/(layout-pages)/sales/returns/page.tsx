@@ -140,7 +140,7 @@ function SalesReturns() {
     withReason: true,
     totals: [
       { label: t("sales.subtotal"), value: money(d.subtotal) },
-      { label: t("sales.discount"), value: `-${money(d.discount)}` },
+      { label: t("sales.discount"), value: d.discount ? `-${money(d.discount)}` : money(0) },
       { label: t("sales.tax"), value: money(d.tax) },
       { label: t("sales.total"), value: money(d.ret?.total), strong: true },
     ],
@@ -317,7 +317,7 @@ function SalesReturns() {
       </Card>
 
       <ReturnFormDialog state={editing} lookups={lookups} onClose={() => setEditing(null)} onSaved={reload} />
-      <SalesDetailDialog id={viewParam} load={loadDetail} view={detailView} onClose={() => update({ view: "" })} />
+      <SalesDetailDialog docLabel={t("menu.sales.return")} id={viewParam} load={loadDetail} view={detailView} onClose={() => update({ view: "" })} />
       <ConfirmDialog
         open={!!pending}
         onOpenChange={(o) => !o && setPending(undefined)}

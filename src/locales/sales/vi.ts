@@ -89,6 +89,8 @@ const salesVi: Record<keyof typeof salesEn, string> = {
   "sales.reason": "Lý do",
   "sales.choose": "Chọn…",
   "sales.detail": "Chi tiết",
+  "sales.print": "In / Lưu PDF",
+  "sales.printBlocked": "Trình duyệt đã chặn cửa sổ in. Hãy cho phép cửa sổ bật lên cho trang này rồi thử lại.",
   "sales.formDesc": "Chỉ chứng từ nháp mới sửa được. Để trống đơn giá = giá bán của mặt hàng.",
   "sales.previewHint": "Số liệu tạm tính; máy chủ sẽ tính lại giảm giá, thuế và tổng.",
   "sales.actionsFor": "Thao tác cho {number}",
