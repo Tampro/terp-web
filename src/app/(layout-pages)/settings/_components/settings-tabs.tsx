@@ -12,7 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { useLanguages } from "@/hooks/use-public-settings"
+import { useLanguages, usePublicSettings } from "@/hooks/use-public-settings"
 import {
   PlatformSettingsService as S,
   type BankTransferSettings,
@@ -294,13 +294,23 @@ export function CurrencyTab() {
 
 export function SeoTab() {
   const t = useT()
+  const brand = usePublicSettings()?.brand?.titleText || "ERP"
   const b = useSettingsBlock<SeoSettings>(S.seo, S.saveSeo, id)
   const f = b.form
+  const image = (f?.metaImageUrl ?? "").trim()
+  const imageBad = !!image && !/^https?:\/\/.+/i.test(image)
+  const keywords = (f?.metaKeywords ?? "").split(",").map((k) => k.trim()).filter(Boolean)
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (imageBad) return
+    void b.submit()
+  }
   return (
-    <SettingsCard title={t("settings.seo")} description={t("settings.seoDesc")} {...cardProps(b)}>
+    <div className="grid gap-4">
+    <SettingsCard title={t("settings.seo")} description={t("settings.seoDesc")} {...cardProps(b)} onSubmit={submit}>
       {f && (
         <>
-          <FieldRow id="metaKeywords" label={t("settings.metaKeywords")} hint={t("settings.metaKeywordsHint")}>
+          <FieldRow id="metaKeywords" label={t("settings.metaKeywords")} hint={`${t("settings.metaKeywordsHint")} · ${t("settings.keywordCount", { n: keywords.length })}`}>
             <Input id="metaKeywords" maxLength={500} value={f.metaKeywords ?? ""} onChange={(e) => b.patch({ metaKeywords: e.target.value })} />
           </FieldRow>
           <FieldRow
@@ -316,11 +326,46 @@ export function SeoTab() {
             />
           </FieldRow>
           <FieldRow id="metaImageUrl" label={t("settings.metaImage")} hint={t("settings.metaImageHint")}>
-            <Input id="metaImageUrl" maxLength={1000} value={f.metaImageUrl ?? ""} onChange={(e) => b.patch({ metaImageUrl: e.target.value })} />
+            <Input id="metaImageUrl" maxLength={1000} value={f.metaImageUrl ?? ""} aria-invalid={imageBad} onChange={(e) => b.patch({ metaImageUrl: e.target.value })} />
+            <FieldError message={imageBad ? t("settings.metaImageBad") : undefined} />
           </FieldRow>
         </>
       )}
     </SettingsCard>
+    {f && <SeoPreview brand={brand} description={f.metaDescription ?? ""} image={imageBad ? "" : image} />}
+    </div>
+  )
+}
+
+/** How the public website appears in a search result and in a shared link (values as typed, before saving). */
+function SeoPreview({ brand, description, image }: { brand: string; description: string; image: string }) {
+  const t = useT()
+  const short = description.length > 160 ? `${description.slice(0, 157)}…` : description
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t("settings.seoPreview")}</CardTitle>
+        <CardDescription>{t("settings.seoPreviewDesc")}</CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-1 rounded-lg border bg-white p-4 text-slate-800" data-testid="seo-search-preview">
+          <span className="text-xs text-slate-500">{t("settings.seoSearch")}</span>
+          <span className="text-xl text-[#1a0dab]">{brand}</span>
+          <span className="text-sm text-slate-600">{short || <i>{t("settings.seoNoDescription")}</i>}</span>
+        </div>
+        <div className="overflow-hidden rounded-lg border bg-white text-slate-800" data-testid="seo-share-preview">
+          <span className="block px-4 pt-3 text-xs text-slate-500">{t("settings.seoShare")}</span>
+          <div className="mt-2 aspect-[1200/630] bg-slate-100">
+            {/* eslint-disable-next-line @next/next/no-img-element -- any https image the admin typed */}
+            {image ? <img src={image} alt="" className="size-full object-cover" /> : <span className="flex size-full items-center justify-center text-xs text-slate-400">1200 × 630</span>}
+          </div>
+          <div className="grid gap-0.5 p-3">
+            <span className="font-semibold">{brand}</span>
+            <span className="line-clamp-2 text-sm text-slate-600">{description}</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   )
 }
 
