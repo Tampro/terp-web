@@ -1,6 +1,7 @@
 "use client"
 
 import { useUIThemeStore } from "@/store/ui-theme.store"
+import { useEffectiveUITheme } from "@/providers/ui-theme-provider"
 import { useTheme } from "@/providers/theme-provider"   
 import { Button } from "@/components/ui/button"
 import {
@@ -144,7 +145,8 @@ function ThemePreview({ colors }: { colors: ThemeOption["colors"] }) {
 
 export default function ThemeCustomizer() {
   const { setTheme: setMode } = useTheme() // next-themes (light / dark / system)
-  const { theme, setTheme } = useUIThemeStore() // custom themes
+  const { setTheme } = useUIThemeStore() // custom themes
+  const theme = useEffectiveUITheme() // what is shown now (the brand's look until the user picks one)
 
   return (
     <Sheet>

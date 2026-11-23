@@ -33,7 +33,8 @@ export interface LanguageDto {
 
 export interface PublicSettings {
   system?: { defaultLanguage?: string; userRegistration?: boolean; emailVerification?: boolean; termsUrl?: string | null }
-  brand?: { logoLightUrl?: string | null; logoDarkUrl?: string | null; titleText?: string; footerText?: string | null }
+  /** every Brand Settings field (store/brand.store.ts Brand) */
+  brand?: import("@/store/brand.store").Brand
   recaptcha?: { enabled?: boolean; version?: "V2" | "V3"; siteKey?: string | null }
   currency?: {
     format?: import("@/lib/format").MoneyFormat

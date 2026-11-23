@@ -91,10 +91,25 @@ import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/compone
 import { usePublicSettings } from "@/hooks/use-public-settings"
 import { useAuthStore } from "@/lib/auth/auth.store"
 import { useT } from "@/lib/i18n"
+import { useTheme } from "@/providers/theme-provider"
+import { useEffectiveUITheme } from "@/providers/ui-theme-provider"
+import { brandImage, useBrandStore } from "@/store/brand.store"
+
+const SIDEBAR_VARIANT = { INSET: "inset", FLOATING: "floating", MINIMAL: "sidebar" } as const
+const DARK_THEMES = ["dark-blue", "gaussian-black", "semi-dark"]
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
-  const brand = usePublicSettings()?.brand?.titleText || "ERP"
+  const publicBrand = usePublicSettings()?.brand
+  // the brand that applies (company's effective brand for a company user), see <BrandApplier>
+  const applied = useBrandStore((s) => s.brand) ?? publicBrand
+  const brand = applied?.titleText || "ERP"
+  const { resolvedTheme } = useTheme()
+  const uiTheme = useEffectiveUITheme()
+  const dark = uiTheme ? DARK_THEMES.includes(uiTheme) : resolvedTheme === "dark"
+  const logo = brandImage(dark ? applied?.logoDarkUrl || applied?.logoLightUrl : applied?.logoLightUrl || applied?.logoDarkUrl)
+  const mark = brandImage(applied?.faviconUrl)
+  const variant = SIDEBAR_VARIANT[applied?.sidebarVariant ?? "INSET"] ?? "inset"
   const superAdmin = useAuthStore((s) => s.me?.superAdmin)
   const permissions = useAuthStore((s) => s.me?.permissions)
   const can = (code: string) => !!permissions?.includes(code)
@@ -252,13 +267,22 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   ]
 
   return (
-    <Sidebar collapsible="icon" className="sidebar-hover-glass z-50" {...props}>
+    <Sidebar collapsible="icon" variant={variant} className="sidebar-hover-glass z-50" {...props}>
       <SidebarHeader className="h-16 justify-center border-b">
         <div className="flex items-center gap-2 px-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0">
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 shrink-0 items-center justify-center rounded-lg font-semibold">
-            {brand.charAt(0)}
-          </div>
-          <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">{brand}</span>
+          {logo ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element -- brand image of any host */}
+              <img src={logo} alt={brand} data-testid="brand-logo" className="h-8 max-w-40 object-contain group-data-[collapsible=icon]:hidden" />
+              {/* eslint-disable-next-line @next/next/no-img-element -- brand image of any host */}
+              {mark ? <img src={mark} alt="" className="hidden size-8 object-contain group-data-[collapsible=icon]:block" /> : <BrandInitial brand={brand} collapsedOnly />}
+            </>
+          ) : (
+            <>
+              <BrandInitial brand={brand} />
+              <span className="truncate text-sm font-semibold group-data-[collapsible=icon]:hidden">{brand}</span>
+            </>
+          )}
         </div>
       </SidebarHeader>
 
@@ -274,5 +298,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <NavUser />
       </SidebarFooter>
     </Sidebar>
+  )
+}
+
+function BrandInitial({ brand, collapsedOnly }: { brand: string; collapsedOnly?: boolean }) {
+  return (
+    <div className={`bg-sidebar-primary text-sidebar-primary-foreground aspect-square size-8 shrink-0 items-center justify-center rounded-lg font-semibold ${collapsedOnly ? "hidden group-data-[collapsible=icon]:flex" : "flex"}`}>
+      {brand.charAt(0)}
+    </div>
   )
 }

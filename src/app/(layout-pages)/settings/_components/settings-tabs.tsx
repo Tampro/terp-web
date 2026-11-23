@@ -43,14 +43,32 @@ function pick<O extends object, K extends keyof O>(o: O, keys: K[]): Pick<O, K> 
 
 // ---------------------------------------------------------------- Brand
 
+// SettingsDtos.BrandSettings patterns
+const THEME_COLOR_RE = /^(blue|green|purple|orange|red|teal|#[0-9a-fA-F]{6})$/
+const MOBILE_RE = /^$|^[0-9+()\-. ]{3,30}$/
+const IMAGE_RE = /^$|^(https?:\/\/|\/(?!\/))/i
+
 export function BrandTab() {
   const t = useT()
   const b = useSettingsBlock<BrandSettings>(S.brand, S.saveBrand, id)
   const f = b.form
+  const errors = {
+    themeColor: f?.themeColor && !THEME_COLOR_RE.test(f.themeColor) ? t("settings.themeColorBad") : undefined,
+    companyMobile: !MOBILE_RE.test(f?.companyMobile ?? "") ? t("settings.mobileBad") : undefined,
+    logoLightUrl: !IMAGE_RE.test(f?.logoLightUrl ?? "") ? t("settings.imageBad") : undefined,
+    logoDarkUrl: !IMAGE_RE.test(f?.logoDarkUrl ?? "") ? t("settings.imageBad") : undefined,
+    faviconUrl: !IMAGE_RE.test(f?.faviconUrl ?? "") ? t("settings.imageBad") : undefined,
+  }
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (Object.values(errors).some(Boolean)) return
+    void b.submit()
+  }
   return (
-    <SettingsCard title={t("settings.brand")} description={t("settings.brandDesc")} {...cardProps(b)}>
+    <SettingsCard title={t("settings.brand")} description={t("settings.brandDesc")} {...cardProps(b)} onSubmit={submit}>
       {f && (
         <>
+          <p className="text-muted-foreground text-xs">{t("settings.brandApplyHint")}</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <FieldRow id="titleText" label={t("settings.titleText")}>
               <Input id="titleText" maxLength={100} value={f.titleText ?? ""} onChange={(e) => b.patch({ titleText: e.target.value })} />
@@ -60,12 +78,15 @@ export function BrandTab() {
             </FieldRow>
             <FieldRow id="logoLightUrl" label={t("settings.logoLight")} hint={t("settings.urlHint")}>
               <Input id="logoLightUrl" maxLength={1000} value={f.logoLightUrl ?? ""} onChange={(e) => b.patch({ logoLightUrl: e.target.value })} />
+              <FieldError message={errors.logoLightUrl} />
             </FieldRow>
             <FieldRow id="logoDarkUrl" label={t("settings.logoDark")} hint={t("settings.urlHint")}>
               <Input id="logoDarkUrl" maxLength={1000} value={f.logoDarkUrl ?? ""} onChange={(e) => b.patch({ logoDarkUrl: e.target.value })} />
+              <FieldError message={errors.logoDarkUrl} />
             </FieldRow>
             <FieldRow id="faviconUrl" label={t("settings.favicon")} hint={t("settings.urlHint")}>
               <Input id="faviconUrl" maxLength={1000} value={f.faviconUrl ?? ""} onChange={(e) => b.patch({ faviconUrl: e.target.value })} />
+              <FieldError message={errors.faviconUrl} />
             </FieldRow>
             <FieldRow id="themeColor" label={t("settings.themeColor")} hint={t("settings.themeColorHint")}>
               <div className="flex gap-2">
@@ -78,6 +99,14 @@ export function BrandTab() {
                   onChange={(e) => b.patch({ themeColor: e.target.value })}
                 />
               </div>
+              <FieldError message={errors.themeColor} />
+            </FieldRow>
+            <FieldRow id="companyMobile" label={t("settings.companyMobile")}>
+              <Input id="companyMobile" maxLength={30} placeholder="+84 28 0000 0000" value={f.companyMobile ?? ""} onChange={(e) => b.patch({ companyMobile: e.target.value })} />
+              <FieldError message={errors.companyMobile} />
+            </FieldRow>
+            <FieldRow id="companyAddress" label={t("settings.companyAddress")} hint={t("settings.companyContactHint")}>
+              <Input id="companyAddress" maxLength={500} value={f.companyAddress ?? ""} onChange={(e) => b.patch({ companyAddress: e.target.value })} />
             </FieldRow>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">

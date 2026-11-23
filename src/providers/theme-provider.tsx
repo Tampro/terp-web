@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react"
 
+import { brandMode, useBrandStore } from "@/store/brand.store"
+
 type Theme = "light" | "dark" | "system"
 
 type Ctx = {
@@ -53,12 +55,11 @@ export function ThemeProvider({
   children: React.ReactNode
   defaultTheme?: Theme
 }) {
+  // The user's saved choice wins; else the brand's light/dark mode (§3.7 Brand, a default only); else defaultTheme.
   // Server render and hydration use defaultTheme / "light"; the browser values follow right after.
-  const theme = useSyncExternalStore(
-    subscribeSaved,
-    () => readSaved() ?? defaultTheme,
-    () => defaultTheme
-  )
+  const brandDefault = useBrandStore((s) => brandMode(s.brand))
+  const saved = useSyncExternalStore(subscribeSaved, readSaved, () => null)
+  const theme: Theme = saved ?? brandDefault ?? defaultTheme
   const systemTheme = useSyncExternalStore(subscribeSystem, getSystem, () => "light" as const)
 
   const resolvedTheme = theme === "system" ? systemTheme : theme
