@@ -112,6 +112,12 @@ export const CompanyService = {
   statusCounts: (p: Pick<CompanyListParams, "keyword" | "createdFrom" | "createdTo">) =>
     request<StatusCountsDto>(withQuery("/v1/iam/companies/status-counts", { ...p })),
   info: (id: string) => request<CompanyInfoDto>(`/v1/iam/companies/${id}/info`),
+  /**
+   * Upgrade plan (CompanyController.upgradePlan): the company moves to the plan for one billing cycle from now (or the
+   * running period of the same plan is extended); recorded as an APPROVED MANUAL order. SAAS_003 = no yearly price.
+   */
+  upgradePlan: (id: string, body: { planId: number; billingCycle: "MONTHLY" | "YEARLY" }) =>
+    request<unknown>(`/v1/iam/companies/${id}/plan`, { method: "PUT", body }),
   create: (body: {
     code: string
     name: string

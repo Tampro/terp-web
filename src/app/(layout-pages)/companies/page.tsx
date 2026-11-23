@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { History, KeyRound, LogIn, MoreHorizontal, Pencil, Plus, Power, Search, Trash2 } from "lucide-react"
+import { ArrowUpCircle, History, Info, KeyRound, LayoutGrid, List, LogIn, MoreHorizontal, Pencil, Plus, Power, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog"
@@ -35,6 +35,7 @@ import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT } from "@/lib/i18n"
 
 import { CompanyPasswordDialog, CreateCompanyDialog, EditCompanyDialog } from "./_components/company-form-dialog"
+import { CompanyInfoDialog, UpgradePlanDialog } from "./_components/company-info-dialog"
 
 const PAGE_SIZE = 20
 type StatusTab = "ALL" | ECompanyStatus
@@ -61,6 +62,7 @@ function CompaniesList() {
   const createdFrom = searchParams.get("createdFrom") ?? ""
   const createdTo = searchParams.get("createdTo") ?? ""
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
+  const view = searchParams.get("view") === "grid" ? "grid" : "list"
 
   // Data
   const [data, setData] = React.useState<IPage<CompanyDto>>()
@@ -96,6 +98,48 @@ function CompaniesList() {
   const [editing, setEditing] = React.useState<CompanyDto>()
   const [password, setPassword] = React.useState<CompanyDto>()
   const [deleting, setDeleting] = React.useState<CompanyDto>()
+  const [viewing, setViewing] = React.useState<CompanyDto>()
+  const [upgrading, setUpgrading] = React.useState<CompanyDto>()
+
+  const actions = (c: CompanyDto) => (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={t("companies.actionsFor", { name: c.name ?? "" })}>
+          <MoreHorizontal className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end">
+        <DropdownMenuItem onClick={() => setViewing(c)}>
+          <Info className="size-4" /> {t("companies.info")}
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={c.status !== "ACTIVE"} onClick={() => loginAs(c)}>
+          <LogIn className="size-4" /> {t("companies.loginAs")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setUpgrading(c)}>
+          <ArrowUpCircle className="size-4" /> {t("companies.upgradePlan")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setPassword(c)}>
+          <KeyRound className="size-4" /> {t("companies.changePassword")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setEditing(c)}>
+          <Pencil className="size-4" /> {t("common.edit")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => toggleStatus(c)}>
+          <Power className="size-4" />
+          {c.status === "ACTIVE" ? t("companies.disableLogin") : t("companies.enableLogin")}
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem variant="destructive" onClick={() => setDeleting(c)}>
+          <Trash2 className="size-4" /> {t("common.delete")}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+  const statusBadge = (c: CompanyDto) => (
+    <Badge variant={c.status === "ACTIVE" ? "secondary" : "outline"}>
+      {c.status === "ACTIVE" ? t("companies.enabled") : c.status ? t("companies.disabled") : "-"}
+    </Badge>
+  )
 
   async function toggleStatus(c: CompanyDto) {
     if (!c.id) return
@@ -193,6 +237,14 @@ function CompaniesList() {
                 onChange={(e) => updateQuery({ createdTo: e.target.value, page: 0 })}
               />
             </div>
+            <div className="flex rounded-md border p-0.5" role="group" aria-label={t("companies.view")}>
+              <Button size="icon" variant={view === "list" ? "secondary" : "ghost"} className="size-8" aria-label={t("companies.viewList")} aria-pressed={view === "list"} onClick={() => updateQuery({ view: "" })}>
+                <List className="size-4" />
+              </Button>
+              <Button size="icon" variant={view === "grid" ? "secondary" : "ghost"} className="size-8" aria-label={t("companies.viewGrid")} aria-pressed={view === "grid"} onClick={() => updateQuery({ view: "grid" })}>
+                <LayoutGrid className="size-4" />
+              </Button>
+            </div>
             {(keyword || createdFrom || createdTo || status !== "ALL") && (
               <Button
                 variant="ghost"
@@ -206,6 +258,35 @@ function CompaniesList() {
             )}
           </div>
 
+          {view === "grid" ? (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" data-testid="companies-grid">
+              {loading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-36" />)}
+              {!loading && rows.length === 0 && <p className="text-muted-foreground col-span-full py-8 text-center">{t("companies.empty")}</p>}
+              {!loading &&
+                rows.map((c) => (
+                  <div key={c.id} className="flex flex-col gap-3 rounded-lg border p-4">
+                    <div className="flex items-start gap-3">
+                      <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-full font-semibold">{(c.name ?? "?").charAt(0).toUpperCase()}</span>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium">{c.name ?? "-"}</p>
+                        <p className="text-muted-foreground truncate text-xs">{c.email ?? "-"}</p>
+                      </div>
+                      {actions(c)}
+                    </div>
+                    <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <span>
+                        {c.planName ?? "-"}
+                        {c.planExpiresAt && <span className="text-muted-foreground"> · {t("companies.expires", { date: formatDate(c.planExpiresAt, language) })}</span>}
+                      </span>
+                      {statusBadge(c)}
+                    </div>
+                    <p className="text-muted-foreground text-xs">
+                      {c.code} · {formatDate(c.createdDate, language)}
+                    </p>
+                  </div>
+                ))}
+            </div>
+          ) : (
           <div className="overflow-x-auto">
             <Table>
               <TableHeader>
@@ -252,45 +333,15 @@ function CompaniesList() {
                           </div>
                         )}
                       </TableCell>
-                      <TableCell>
-                        <Badge variant={c.status === "ACTIVE" ? "secondary" : "outline"}>
-                          {c.status === "ACTIVE" ? t("companies.enabled") : c.status ? t("companies.disabled") : "-"}
-                        </Badge>
-                      </TableCell>
+                      <TableCell>{statusBadge(c)}</TableCell>
                       <TableCell>{formatDate(c.createdDate, language)}</TableCell>
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" aria-label={t("companies.actionsFor", { name: c.name ?? "" })}>
-                              <MoreHorizontal className="size-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem disabled={c.status !== "ACTIVE"} onClick={() => loginAs(c)}>
-                              <LogIn className="size-4" /> {t("companies.loginAs")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setPassword(c)}>
-                              <KeyRound className="size-4" /> {t("companies.changePassword")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setEditing(c)}>
-                              <Pencil className="size-4" /> {t("common.edit")}
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => toggleStatus(c)}>
-                              <Power className="size-4" />
-                              {c.status === "ACTIVE" ? t("companies.disableLogin") : t("companies.enableLogin")}
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator />
-                            <DropdownMenuItem variant="destructive" onClick={() => setDeleting(c)}>
-                              <Trash2 className="size-4" /> {t("common.delete")}
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+                      <TableCell>{actions(c)}</TableCell>
                     </TableRow>
                   ))}
               </TableBody>
             </Table>
           </div>
+          )}
 
           <Pager
             page={data?.page ?? page}
@@ -305,6 +356,8 @@ function CompaniesList() {
       <CreateCompanyDialog open={creating} onOpenChange={setCreating} onCreated={reload} />
       <EditCompanyDialog company={editing} onOpenChange={(o) => !o && setEditing(undefined)} onSaved={reload} />
       <CompanyPasswordDialog company={password} onOpenChange={(o) => !o && setPassword(undefined)} />
+      <CompanyInfoDialog company={viewing} onOpenChange={(o) => !o && setViewing(undefined)} />
+      <UpgradePlanDialog company={upgrading} onOpenChange={(o) => !o && setUpgrading(undefined)} onDone={reload} />
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(undefined)}
