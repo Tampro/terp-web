@@ -30,6 +30,10 @@ export interface PlanDto {
   defaultPlan?: boolean
   enabled?: boolean
   recommended?: boolean
+  /** free plan: prices 0 (SAAS_041 otherwise) */
+  free?: boolean
+  /** badge text on the plan card (≤50); shown instead of the Recommended badge */
+  badge?: string | null
   modules?: string[]
 }
 
@@ -47,6 +51,8 @@ export interface PlanForm {
   defaultPlan: boolean
   enabled: boolean
   recommended: boolean
+  free: boolean
+  badge?: string | null
   modules: string[]
 }
 
@@ -279,4 +285,14 @@ export const CurrencyService = {
   create: (b: CurrencyBody) => request<CurrencyDto>("/v1/saas/admin/currencies", { method: "POST", body: b }),
   update: (id: string, b: CurrencyBody) => request<CurrencyDto>(`/v1/saas/admin/currencies/${id}`, { method: "PUT", body: b }),
   remove: (id: string) => request<void>(`/v1/saas/admin/currencies/${id}`, { method: "DELETE" }),
+}
+
+/**
+ * Set a company's plan directly (SaasAdminController PUT /saas/admin/companies/{id}/subscription: upgrade, gift,
+ * correction). No order is recorded (unlike CompanyService.upgradePlan). expiresAt = end of the period (UTC), omitted =
+ * no expiry. IAM_001 / SAAS_001 when the company / plan is missing.
+ */
+export const AdminSubscriptionService = {
+  assign: (companyId: string, body: { planId: number; expiresAt?: string }) =>
+    request<unknown>(`/v1/saas/admin/companies/${companyId}/subscription`, { method: "PUT", body }),
 }

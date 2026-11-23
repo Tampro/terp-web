@@ -39,8 +39,13 @@ export const getPlanSchema = (t: T) =>
     defaultPlan: z.boolean(),
     enabled: z.boolean(),
     recommended: z.boolean(),
+    free: z.boolean(),
+    badge: z.string().trim().max(50, t("common.maxLength", { n: 50 })),
     modules: z.array(z.string()),
   })
+  // SAAS_041: a free plan's monthly price is 0 and its yearly price 0 or not set
+  .refine((v) => !v.free || Number(v.monthlyPrice) === 0, { path: ["monthlyPrice"], message: t("plans.freeMustBeZero") })
+  .refine((v) => !v.free || v.yearlyPrice.trim() === "" || Number(v.yearlyPrice) === 0, { path: ["yearlyPrice"], message: t("plans.freeMustBeZero") })
 export type TPlanSchema = z.infer<ReturnType<typeof getPlanSchema>>
 
 export const getCouponSchema = (t: T) =>

@@ -70,6 +70,8 @@ test("PLAN-002 tạo gói: giới hạn trống gửi null, Chọn tất cả mo
       defaultPlan: false,
       enabled: true,
       recommended: false,
+      free: false,
+      badge: null,
       modules: ["HRM", "ACCOUNTING", "CRM"],
     },
   ])
@@ -117,4 +119,35 @@ test("PLAN-004 ngừng gói gửi enabled=false; gói mặc định không xóa 
   await page.getByRole("alertdialog").getByRole("button", { name: "Xóa" }).click()
   await expect(page.getByText("Đã xóa gói")).toBeVisible()
   expect(del.requests).toHaveLength(1)
+})
+
+test("PLAN-005 gói miễn phí: bật thì giá về 0, giá khác 0 bị chặn (SAAS_041); nhãn thẻ thay cho Phổ biến nhất", async ({ page }) => {
+  await openPlans(page)
+  const create = await mockApi(page, "/v1/saas/admin/plans", { method: "POST", body: ok({ id: "9" }) })
+  await page.getByRole("button", { name: "Tạo gói" }).click()
+  const dialog = page.getByRole("dialog")
+  await dialog.getByLabel("Tên gói").fill("E2E Free Plus")
+  await dialog.getByLabel("Mã", { exact: true }).fill("E2E_FREE_PLUS")
+  await dialog.getByLabel("Giá theo tháng").fill("100000")
+  await dialog.getByRole("switch", { name: "Gói miễn phí" }).click()
+  await expect(dialog.getByLabel("Giá theo tháng")).toHaveValue("0")
+  await dialog.getByLabel("Giá theo tháng").fill("5")
+  await expect(dialog.getByText("Gói miễn phí phải có giá 0")).toBeVisible()
+  await dialog.getByLabel("Giá theo tháng").fill("0")
+  await dialog.getByLabel("Nhãn trên thẻ gói").fill("E2E Best value")
+  await dialog.getByRole("button", { name: "Lưu thay đổi" }).click()
+  await expect.poll(() => create.length).toBe(1)
+  expect(create[0]).toMatchObject({ monthlyPrice: 0, yearlyPrice: null, free: true, badge: "E2E Best value" })
+})
+
+test("PLAN-006 thẻ gói hiện nhãn tùy chỉnh thay cho Phổ biến nhất, và nhãn Miễn phí", async ({ page }) => {
+  await mockLoggedIn(page, { superAdmin: true })
+  await mockApi(page, "/v1/saas/admin/plans", { body: ok([{ ...PLANS[1], badge: "E2E Best value" }, { ...PLANS[0], free: true }]) })
+  await mockApi(page, "/v1/saas/plan-modules", { body: ok(MODULES) })
+  await page.goto("/plans")
+  const pro = page.locator("[data-slot=card]").filter({ hasText: "E2E Pro" })
+  await expect(pro.getByTestId("plan-badge")).toHaveText("E2E Best value")
+  await expect(pro).not.toContainText("Phổ biến nhất")
+  const free = page.locator("[data-slot=card]").filter({ hasText: "E2E Free" })
+  await expect(free.locator("[data-slot=badge]").filter({ hasText: "Miễn phí" })).toBeVisible()
 })

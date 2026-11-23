@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { ArrowUpCircle, History, Info, KeyRound, LayoutGrid, List, LogIn, MoreHorizontal, Pencil, Plus, Power, Search, Trash2 } from "lucide-react"
+import { ArrowUpCircle, Gift, History, Info, KeyRound, LayoutGrid, List, LogIn, MoreHorizontal, Pencil, Plus, Power, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog"
@@ -35,7 +35,7 @@ import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT } from "@/lib/i18n"
 
 import { CompanyPasswordDialog, CreateCompanyDialog, EditCompanyDialog } from "./_components/company-form-dialog"
-import { CompanyInfoDialog, UpgradePlanDialog } from "./_components/company-info-dialog"
+import { AssignPlanDialog, CompanyInfoDialog, UpgradePlanDialog } from "./_components/company-info-dialog"
 
 const PAGE_SIZE = 20
 type StatusTab = "ALL" | ECompanyStatus
@@ -100,6 +100,7 @@ function CompaniesList() {
   const [deleting, setDeleting] = React.useState<CompanyDto>()
   const [viewing, setViewing] = React.useState<CompanyDto>()
   const [upgrading, setUpgrading] = React.useState<CompanyDto>()
+  const [assigning, setAssigning] = React.useState<CompanyDto>()
 
   const actions = (c: CompanyDto) => (
     <DropdownMenu>
@@ -117,6 +118,9 @@ function CompaniesList() {
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setUpgrading(c)}>
           <ArrowUpCircle className="size-4" /> {t("companies.upgradePlan")}
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setAssigning(c)}>
+          <Gift className="size-4" /> {t("companies.assignPlan")}
         </DropdownMenuItem>
         <DropdownMenuItem onClick={() => setPassword(c)}>
           <KeyRound className="size-4" /> {t("companies.changePassword")}
@@ -358,6 +362,7 @@ function CompaniesList() {
       <CompanyPasswordDialog company={password} onOpenChange={(o) => !o && setPassword(undefined)} />
       <CompanyInfoDialog company={viewing} onOpenChange={(o) => !o && setViewing(undefined)} />
       <UpgradePlanDialog company={upgrading} onOpenChange={(o) => !o && setUpgrading(undefined)} onDone={reload} />
+      <AssignPlanDialog company={assigning} onOpenChange={(o) => !o && setAssigning(undefined)} onDone={reload} />
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(undefined)}
