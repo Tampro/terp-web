@@ -42,6 +42,12 @@ const adminKo: Record<keyof typeof adminEn, string> = {
   "dash.recentCompanies": "최근 가입 회사",
   "dash.topPlans": "인기 플랜",
   "dash.subscribers": "{n}개 회사",
+  "dash.totalOrders": "총 주문",
+  "dash.orderPayments": "주문 결제액",
+  "dash.tickets": "헬프데스크 티켓",
+  "dash.ticketsCreated": "새 티켓",
+  "dash.ticketsResolved": "해결됨",
+  "dash.ticketStatus": "상태별 티켓",
 
   "companies.title": "회사",
   "companies.subtitle": "플랫폼의 회사(테넌트)를 관리합니다.",

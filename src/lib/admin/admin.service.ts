@@ -65,6 +65,10 @@ export interface AdminDashboard {
   year?: number
   newCompaniesByMonth?: number[]
   revenueByMonth?: number[]
+  /** Total Orders card (manual 3.1): APPROVED plan orders */
+  totalOrders?: number
+  /** Order Payments card: sum of the final price of APPROVED orders */
+  orderPayments?: number
 }
 
 export type EUserType = "SUPER_ADMIN" | "COMPANY_USER"
