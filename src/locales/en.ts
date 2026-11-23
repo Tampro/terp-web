@@ -1,3 +1,4 @@
+import language from "./language/en"
 import notification from "./notification/en"
 import emailTemplate from "./email-template/en"
 import site from "./site/en"
@@ -139,6 +140,7 @@ const en = {
   ...site,
   ...emailTemplate,
   ...notification,
+  ...language,
 }
 
 export default en
