@@ -34,14 +34,16 @@ export function PlanCard({
   const included = new Set(plan.modules ?? [])
 
   return (
-    <Card className={cn("flex flex-col", plan.recommended && "border-primary ring-primary/30 ring-2", !plan.enabled && "opacity-70")}>
+    <Card className={cn("flex flex-col", (plan.recommended || plan.badge) && "border-primary ring-primary/30 ring-2", !plan.enabled && "opacity-70")}>
       <CardHeader className="gap-2">
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-lg">{plan.name ?? "-"}</CardTitle>
           {actions}
         </div>
         <div className="flex flex-wrap gap-1">
-          {plan.recommended && <Badge>{t("plans.mostPopular")}</Badge>}
+          {/* a custom badge replaces the Recommended one (SaasDtos.PlanForm.badge) */}
+          {plan.badge ? <Badge data-testid="plan-badge">{plan.badge}</Badge> : plan.recommended && <Badge>{t("plans.mostPopular")}</Badge>}
+          {plan.free && <Badge variant="secondary">{t("plans.free")}</Badge>}
           {plan.defaultPlan && <Badge variant="secondary">{t("plans.defaultPlan")}</Badge>}
           {current && <Badge variant="secondary">{t("subscription.currentPlan")}</Badge>}
           {plan.enabled === false && <Badge variant="outline">{t("plans.inactive")}</Badge>}

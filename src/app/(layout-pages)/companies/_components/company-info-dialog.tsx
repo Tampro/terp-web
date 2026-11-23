@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -14,7 +15,7 @@ import { useMoney } from "@/hooks/use-money"
 import { CompanyService, type CompanyDto, type CompanyInfoDto } from "@/lib/admin/admin.service"
 import { formatDate, formatNumber } from "@/lib/format"
 import { useLanguageStore, useT } from "@/lib/i18n"
-import { AdminPlanService, type PlanDto } from "@/lib/saas/saas.service"
+import { AdminPlanService, AdminSubscriptionService, type PlanDto } from "@/lib/saas/saas.service"
 
 /** Company info panel (GET /iam/companies/{id}/info): profile, plan, accounts vs the plan limit, administrators. */
 export function CompanyInfoDialog({ company, onOpenChange }: { company?: CompanyDto; onOpenChange: (open: boolean) => void }) {
@@ -210,6 +211,96 @@ export function UpgradePlanDialog({ company, onOpenChange, onDone }: { company?:
           </Button>
           <Button onClick={submit} disabled={busy || !plan}>
             {t("companies.upgradeConfirm")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+
+/**
+ * Assign a plan directly (PUT /saas/admin/companies/{id}/subscription): gift or correction, no order recorded. Any plan,
+ * enabled or not; an optional end date (end of that day, UTC), none = no expiry.
+ */
+export function AssignPlanDialog({ company, onOpenChange, onDone }: { company?: CompanyDto; onOpenChange: (open: boolean) => void; onDone: () => void }) {
+  const t = useT()
+  const [plans, setPlans] = React.useState<PlanDto[]>()
+  const [planId, setPlanId] = React.useState("")
+  const [until, setUntil] = React.useState("")
+  const [busy, setBusy] = React.useState(false)
+  const open = !!company
+  React.useEffect(() => {
+    if (!open) return
+    let cancelled = false
+    AdminPlanService.list()
+      .then((p) => !cancelled && setPlans(p ?? []))
+      .catch((e: Error) => !cancelled && toast.error(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [open])
+  const today = new Date().toISOString().slice(0, 10)
+  const pastDate = !!until && until < today
+  const plan = plans?.find((p) => p.id === planId)
+  const close = (o: boolean) => {
+    if (!o) {
+      setPlanId("")
+      setUntil("")
+    }
+    onOpenChange(o)
+  }
+  const submit = async () => {
+    if (!company?.id || !plan?.id || pastDate) return
+    setBusy(true)
+    try {
+      await AdminSubscriptionService.assign(company.id, { planId: Number(plan.id), expiresAt: until ? `${until}T23:59:59Z` : undefined })
+      toast.success(t("companies.planAssigned", { name: company.name ?? "", plan: plan.name ?? "" }))
+      close(false)
+      onDone()
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <Dialog open={open} onOpenChange={close}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{t("companies.assignPlan")}</DialogTitle>
+          <DialogDescription>{t("companies.assignHint", { name: company?.name ?? "", plan: company?.planName ?? "-" })}</DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <div className="grid gap-1.5">
+            <Label htmlFor="assign-plan">{t("companies.plan")}</Label>
+            <Select value={planId} onValueChange={setPlanId} disabled={!plans}>
+              <SelectTrigger id="assign-plan" className="w-full" aria-label={t("companies.plan")}>
+                <SelectValue placeholder={t("companies.choosePlan")} />
+              </SelectTrigger>
+              <SelectContent>
+                {plans?.map((p) => (
+                  <SelectItem key={p.id} value={String(p.id)}>
+                    {p.name}
+                    {p.id === company?.planId ? ` (${t("companies.currentPlan")})` : ""}
+                    {p.enabled === false ? ` · ${t("plans.inactive")}` : ""}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="assign-until">{t("companies.assignUntil")}</Label>
+            <Input id="assign-until" type="date" min={today} value={until} onChange={(e) => setUntil(e.target.value)} />
+            <p className={`text-xs ${pastDate ? "text-destructive" : "text-muted-foreground"}`}>{pastDate ? t("companies.assignPast") : t("companies.assignUntilHint")}</p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => close(false)}>
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={submit} disabled={busy || !plan || pastDate}>
+            {t("companies.assignConfirm")}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -35,6 +35,8 @@ function toForm(p?: PlanDto): TPlanSchema {
     defaultPlan: !!p?.defaultPlan,
     enabled: p?.enabled ?? true,
     recommended: !!p?.recommended,
+    free: !!p?.free,
+    badge: p?.badge ?? "",
     modules: p?.modules ?? [],
   }
 }
@@ -83,6 +85,8 @@ export function PlanFormDialog({
       defaultPlan: v.defaultPlan,
       enabled: v.enabled,
       recommended: v.recommended,
+      free: v.free,
+      badge: v.badge || null,
       modules: v.modules,
     }
     try {
@@ -105,18 +109,30 @@ export function PlanFormDialog({
     </div>
   )
 
-  const toggle = (name: "enabled" | "recommended" | "defaultPlan" | "aiIntegration", label: string) => (
+  const toggle = (name: "enabled" | "recommended" | "defaultPlan" | "aiIntegration" | "free", label: string, onOn?: () => void) => (
     <Controller
       control={form.control}
       name={name}
       render={({ field }) => (
         <label className="flex items-center justify-between gap-3 rounded-lg border p-3 text-sm">
           {label}
-          <Switch checked={field.value} onCheckedChange={field.onChange} aria-label={label} />
+          <Switch
+            checked={field.value}
+            onCheckedChange={(on) => {
+              field.onChange(on)
+              if (on) onOn?.()
+            }}
+            aria-label={label}
+          />
         </label>
       )}
     />
   )
+  // a free plan costs nothing: zero the prices when it is switched on (SAAS_041)
+  const makeFree = () => {
+    form.setValue("monthlyPrice", "0", { shouldValidate: true })
+    form.setValue("yearlyPrice", "", { shouldValidate: true })
+  }
 
   return (
     <Dialog open={state !== null} onOpenChange={(o) => !o && onClose()}>
@@ -156,6 +172,13 @@ export function PlanFormDialog({
             {toggle("recommended", t("plans.recommended"))}
             {toggle("defaultPlan", t("plans.defaultPlan"))}
             {toggle("aiIntegration", t("plans.ai"))}
+            {toggle("free", t("plans.freePlan"), makeFree)}
+            <div className="grid gap-1.5">
+              <Label htmlFor="plan-badge">{t("plans.badge")}</Label>
+              <Input id="plan-badge" maxLength={50} placeholder={t("plans.mostPopular")} {...form.register("badge")} />
+              {!errors.badge && <p className="text-muted-foreground text-xs">{t("plans.badgeHint")}</p>}
+              <FieldError message={errors.badge?.message} />
+            </div>
           </div>
 
           <fieldset className="grid gap-2 rounded-lg border p-3">
