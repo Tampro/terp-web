@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { Check, Plus, Trash2, X } from "lucide-react"
+import { Check, FileDown, Plus, Trash2, Upload, X } from "lucide-react"
 import { Controller, useForm, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 import { z } from "zod"
@@ -25,7 +25,10 @@ import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 import { EmployeeLookupService, type EmployeeOption } from "@/lib/meeting/zoom.service"
 import { toNumber } from "@/lib/sales/sales.schema"
 
+import { saveBlob } from "@/lib/pos/pos.service"
+
 import { attempt, Field, today } from "../projects/_components/project-kit"
+import { TimesheetImportDialog } from "./_components/timesheet-import-dialog"
 
 const PAGE_SIZE = 20
 const ALL = "ALL"
@@ -58,6 +61,22 @@ function Timesheets() {
   const month = Number(searchParams.get("month") ?? now.getMonth() + 1) || now.getMonth() + 1
   const employeeId = searchParams.get("employeeId") ?? undefined
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
+  const [importing, setImporting] = React.useState(false)
+  const [exporting, setExporting] = React.useState(false)
+  async function exportMonth() {
+    // the month shown, for the chosen employee (GET /timesheets/export?from&to&employeeId)
+    const mm = String(month).padStart(2, "0")
+    const last = new Date(year, month, 0).getDate()
+    setExporting(true)
+    try {
+      const blob = await TimesheetService.exportXlsx({ from: `${year}-${mm}-01`, to: `${year}-${mm}-${String(last).padStart(2, "0")}`, employeeId })
+      saveBlob(blob, `timesheets-${year}-${mm}.xlsx`)
+    } catch (e) {
+      toast.error((e as Error).message)
+    } finally {
+      setExporting(false)
+    }
+  }
   const [data, setData] = React.useState<TimesheetMonth>()
   const [employees, setEmployees] = React.useState<EmployeeOption[]>([])
   const [reloadKey, setReloadKey] = React.useState(0)
@@ -92,12 +111,21 @@ function Timesheets() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       <PageHeader title={t("menu.timesheets")} description={t("timesheet.subtitle")}>
+        <Button variant="outline" disabled={exporting} onClick={exportMonth}>
+          <FileDown className="size-4" /> {t("timesheet.export")}
+        </Button>
+        {manage && (
+          <Button variant="outline" onClick={() => setImporting(true)}>
+            <Upload className="size-4" /> {t("timesheet.import.open")}
+          </Button>
+        )}
         {manage && (
           <Button disabled={employees.length === 0} onClick={() => setAdding({})}>
             <Plus className="size-4" /> {t("timesheet.add")}
           </Button>
         )}
       </PageHeader>
+      <TimesheetImportDialog open={importing} onClose={() => setImporting(false)} onImported={reload} />
       <Card>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap items-center gap-3">

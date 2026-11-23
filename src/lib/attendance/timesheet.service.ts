@@ -56,6 +56,13 @@ export interface TimeEntryForm {
   description: string
 }
 
+/** POST /timesheets/import: rows with errors are skipped (RowError {row, code, message}) */
+export interface TimesheetImportResult {
+  total?: number
+  created?: number
+  errors?: { row?: number; code?: string | null; message?: string | null }[]
+}
+
 export const TimesheetService = {
   month: (f: { year: number; month: number; employeeId?: string; keyword?: string; status?: string; page?: number; size?: number }) =>
     request<TimesheetMonth>(withQuery("/v1/attendance/timesheets/month", { ...f })),
@@ -66,4 +73,15 @@ export const TimesheetService = {
   remove: (id: string) => request<void>(`/v1/attendance/timesheets/entries/${id}`, { method: "DELETE" }),
   approve: (id: string, comments?: string) => request<TimeEntryDto>(`/v1/attendance/timesheets/entries/${id}/approve`, { method: "PUT", body: { comments } }),
   reject: (id: string, comments?: string) => request<TimeEntryDto>(`/v1/attendance/timesheets/entries/${id}/reject`, { method: "PUT", body: { comments } }),
+  /** .xlsx of the entries in [from, to] (≤ 1 year), ATTENDANCE_VIEW */
+  exportXlsx: (f: { from: string; to: string; employeeId?: string }) =>
+    request<Blob>(withQuery("/v1/attendance/timesheets/export", { ...f }), { as: "blob" }),
+  /** .xlsx template: Employee, Date, Hours, Project, Description (ATTENDANCE_MANAGE) */
+  importTemplate: () => request<Blob>("/v1/attendance/timesheets/import-template", { as: "blob" }),
+  /** CSV or .xlsx, ≤ 2000 rows, ≤ 5 MB; multipart part "file" (ATTENDANCE_MANAGE) */
+  importFile: (file: File) => {
+    const fd = new FormData()
+    fd.append("file", file)
+    return request<TimesheetImportResult>("/v1/attendance/timesheets/import", { method: "POST", body: fd })
+  },
 }

@@ -125,3 +125,67 @@ test("TS-001 bảng chấm giờ: lưới tháng có tổng, bản ghi 15 phút.
   await expect.poll(() => create.length).toBe(1)
   expect(create[0]).toEqual({ employeeId: 301, date: "2026-11-05", hours: 2, minutes: 30, type: "PROJECT", project: "E2E Website", description: "E2E docs" })
 })
+
+/** @param {import('@playwright/test').Page} page @param {string[]} permissions */
+async function timesheetMonth(page, permissions) {
+  await mockLoggedIn(page, { permissions })
+  await mockApi(page, "/v1/employees", { body: pageOf(EMPLOYEES) })
+  await mockApi(page, "/v1/attendance/timesheets/month", {
+    body: ok({ year: 2026, month: 2, rows: [], dayTotals: [], total: 0, counts: { all: 0, pending: 0, approved: 0, rejected: 0 }, page: 0, size: 20, totalElements: 0 }),
+  })
+}
+
+// GET /timesheets/export?from&to&employeeId (.xlsx, ATTENDANCE_VIEW); import is ATTENDANCE_MANAGE only
+test("TS-010 xuất Excel tháng đang xem (from/to/employeeId); chỉ xem thì không có Nhập từ tệp", async ({ page }) => {
+  await timesheetMonth(page, ["ATTENDANCE_VIEW"])
+  /** @type {URL[]} */
+  const exports = []
+  await page.route("**/api/v1/attendance/timesheets/export**", (r) => {
+    exports.push(new URL(r.request().url()))
+    return r.fulfill({ status: 200, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", body: Buffer.from("PK e2e") })
+  })
+  await page.goto("/timesheets?year=2026&month=2&employeeId=301")
+  await expect(page.getByRole("button", { name: "Nhập từ tệp" })).toHaveCount(0)
+  const [dl] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Xuất Excel" }).click()])
+  expect(dl.suggestedFilename()).toBe("timesheets-2026-02.xlsx")
+  expect(exports[0].searchParams.get("from")).toBe("2026-02-01")
+  expect(exports[0].searchParams.get("to")).toBe("2026-02-28")
+  expect(exports[0].searchParams.get("employeeId")).toBe("301")
+})
+
+// POST /timesheets/import (multipart "file") → ImportResult {total, created, errors[{row, code, message}]}
+test("TS-011 nhập từ tệp: tải mẫu, gửi multipart, hiện kết quả và dòng lỗi; tệp > 5 MB bị chặn trước khi gửi", async ({ page }) => {
+  await timesheetMonth(page, ["ATTENDANCE_VIEW", "ATTENDANCE_MANAGE"])
+  await page.route("**/api/v1/attendance/timesheets/import-template", (r) =>
+    r.fulfill({ status: 200, contentType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", body: Buffer.from("PK e2e") }),
+  )
+  const imp = await mockApi(page, "/v1/attendance/timesheets/import", {
+    method: "POST",
+    body: ok({ total: 3, created: 2, errors: [{ row: 4, code: "ATT_015", message: "E2E dòng 4: nhân viên không hợp lệ" }] }),
+  })
+  await page.goto("/timesheets?year=2026&month=2")
+  await page.getByRole("button", { name: "Nhập từ tệp" }).click()
+  const dlg = page.getByRole("dialog")
+  const [tpl] = await Promise.all([page.waitForEvent("download"), dlg.getByRole("button", { name: "Tải tệp mẫu" }).click()])
+  expect(tpl.suggestedFilename()).toBe("timesheet-import-template.xlsx")
+  await expect(dlg.getByRole("button", { name: "Nhập", exact: true })).toBeDisabled()
+  await dlg.getByLabel("Tệp cần nhập").setInputFiles({ name: "big.csv", mimeType: "text/csv", buffer: Buffer.alloc(5 * 1024 * 1024 + 1, 65) })
+  await dlg.getByRole("button", { name: "Nhập", exact: true }).click()
+  await expect(dlg.getByText("Tệp lớn hơn 5 MB.")).toBeVisible()
+  expect(imp.length).toBe(0)
+  await dlg.getByLabel("Tệp cần nhập").setInputFiles({ name: "e2e.csv", mimeType: "text/csv", buffer: Buffer.from("Employee,Date,Hours\nE01,2026-02-02,2\n") })
+  await dlg.getByRole("button", { name: "Nhập", exact: true }).click()
+  await expect(dlg.getByTestId("timesheet-import-result")).toContainText("Đã nhập 2/3 dòng")
+  await expect(dlg.getByRole("row").filter({ hasText: "4" })).toContainText("ATT_015")
+  expect(imp.requests[0].headers["content-type"]).toMatch(/^multipart\/form-data/)
+})
+
+test("ZM-010 cuộc họp: nút Lịch mở lịch chung lọc cuộc họp video", async ({ page }) => {
+  await mockLoggedIn(page, { permissions: ["ZOOM_VIEW"] })
+  await mockApi(page, "/v1/meeting/zoom/status", { body: ok({ configured: true, enabled: true }) })
+  await mockApi(page, "/v1/meeting/zoom/meetings", { method: "GET", body: ok([]) })
+  await mockApi(page, "/v1/reports/calendar", { body: ok({ events: [], counts: {}, unavailable: {} }) })
+  await page.goto("/meetings")
+  await page.locator('main a[href="/calendar?kinds=ZOOM_MEETING"]').click()
+  await expect(page).toHaveURL(/\/calendar\?kinds=ZOOM_MEETING/)
+})
