@@ -37,6 +37,7 @@ import { useAuthStore } from "@/lib/auth/auth.store"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 import { SectionCard, StatCard } from "./dashboard-kit"
+import { AccountDashboard, CrmDashboard, PosDashboard, ProjectDashboard, SupportDashboard, type DashboardModule } from "./module-dashboards"
 import { ClockCard } from "./clock-card"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
@@ -52,16 +53,28 @@ const LEAVE_VARIANT: Record<ELeaveStatus, "secondary" | "outline" | "destructive
  * §5 company dashboards with a backend today: HRM and Recruitment (GET /reports/dashboard?year=, one call; each card
  * carries its own error). Tabs follow the permissions; the server re-checks every card.
  */
-export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitment: boolean }) {
+const MODULE_VIEWS: Record<DashboardModule, React.ComponentType<{ year: number }>> = {
+  project: ProjectDashboard,
+  account: AccountDashboard,
+  pos: PosDashboard,
+  crm: CrmDashboard,
+  support: SupportDashboard,
+}
+
+export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: boolean; recruitment: boolean; modules?: DashboardModule[] }) {
   const t = useT()
   const selfService = !!useAuthStore((s) => s.me?.permissions)?.includes("ATTENDANCE_SELF")
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)
-  const [tab, setTab] = React.useState(hrm ? "hrm" : "recruitment")
+  const tabs = [...(hrm ? ["hrm"] : []), ...(recruitment ? ["recruitment"] : []), ...modules]
+  const [tab, setTab] = React.useState(tabs[0] ?? "hrm")
   const [state, setState] = React.useState<{ data?: TDashboard; error?: string; loading: boolean }>({ loading: true })
   const calendar = useUpcomingCalendar()
 
+  const people = hrm || recruitment
   React.useEffect(() => {
+    // the HRM / Recruitment cards come from /reports/dashboard; module tabs load their own dashboard
+    if (!people) return
     let cancelled = false
     DashboardService.company(year)
       .then((data) => !cancelled && setState({ data, loading: false }))
@@ -69,7 +82,7 @@ export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitme
     return () => {
       cancelled = true
     }
-  }, [year])
+  }, [year, people])
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -96,10 +109,15 @@ export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitme
       )}
 
       <Tabs value={tab} onValueChange={setTab}>
-        {hrm && recruitment && (
-          <TabsList>
-            <TabsTrigger value="hrm">{t("cdash.tabHrm")}</TabsTrigger>
-            <TabsTrigger value="recruitment">{t("cdash.tabRecruitment")}</TabsTrigger>
+        {tabs.length > 1 && (
+          <TabsList className="flex-wrap">
+            {hrm && <TabsTrigger value="hrm">{t("cdash.tabHrm")}</TabsTrigger>}
+            {recruitment && <TabsTrigger value="recruitment">{t("cdash.tabRecruitment")}</TabsTrigger>}
+            {modules.map((m) => (
+              <TabsTrigger key={m} value={m}>
+                {t(`mdash.tab.${m}`)}
+              </TabsTrigger>
+            ))}
           </TabsList>
         )}
         {hrm && (
@@ -112,6 +130,15 @@ export function CompanyDashboard({ hrm, recruitment }: { hrm: boolean; recruitme
             <RecruitmentDashboardView data={state.data} loading={state.loading} />
           </TabsContent>
         )}
+        {modules.map((m) => {
+          const View = MODULE_VIEWS[m]
+          // mounted only while its tab is shown, so each module dashboard is fetched on demand
+          return (
+            <TabsContent key={m} value={m}>
+              {tab === m && <View year={year} />}
+            </TabsContent>
+          )
+        })}
       </Tabs>
     </div>
   )

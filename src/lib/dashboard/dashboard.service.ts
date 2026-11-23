@@ -141,6 +141,97 @@ export interface CalendarView {
   unavailable?: Partial<Record<ECalendarKind, string>>
 }
 
+// Module dashboards (manual 5.1 Project, 5.2 Account, 5.5 POS, 5.6 CRM, 5.7 Support), report-service
+// /v1/reports/{project,account,pos,crm,support}-dashboard?year: { parts: { <name>: Part<…> } }, each part read with the
+// caller's token from the owning service (COMMON_004 = no permission). scope OWN = *_VIEW_OWN sees own records only.
+export interface ModuleDashboard<P> {
+  year?: number | null
+  timezone?: string | null
+  parts?: P
+}
+export interface AccountStats {
+  year?: number
+  totalRevenue?: number
+  totalExpense?: number
+  customerPayments?: number
+  vendorPayments?: number
+  netCashFlow?: number
+  clients?: number
+  vendors?: number
+  monthly?: { month?: number; moneyIn?: number; moneyOut?: number }[]
+  recentRevenues?: { id?: string; number?: string; date?: string; amount?: number; status?: string; description?: string | null }[]
+  recentExpenses?: { id?: string; number?: string; date?: string; amount?: number; status?: string; description?: string | null }[]
+}
+export interface CrmStats {
+  scope?: string
+  deals?: number
+  leads?: number
+  users?: number
+  clients?: number
+  calls?: number
+  upcomingTasks?: { id?: string; leadId?: string; leadName?: string; name?: string; taskDate?: string; taskTime?: string; priority?: string }[]
+  dealsByStage?: { stageId?: string; stageName?: string; pipelineId?: string; count?: number; value?: number }[]
+  recentDeals?: { id?: string; name?: string; price?: number; status?: string; createdDate?: string }[]
+  recentLeads?: { id?: string; name?: string; subject?: string; createdDate?: string }[]
+}
+export interface PosSales {
+  year?: number
+  today?: string
+  todayOrders?: number
+  todayRevenue?: number
+  totalOrders?: number
+  totalRevenue?: number
+  averageTransaction?: number
+  monthly?: { month?: number; orders?: number; total?: number }[]
+  /** 7 x 24: dayOfWeek 1 = Monday … 7 = Sunday, hour 0..23 */
+  heatmap?: { dayOfWeek?: number; hour?: number; orders?: number; total?: number }[]
+  topProducts?: { itemId?: string; itemName?: string; sku?: string; quantity?: number; revenue?: number; orders?: number }[]
+}
+export interface PosStock {
+  products?: number
+  outOfStock?: number
+  byWarehouse?: { warehouseId?: string; warehouseName?: string; outOfStock?: number }[]
+}
+export interface ProjectStats {
+  year?: number
+  scope?: string
+  totalProjects?: number
+  overdueProjects?: number
+  totalTasks?: number
+  completedTasks?: number
+  taskCompletionPercent?: number
+  activeBugs?: number
+  teamSize?: number
+  clients?: number
+  monthly?: { month?: number; created?: number; completed?: number }[]
+  byStatus?: Record<string, number>
+  byPriority?: Record<string, number>
+  teamPerformance?: { userId?: string; assigned?: number; done?: number; progress?: number }[]
+}
+export interface SupportStats {
+  scope?: string
+  year?: number
+  total?: number
+  open?: number
+  closed?: number
+  today?: number
+  averageFirstResponseMinutes?: number | null
+  byStatus?: Record<string, number>
+  byCategory?: { categoryId?: string; name?: string; count?: number }[]
+  kbArticles?: number
+  faqs?: number
+  monthly?: { month?: number; created?: number; closed?: number }[]
+}
+const moduleDashboard = <P,>(name: string) => (year: number) => request<ModuleDashboard<P>>(withQuery(`/v1/reports/${name}-dashboard`, { year }))
+
+export const ModuleDashboardService = {
+  project: moduleDashboard<{ stats?: Part<ProjectStats> }>("project"),
+  account: moduleDashboard<{ stats?: Part<AccountStats> }>("account"),
+  pos: moduleDashboard<{ sales?: Part<PosSales>; stock?: Part<PosStock> }>("pos"),
+  crm: moduleDashboard<{ stats?: Part<CrmStats> }>("crm"),
+  support: moduleDashboard<{ stats?: Part<SupportStats> }>("support"),
+}
+
 export const DashboardService = {
   /** One call, every card read with the caller's token; a card you may not see comes back with error. */
   company: (year: number) => request<CompanyDashboard>(withQuery("/v1/reports/dashboard", { year })),
