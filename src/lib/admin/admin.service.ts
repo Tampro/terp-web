@@ -245,6 +245,16 @@ export interface StripeSettingsForm {
   webhookSecret?: string
 }
 
+/** Platform email notifications (PlatformEmailNotificationSettings; PUT = full replacement, at most 10 addresses). */
+export interface PlatformEmailNotifications {
+  /** welcome email with the temporary password (USER_CREATE) for every company */
+  newUser?: boolean
+  helpdeskTicketCreated?: boolean
+  helpdeskTicketReply?: boolean
+  /** platform team addresses that receive the helpdesk emails */
+  helpdeskNotifyEmails?: string[]
+}
+
 export interface EmailSettingsView {
   host?: string | null
   port?: number | null
@@ -292,6 +302,8 @@ export const PlatformSettingsService = {
   email: () => request<EmailSettingsView>(admin("email")),
   /** password: omitted = keep the stored one; "" = remove it (write-only). */
   saveEmail: (b: Omit<EmailSettingsView, "passwordSet"> & { password?: string }) => put<EmailSettingsView>("email", b),
+  emailNotifications: () => request<PlatformEmailNotifications>(admin("email-notifications")),
+  saveEmailNotifications: (b: Required<PlatformEmailNotifications>) => put<PlatformEmailNotifications>("email-notifications", b),
   testEmail: (to: string) => request<void>(admin("email/test"), { method: "POST", body: { to } }),
   recaptcha: () => request<RecaptchaSettingsView>(admin("recaptcha")),
   /** secret: omitted = keep the stored one (write-only). */

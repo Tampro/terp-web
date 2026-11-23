@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Download, Send } from "lucide-react"
+import { Download, Send, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { FieldError, PasswordInput } from "@/components/auth/password-input"
@@ -21,6 +21,7 @@ import {
   type CurrencyFormat,
   type CurrencySettingsView,
   type EmailSettingsView,
+  type PlatformEmailNotifications,
   type RecaptchaSettingsView,
   type SeoSettings,
   type StorageSettings,
@@ -415,7 +416,17 @@ function SeoPreview({ brand, description, image }: { brand: string; description:
 
 type EmailForm = Omit<EmailSettingsView, "passwordSet"> & { password: string; passwordSet: boolean }
 
+/** Email (SMTP) of the platform, with a test email, and the platform email notifications. */
 export function EmailTab() {
+  return (
+    <div className="grid gap-4">
+      <SmtpCard />
+      <EmailNotificationsCard />
+    </div>
+  )
+}
+
+function SmtpCard() {
   const t = useT()
   const [testTo, setTestTo] = React.useState("")
   const [testing, setTesting] = React.useState(false)
@@ -497,6 +508,88 @@ export function EmailTab() {
               <Send className="size-4" /> {t("settings.sendTest")}
             </Button>
           </div>
+        </>
+      )}
+    </SettingsCard>
+  )
+}
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MAX_NOTIFY = 10
+type NotifyForm = Required<PlatformEmailNotifications>
+
+/**
+ * Platform email notifications (GET/PUT /settings/admin/email-notifications, full replacement): New User (welcome
+ * email for every company), New Helpdesk Ticket / Reply (sent to the platform team addresses, at most 10). Each company
+ * keeps its own switches for its side of the helpdesk emails.
+ */
+function EmailNotificationsCard() {
+  const t = useT()
+  const b = useSettingsBlock<PlatformEmailNotifications, NotifyForm>(S.emailNotifications, S.saveEmailNotifications, (v) => ({
+    newUser: v.newUser !== false,
+    helpdeskTicketCreated: v.helpdeskTicketCreated !== false,
+    helpdeskTicketReply: v.helpdeskTicketReply !== false,
+    helpdeskNotifyEmails: v.helpdeskNotifyEmails ?? [],
+  }))
+  const f = b.form
+  const [draft, setDraft] = React.useState("")
+  const emails = f?.helpdeskNotifyEmails ?? []
+  const candidate = draft.trim()
+  const draftErr = !candidate
+    ? undefined
+    : !EMAIL_RE.test(candidate)
+      ? t("settings.notifyEmailBad")
+      : emails.some((e) => e.toLowerCase() === candidate.toLowerCase())
+        ? t("settings.notifyEmailDup")
+        : emails.length >= MAX_NOTIFY
+          ? t("settings.notifyEmailMax", { n: MAX_NOTIFY })
+          : undefined
+  const add = () => {
+    if (!candidate || draftErr) return
+    b.patch({ helpdeskNotifyEmails: [...emails, candidate] })
+    setDraft("")
+  }
+  const helpdeskOn = !!f && (f.helpdeskTicketCreated || f.helpdeskTicketReply)
+  return (
+    <SettingsCard title={t("settings.notifications")} description={t("settings.notificationsDesc")} {...cardProps(b)}>
+      {f && (
+        <>
+          <SwitchRow label={t("settings.notifyNewUser")} hint={t("settings.notifyNewUserHint")} checked={f.newUser} onChange={(v) => b.patch({ newUser: v })} />
+          <SwitchRow label={t("settings.notifyTicket")} hint={t("settings.notifyTicketHint")} checked={f.helpdeskTicketCreated} onChange={(v) => b.patch({ helpdeskTicketCreated: v })} />
+          <SwitchRow label={t("settings.notifyReply")} hint={t("settings.notifyReplyHint")} checked={f.helpdeskTicketReply} onChange={(v) => b.patch({ helpdeskTicketReply: v })} />
+          <FieldRow id="notifyEmail" label={t("settings.notifyEmails", { n: emails.length, max: MAX_NOTIFY })} hint={t("settings.notifyEmailsHint")}>
+            <div className="flex gap-2">
+              <Input
+                id="notifyEmail"
+                type="email"
+                maxLength={254}
+                placeholder="support@example.com"
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault()
+                    add()
+                  }
+                }}
+              />
+              <Button type="button" variant="outline" onClick={add} disabled={!candidate || !!draftErr}>
+                {t("settings.notifyAdd")}
+              </Button>
+            </div>
+            <FieldError message={draftErr} />
+            {helpdeskOn && emails.length === 0 && <p className="text-muted-foreground text-xs">{t("settings.notifyNoEmails")}</p>}
+            <ul className="flex flex-wrap gap-2" data-testid="notify-emails">
+              {emails.map((e) => (
+                <li key={e} className="bg-muted flex items-center gap-1 rounded-full py-1 pr-1 pl-3 text-sm">
+                  {e}
+                  <Button type="button" variant="ghost" size="icon" className="size-6" aria-label={t("settings.notifyRemove", { email: e })} onClick={() => b.patch({ helpdeskNotifyEmails: emails.filter((x) => x !== e) })}>
+                    <X className="size-3" />
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </FieldRow>
         </>
       )}
     </SettingsCard>

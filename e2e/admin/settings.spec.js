@@ -56,12 +56,12 @@ test("SET-003 Email: mật khẩu để trống → không gửi password (giữ
   await page.goto("/settings?tab=email")
   await expect(page.getByText("Đã lưu một giá trị; để trống để giữ nguyên")).toBeVisible()
 
-  await page.getByRole("button", { name: "Lưu thay đổi" }).click()
+  await page.getByRole("button", { name: "Lưu thay đổi" }).first().click()
   await expect.poll(() => save.length).toBe(1)
   expect(save[0]).toEqual({ host: "smtp.example.com", port: 587, username: "mailer", encryption: "TLS", fromAddress: "noreply@example.com", fromName: "ERP" })
 
   await page.getByLabel("Mật khẩu SMTP").fill("e2e-smtp-secret")
-  await page.getByRole("button", { name: "Lưu thay đổi" }).click()
+  await page.getByRole("button", { name: "Lưu thay đổi" }).first().click()
   await expect.poll(() => save.length).toBe(2)
   expect(save[1]).toMatchObject({ password: "e2e-smtp-secret" })
 })
