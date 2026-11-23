@@ -1,3 +1,4 @@
+import emailTemplate from "./email-template/vi"
 import site from "./site/vi"
 import helpdesk from "./helpdesk/vi"
 import company from "./company/vi"
@@ -137,6 +138,7 @@ const vi: Record<keyof typeof en, string> = {
   ...company,
   ...helpdesk,
   ...site,
+  ...emailTemplate,
 }
 
 export default vi

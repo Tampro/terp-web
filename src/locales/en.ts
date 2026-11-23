@@ -1,3 +1,4 @@
+import emailTemplate from "./email-template/en"
 import site from "./site/en"
 import helpdesk from "./helpdesk/en"
 import company from "./company/en"
@@ -135,6 +136,7 @@ const en = {
   ...company,
   ...helpdesk,
   ...site,
+  ...emailTemplate,
 }
 
 export default en
