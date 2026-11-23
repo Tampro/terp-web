@@ -31,6 +31,8 @@ export const getRegisterSchema = (t: T) =>
       name: required(t, 255),
       email: email(t, 100),
       companyName: z.string().trim().max(255),
+      // RegisterForm.referralCode ≤20; an unknown code is refused by the backend (SAAS_026)
+      referralCode: z.string().trim().max(20, t("common.maxLength", { n: 20 })),
       password: newPassword(t, 8),
       confirmPassword: z.string().min(1, t("common.required")),
     })

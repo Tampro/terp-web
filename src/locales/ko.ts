@@ -1,4 +1,5 @@
 import language from "./language/ko"
+import referral from "./referral/ko"
 import notification from "./notification/ko"
 import emailTemplate from "./email-template/ko"
 import site from "./site/ko"
@@ -74,6 +75,8 @@ const ko: Record<keyof typeof en, string> = {
   "register.subtitle": "회사 계정을 만드세요.",
   "register.companyName": "회사명",
   "register.companyHint": "선택 사항 — 비워 두면 이름이 사용됩니다",
+  "register.referralCode": "추천 코드(선택)",
+  "register.referralHint": "추천해 준 회사의 코드(있는 경우)",
   "register.submit": "회원가입",
   "register.haveAccount": "이미 계정이 있으신가요?",
   "register.login": "로그인",
@@ -143,6 +146,7 @@ const ko: Record<keyof typeof en, string> = {
   ...emailTemplate,
   ...notification,
   ...language,
+  ...referral,
 }
 
 export default ko

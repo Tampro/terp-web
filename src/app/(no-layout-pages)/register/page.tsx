@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import { useSearchParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 
@@ -16,9 +17,21 @@ import { getRegisterSchema, type TRegisterSchema } from "@/lib/auth/auth.schema"
 import { AuthService } from "@/lib/auth/auth.service"
 import { useT } from "@/lib/i18n"
 
-/** Shown only when System Settings → User Registration is on (the backend answers AUTH_015 otherwise). */
 export default function RegisterPage() {
+  return (
+    <React.Suspense>
+      <Register />
+    </React.Suspense>
+  )
+}
+
+/**
+ * Shown only when System Settings → User Registration is on (the backend answers AUTH_015 otherwise). A referral link
+ * /register?ref=CODE fills in the referral code (the referring company earns a commission on this company's orders).
+ */
+function Register() {
   const t = useT()
+  const ref = (useSearchParams().get("ref") ?? "").trim().slice(0, 20).toUpperCase()
   const settings = usePublicSettings()
   const [error, setError] = React.useState<string>()
   const [doneEmail, setDoneEmail] = React.useState<string>()
@@ -26,7 +39,7 @@ export default function RegisterPage() {
   const form = useForm<TRegisterSchema>({
     resolver: zodResolver(getRegisterSchema(t)),
     mode: "all",
-    defaultValues: { name: "", email: "", companyName: "", password: "", confirmPassword: "" },
+    defaultValues: { name: "", email: "", companyName: "", referralCode: ref, password: "", confirmPassword: "" },
   })
   const { errors, isSubmitting } = form.formState
 
@@ -39,6 +52,7 @@ export default function RegisterPage() {
         password: v.password,
         confirmPassword: v.confirmPassword,
         companyName: v.companyName || undefined,
+        referralCode: v.referralCode ? v.referralCode.toUpperCase() : undefined,
       })
       setDoneEmail(v.email)
     } catch (e) {
@@ -82,6 +96,12 @@ export default function RegisterPage() {
             <Label htmlFor="companyName">{t("register.companyName")}</Label>
             <Input id="companyName" className="h-10" autoComplete="organization" {...form.register("companyName")} />
             <p className="text-muted-foreground text-xs">{t("register.companyHint")}</p>
+          </div>
+          <div className="grid gap-1.5">
+            <Label htmlFor="referralCode">{t("register.referralCode")}</Label>
+            <Input id="referralCode" className="h-10 uppercase" maxLength={20} autoComplete="off" placeholder="REF000000" {...form.register("referralCode")} />
+            <p className="text-muted-foreground text-xs">{t("register.referralHint")}</p>
+            <FieldError message={errors.referralCode?.message} />
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="password">{t("common.password")}</Label>

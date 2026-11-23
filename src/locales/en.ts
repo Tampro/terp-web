@@ -1,4 +1,5 @@
 import language from "./language/en"
+import referral from "./referral/en"
 import notification from "./notification/en"
 import emailTemplate from "./email-template/en"
 import site from "./site/en"
@@ -72,6 +73,8 @@ const en = {
   "register.subtitle": "Create your company account.",
   "register.companyName": "Company Name",
   "register.companyHint": "Optional — your name is used when left blank",
+  "register.referralCode": "Referral code (optional)",
+  "register.referralHint": "The code of the company that referred you, if any",
   "register.submit": "Register",
   "register.haveAccount": "Already have an account?",
   "register.login": "Login",
@@ -141,6 +144,7 @@ const en = {
   ...emailTemplate,
   ...notification,
   ...language,
+  ...referral,
 }
 
 export default en

@@ -1,4 +1,5 @@
 import language from "./language/vi"
+import referral from "./referral/vi"
 import notification from "./notification/vi"
 import emailTemplate from "./email-template/vi"
 import site from "./site/vi"
@@ -74,6 +75,8 @@ const vi: Record<keyof typeof en, string> = {
   "register.subtitle": "Tạo tài khoản công ty của bạn.",
   "register.companyName": "Tên công ty",
   "register.companyHint": "Không bắt buộc — để trống sẽ dùng họ tên của bạn",
+  "register.referralCode": "Mã giới thiệu (tùy chọn)",
+  "register.referralHint": "Mã của công ty đã giới thiệu bạn, nếu có",
   "register.submit": "Đăng ký",
   "register.haveAccount": "Đã có tài khoản?",
   "register.login": "Đăng nhập",
@@ -143,6 +146,7 @@ const vi: Record<keyof typeof en, string> = {
   ...emailTemplate,
   ...notification,
   ...language,
+  ...referral,
 }
 
 export default vi
