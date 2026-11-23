@@ -32,6 +32,7 @@ import { formatMoney } from "@/lib/format"
 import { useT, type TranslationKey } from "@/lib/i18n"
 import { saveBlob } from "@/lib/pos/pos.service"
 
+import { CurrenciesCard } from "./currencies-card"
 import { FieldRow, SelectRow, SettingsCard, SwitchRow, useSettingsBlock } from "./settings-kit"
 
 const id = <V,>(v: V) => v
@@ -240,7 +241,19 @@ export function SystemTab() {
 
 type CurrencyForm = Required<CurrencyFormat> & { code?: string; symbol?: string }
 
+/** Currency format (SettingsController /admin/currency) and the currency list with the default (Currency page). */
 export function CurrencyTab() {
+  // a new default currency changes the code / symbol shown by the format card: remount it to load them again
+  const [version, setVersion] = React.useState(0)
+  return (
+    <div className="grid gap-4">
+      <CurrencyFormatCard key={version} />
+      <CurrenciesCard onChanged={() => setVersion((v) => v + 1)} />
+    </div>
+  )
+}
+
+function CurrencyFormatCard() {
   const t = useT()
   const b = useSettingsBlock<CurrencySettingsView, CurrencyForm>(
     S.currency,
