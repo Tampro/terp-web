@@ -1,3 +1,4 @@
+import emailTemplate from "./email-template/ko"
 import site from "./site/ko"
 import helpdesk from "./helpdesk/ko"
 import company from "./company/ko"
@@ -137,6 +138,7 @@ const ko: Record<keyof typeof en, string> = {
   ...company,
   ...helpdesk,
   ...site,
+  ...emailTemplate,
 }
 
 export default ko
