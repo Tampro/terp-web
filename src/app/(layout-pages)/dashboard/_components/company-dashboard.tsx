@@ -39,6 +39,7 @@ import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 import { SectionCard, StatCard } from "./dashboard-kit"
 import { AccountDashboard, CrmDashboard, PosDashboard, ProjectDashboard, SupportDashboard, type DashboardModule } from "./module-dashboards"
 import { ClockCard } from "./clock-card"
+import { HrOverview } from "./hr-overview"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i)
@@ -123,6 +124,12 @@ export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: bool
         {hrm && (
           <TabsContent value="hrm">
             <HrmDashboard data={state.data} loading={state.loading} year={year} calendar={calendar} />
+            {/* /reports/hr-dashboard: fetched only while this tab is shown */}
+            {tab === "hrm" && (
+              <div className="mt-4">
+                <HrOverview />
+              </div>
+            )}
           </TabsContent>
         )}
         {recruitment && (

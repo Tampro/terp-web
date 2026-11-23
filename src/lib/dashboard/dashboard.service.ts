@@ -240,3 +240,44 @@ export const DashboardService = {
   /** Active announcements reaching my branch/department or the whole company; no permission needed. */
   myAnnouncements: () => request<IPage<AnnouncementRow>>(withQuery("/v1/org/announcements/my", { tab: "ALL", size: 5 })),
 }
+
+// HR dashboard (manual §15 / FR-ERP-DSH-001), report-service GET /v1/reports/hr-dashboard: one part per card, each read
+// with the caller's token from the owning service (COMMON_004 = no permission, NOT_AVAILABLE = no source yet).
+// List rows are the source services' rows (promotions / terminations: employee-service lifecycle, events: meeting-service
+// calendar = approved events of the next 30 days, at most 5).
+export interface HrPromotionRow {
+  id?: string
+  employee?: { id?: string; fullName?: string }
+  previousDesignation?: string | null
+  newDesignation?: { name?: string } | null
+  promotionDate?: string
+  status?: string
+}
+export interface HrTerminationRow {
+  id?: string
+  employee?: { id?: string; fullName?: string }
+  terminationType?: { name?: string } | null
+  terminationDate?: string
+  status?: string
+}
+export interface HrEventRow {
+  id?: string
+  title?: string
+  eventType?: { name?: string } | null
+  startDate?: string
+  endDate?: string | null
+  startTime?: string | null
+  location?: string | null
+  color?: string | null
+}
+export interface HrDashboard {
+  today?: string
+  employeesByBranch?: Part<{ branchId?: string; name?: string; employees?: number }[]>
+  recentPromotions?: Part<HrPromotionRow[]>
+  recentTerminations?: Part<HrTerminationRow[]>
+  upcomingEvents?: Part<HrEventRow[]>
+  unavailable?: Record<string, string>
+}
+export const HrDashboardService = {
+  get: () => request<HrDashboard>("/v1/reports/hr-dashboard"),
+}
