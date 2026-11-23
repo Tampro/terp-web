@@ -70,6 +70,7 @@ import {
   SlidersHorizontal,
   Headset,
   Globe,
+  BellRing,
   MailPlus,
   LifeBuoy,
   LibraryBig,
@@ -110,6 +111,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset },
           { title: t("menu.website"), url: "/website", icon: Globe },
           { title: t("menu.emailTemplates"), url: "/email-templates", icon: MailPlus },
+          { title: t("menu.notificationLog"), url: "/notifications", icon: BellRing },
           { title: t("menu.media"), url: "/media", icon: Images },
           { title: t("menu.settings"), url: "/settings", icon: Settings },
         ]
@@ -237,6 +239,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               ]
             : []),
           ...(can("HELPDESK_VIEW") ? [{ title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset }] : []),
+          ...(can("NOTIFICATION_LOG_VIEW") ? [{ title: t("menu.notificationLog"), url: "/notifications", icon: BellRing }] : []),
           ...(can("SAAS_SUBSCRIPTION_VIEW") ? [{ title: t("menu.plans"), url: "/plans", icon: Layers }] : []),
           ...(can("SAAS_ORDER_VIEW")
             ? [
