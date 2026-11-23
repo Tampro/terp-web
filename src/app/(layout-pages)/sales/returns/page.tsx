@@ -32,6 +32,7 @@ import { SalesReturnService, type EReturnStatus, type ReturnDetail, type ReturnR
 import { SalesDetailDialog, type DetailView } from "../_components/document-detail-dialog"
 import { ReturnFormDialog } from "../_components/return-form-dialog"
 import { SalesStatusBadge } from "../_components/sales-status-badge"
+import { JournalBadge, RetryJournalItem } from "../_components/journal-status"
 import { useSalesLookups } from "../_components/use-sales-lookups"
 
 const PAGE_SIZE = 20
@@ -102,6 +103,16 @@ function SalesReturns() {
     if (!row.id) return
     try {
       setEditing({ detail: await SalesReturnService.get(row.id) })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  async function retryJournal(id: string) {
+    try {
+      await SalesReturnService.retryJournal(id)
+      toast.success(t("journal.retried"))
+      reload()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : String(e))
     }
@@ -262,7 +273,10 @@ function SalesReturns() {
                       <TableCell className="text-right font-medium">{money(r.total)}</TableCell>
                       <TableCell className="text-right">{formatNumber(r.items, language)}</TableCell>
                       <TableCell>
-                        <SalesStatusBadge status={r.status} />
+                        <div className="flex flex-wrap items-center gap-1">
+                          <SalesStatusBadge status={r.status} />
+                          <JournalBadge status={r.journalStatus} errorCode={r.journalErrorCode} />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -275,6 +289,7 @@ function SalesReturns() {
                             <DropdownMenuItem onClick={() => r.id && update({ view: r.id })}>
                               <Eye className="size-4" /> {t("sales.action.view")}
                             </DropdownMenuItem>
+                            {canPost && r.journalStatus === "FAILED" && <RetryJournalItem onRetry={() => r.id && retryJournal(r.id)} />}
                             {manage && r.status === "DRAFT" && (
                               <DropdownMenuItem onClick={() => openEdit(r)}>
                                 <Pencil className="size-4" /> {t("common.edit")}

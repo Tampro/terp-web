@@ -25,6 +25,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useMoney } from "@/hooks/use-money"
 import { useUrlQuery } from "@/hooks/use-url-query"
 import type { IPage } from "@/lib/api"
+import type { EJournalStatus } from "@/lib/sales/sales.service"
 import { useAuthStore } from "@/lib/auth/auth.store"
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
@@ -38,6 +39,7 @@ import {
 
 import { SalesDetailDialog, type DetailView } from "../../sales/_components/document-detail-dialog"
 import { SalesStatusBadge } from "../../sales/_components/sales-status-badge"
+import { JournalBadge, JournalFilter, RetryJournalItem } from "../../sales/_components/journal-status"
 import { PurchaseInvoiceFormDialog } from "../_components/invoice-form-dialog"
 import { usePurchaseLookups } from "../_components/use-purchase-lookups"
 
@@ -76,6 +78,7 @@ function PurchaseInvoices() {
   const warehouseId = searchParams.get("warehouseId") ?? undefined
   const from = searchParams.get("from") ?? undefined
   const to = searchParams.get("to") ?? undefined
+  const journalStatus = (searchParams.get("journalStatus") ?? "") as EJournalStatus | ""
   const viewParam = searchParams.get("view") ?? undefined
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
 
@@ -90,7 +93,7 @@ function PurchaseInvoices() {
 
   React.useEffect(() => {
     let cancelled = false
-    const filter = { keyword: keyword || undefined, vendorId, warehouseId, from, to }
+    const filter = { keyword: keyword || undefined, vendorId, warehouseId, from, to, journalStatus: journalStatus || undefined }
     Promise.all([
       PurchaseInvoiceService.list({
         ...filter,
@@ -111,12 +114,22 @@ function PurchaseInvoices() {
     return () => {
       cancelled = true
     }
-  }, [keyword, tab, vendorId, warehouseId, from, to, page, reloadKey])
+  }, [keyword, tab, vendorId, warehouseId, from, to, journalStatus, page, reloadKey])
 
   async function openEdit(row: PurchaseInvoiceRow) {
     if (!row.id) return
     try {
       setEditing({ detail: await PurchaseInvoiceService.get(row.id) })
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e))
+    }
+  }
+
+  async function retryJournal(id: string) {
+    try {
+      await PurchaseInvoiceService.retryJournal(id)
+      toast.success(t("journal.retried"))
+      reload()
     } catch (e) {
       toast.error(e instanceof Error ? e.message : String(e))
     }
@@ -222,6 +235,7 @@ function PurchaseInvoices() {
             </Select>
             <Input type="date" className="w-40" aria-label={t("sales.from")} value={from ?? ""} onChange={(e) => update({ from: e.target.value, page: 0 })} />
             <Input type="date" className="w-40" aria-label={t("sales.to")} value={to ?? ""} onChange={(e) => update({ to: e.target.value, page: 0 })} />
+            <JournalFilter value={journalStatus} onChange={(v) => update({ journalStatus: v, page: 0 })} />
             <form
               className="flex min-w-60 flex-1 items-center gap-2"
               onSubmit={(e) => {
@@ -295,7 +309,10 @@ function PurchaseInvoices() {
                       <TableCell className="text-right font-medium">{money(row.total)}</TableCell>
                       <TableCell className="text-right">{money(row.balance)}</TableCell>
                       <TableCell>
-                        <SalesStatusBadge status={row.status} />
+                        <div className="flex flex-wrap items-center gap-1">
+                          <SalesStatusBadge status={row.status} />
+                          <JournalBadge status={row.journalStatus} errorCode={row.journalErrorCode} />
+                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -308,6 +325,7 @@ function PurchaseInvoices() {
                             <DropdownMenuItem onClick={() => row.id && update({ view: row.id })}>
                               <Eye className="size-4" /> {t("sales.action.view")}
                             </DropdownMenuItem>
+                            {canPost && row.journalStatus === "FAILED" && <RetryJournalItem onRetry={() => row.id && retryJournal(row.id)} />}
                             {manage && row.status === "DRAFT" && (
                               <DropdownMenuItem onClick={() => openEdit(row)}>
                                 <Pencil className="size-4" /> {t("common.edit")}

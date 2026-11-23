@@ -117,6 +117,8 @@ export interface ReturnRow {
   total?: number
   items?: number
   status?: EReturnStatus
+  journalStatus?: EJournalStatus | null
+  journalErrorCode?: string | null
 }
 
 export interface ReturnDetail {
@@ -212,6 +214,9 @@ export function salesDocuments(kind: EDocumentKind) {
   }
 }
 
+/** commerce EJournalStatus: accounting journal written asynchronously after posting / completion */
+export type EJournalStatus = "PENDING" | "POSTED" | "FAILED"
+
 export const SalesReturnService = {
   list: (f: DocumentFilter & { invoiceId?: string }) =>
     request<IPage<ReturnRow>>(withQuery("/v1/sales/returns", { ...f })),
@@ -222,6 +227,8 @@ export const SalesReturnService = {
   remove: (id: string) => request<void>(`/v1/sales/returns/${id}`, { method: "DELETE" }),
   approve: (id: string) => request<ReturnDetail>(`/v1/sales/returns/${id}/approve`, { method: "POST" }),
   complete: (id: string) => request<ReturnDetail>(`/v1/sales/returns/${id}/complete`, { method: "POST" }),
+  /** FAILED journal only (SAL_025), SALES_POST: FAILED → PENDING, no stock move */
+  retryJournal: (id: string) => request<ReturnDetail>(`/v1/sales/returns/${id}/journal/retry`, { method: "POST" }),
 }
 
 export const SalesLookupService = {
