@@ -4,6 +4,7 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/providers/theme-provider"
 import UIThemeProvider from "@/providers/ui-theme-provider"
 // src/app/layout.tsx
+import { RemoteLabels } from "@/components/remote-labels"
 import { TooltipProvider } from "@/components/ui/tooltip"
 
 const themeScript = `
@@ -63,6 +64,7 @@ export default function RootLayout({
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider defaultTheme="dark">
           <UIThemeProvider>
+            <RemoteLabels />
             <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
           </UIThemeProvider>
         </ThemeProvider>

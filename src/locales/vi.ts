@@ -1,3 +1,4 @@
+import language from "./language/vi"
 import notification from "./notification/vi"
 import emailTemplate from "./email-template/vi"
 import site from "./site/vi"
@@ -141,6 +142,7 @@ const vi: Record<keyof typeof en, string> = {
   ...site,
   ...emailTemplate,
   ...notification,
+  ...language,
 }
 
 export default vi

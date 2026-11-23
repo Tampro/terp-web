@@ -8,11 +8,13 @@ import { RequireSuperAdmin } from "@/components/common/require-super-admin"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useT, type TranslationKey } from "@/lib/i18n"
 
+import { LanguagesTab } from "./_components/languages-tab"
 import { BrandTab, CookieTab, CurrencyTab, EmailTab, PaymentTab, RecaptchaTab, SeoTab, StorageTab, SystemTab } from "./_components/settings-tabs"
 
 const TABS: { value: string; label: TranslationKey; Comp: React.ComponentType }[] = [
   { value: "brand", label: "settings.brand", Comp: BrandTab },
   { value: "system", label: "settings.systemTab", Comp: SystemTab },
+  { value: "languages", label: "lang.tab", Comp: LanguagesTab },
   { value: "currency", label: "settings.currency", Comp: CurrencyTab },
   { value: "email", label: "settings.email", Comp: EmailTab },
   { value: "seo", label: "settings.seo", Comp: SeoTab },
