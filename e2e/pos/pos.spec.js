@@ -222,3 +222,21 @@ test("POS-040 chỉ POS_VIEW: menu chỉ có Đơn POS", async ({ page }) => {
   await expect(nav.getByRole("link", { name: "Mã vạch" })).toHaveCount(0)
   await expect(nav.getByRole("link", { name: "Báo cáo POS" })).toHaveCount(0)
 })
+
+// GET /pos/orders?customerId= (PosController); customers from /accounting/customers; walk-in orders have no customer
+test("POS-011 đơn POS: lọc theo khách hàng gửi customerId và giữ trên URL", async ({ page }) => {
+  await mockLoggedIn(page, { permissions: ALL })
+  await mockApi(page, "/v1/inventory/warehouses", { body: pageOf(WAREHOUSES) })
+  await mockApi(page, "/v1/accounting/customers", { body: pageOf([{ id: "501", customerCode: "E2E-C1", companyName: "E2E Công ty Ánh Dương" }]) })
+  const list = await mockApi(page, "/v1/pos/orders", { method: "GET", body: pageOf([ORDER.order]) })
+  await page.goto("/pos/orders")
+  await expect(page.getByRole("row").filter({ hasText: "POS-2026-11-001" })).toBeVisible()
+  expect(list.requests[0].url.searchParams.get("customerId")).toBeNull()
+  await page.getByRole("combobox", { name: "Khách hàng" }).click()
+  await page.getByRole("option", { name: "E2E Công ty Ánh Dương" }).click()
+  await expect(page).toHaveURL(/customerId=501/)
+  await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("customerId")).toBe("501")
+  await page.getByRole("combobox", { name: "Khách hàng" }).click()
+  await page.getByRole("option", { name: "Tất cả khách hàng" }).click()
+  await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("customerId")).toBeNull()
+})
