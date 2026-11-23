@@ -52,14 +52,27 @@ export interface MediaFileDto {
 
 const pub = { auth: false } as const
 
+/**
+ * The browser's IANA time zone, sent as X-Client-Timezone on the calls that record a login (AuthController login and
+ * initial-password → LoginHistoryService.timezone: ignored when blank, longer than 64 or not a ZoneId).
+ */
+function clientTimezone(): Record<string, string> {
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone
+    return tz ? { "X-Client-Timezone": tz } : {}
+  } catch {
+    return {}
+  }
+}
+
 export const AuthService = {
   async login(body: { username: string; password: string }, remember: boolean) {
-    const t = await request<TokenPair>("/v1/auth/login", { method: "POST", body, ...pub })
+    const t = await request<TokenPair>("/v1/auth/login", { method: "POST", body, ...pub, headers: clientTimezone() })
     tokenStore.set(t, remember)
     return t
   },
   async initialPassword(body: { username: string; currentPassword: string; newPassword: string }, remember: boolean) {
-    const t = await request<TokenPair>("/v1/auth/initial-password", { method: "POST", body, ...pub })
+    const t = await request<TokenPair>("/v1/auth/initial-password", { method: "POST", body, ...pub, headers: clientTimezone() })
     tokenStore.set(t, remember)
     return t
   },

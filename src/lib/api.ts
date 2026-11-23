@@ -137,15 +137,16 @@ function refreshTokens(): Promise<boolean> {
 }
 
 /** as: "blob" returns the raw body (PDF downloads); errors still come as the JSON envelope → ApiError. */
-type RequestOptions = { method?: string; body?: unknown; auth?: boolean; as?: "json" | "blob" }
+type RequestOptions = { method?: string; body?: unknown; auth?: boolean; as?: "json" | "blob"; headers?: Record<string, string> }
 
 /** Calls the backend, unwraps the envelope, refreshes once on 401, throws ApiError otherwise. */
 export async function request<T>(
   path: string,
-  { method = "GET", body, auth = true, as = "json" }: RequestOptions = {},
+  { method = "GET", body, auth = true, as = "json", headers: extra }: RequestOptions = {},
   retry = true
 ): Promise<T> {
   const headers: Record<string, string> = {
+    ...extra,
     "Accept-Language": useLanguageStore.getState().language,
   }
   const isForm = typeof FormData !== "undefined" && body instanceof FormData
@@ -163,7 +164,7 @@ export async function request<T>(
   })
 
   if (res.status === 401 && token && retry) {
-    if (await refreshTokens()) return request<T>(path, { method, body, auth, as }, false)
+    if (await refreshTokens()) return request<T>(path, { method, body, auth, as, headers: extra }, false)
     tokenStore.clear()
     if (!window.location.pathname.startsWith("/login")) {
       window.location.href = `/login?redirect=${encodeURIComponent(window.location.pathname)}`

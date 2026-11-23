@@ -26,6 +26,9 @@ test("AUTH-001 đăng nhập đúng → vào /dashboard, gửi đúng payload, l
   await expect(page).toHaveURL(/\/dashboard$/)
   await expect(page.getByRole("heading", { name: "Xin chào, E2E Tester" })).toBeVisible()
   expect(calls).toEqual([{ username: EMAIL, password: PASSWORD }]) // email trimmed, password untouched
+  // the browser's IANA time zone goes with the login (LoginHistoryService records it; the test browser runs in UTC or the host zone)
+  const tz = await page.evaluate(() => Intl.DateTimeFormat().resolvedOptions().timeZone)
+  expect(calls.requests[0].headers["x-client-timezone"]).toBe(tz)
   // "Ghi nhớ đăng nhập" is on by default → tokens persist in localStorage
   expect(await page.evaluate(() => localStorage.getItem("erp.refreshToken"))).toBe(FAKE_TOKENS.refreshToken)
 })
