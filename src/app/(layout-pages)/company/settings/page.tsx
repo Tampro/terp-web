@@ -13,6 +13,7 @@ import { Switch } from "@/components/ui/switch"
 import { CompanySettingsService as S, type EIntegration, type Integrations, type NotificationGroup } from "@/lib/company/company.service"
 import type { Row } from "@/lib/hrm/hrm.service"
 import { useT, type TranslationKey } from "@/lib/i18n"
+import { ensureDelivered } from "@/lib/webhook-test"
 
 import { attempt, CrudSection, errorMessage, fieldErrors, FormFields, initialValues, TabbedPage, toBody, useAuthStore, type CrudConfig, type FieldDef, type Values } from "../../hrm/_components/crud-kit"
 import { ChatTemplatesTab } from "./_components/chat-templates-tab"
@@ -373,7 +374,7 @@ function Webhooks({ manage }: { manage: boolean }) {
     toValues: (r: Row) => ({ ...r, secret: "" }),
     save: (id, b) => S.saveWebhook(id, { method: "POST", ...b }),
     remove: S.removeWebhook,
-    actions: [{ key: "test", label: "co.int.test", icon: <Zap className="size-4" />, when: () => true, confirmDesc: "co.webhook.testDesc", run: (r) => S.testWebhook(r.id ?? "") }],
+    actions: [{ key: "test", label: "co.int.test", icon: <Zap className="size-4" />, when: () => true, confirmDesc: "co.webhook.testDesc", run: (r) => S.testWebhook(r.id ?? "").then((x) => ensureDelivered(x, (f) => t("pwh.testFailed", { reason: f.statusCode ? `HTTP ${f.statusCode}` : f.failure || "-" }))) }],
     manage,
   }
   return <CrudSection config={cfg} />

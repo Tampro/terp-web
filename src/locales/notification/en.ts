@@ -4,6 +4,7 @@ const notificationEn = {
   "ntf.subtitle": "Emails, Slack, Telegram, webhook and SMS messages sent for business events",
   "ntf.company": "Company",
   "ntf.chooseCompany": "Choose a company",
+  "ntf.platform": "Platform (platform webhooks)",
   "ntf.pickCompany": "Choose a company to see its notification log.",
   "ntf.channel": "Channel",
   "ntf.allChannels": "All channels",

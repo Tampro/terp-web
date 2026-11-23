@@ -5,6 +5,7 @@ const notificationKo: Record<keyof typeof notificationEn, string> = {
   "ntf.subtitle": "업무 이벤트로 발송된 이메일, Slack, Telegram, 웹훅, SMS",
   "ntf.company": "회사",
   "ntf.chooseCompany": "회사 선택",
+  "ntf.platform": "플랫폼 (플랫폼 웹훅)",
   "ntf.pickCompany": "알림 기록을 보려면 회사를 선택하세요.",
   "ntf.channel": "채널",
   "ntf.allChannels": "모든 채널",

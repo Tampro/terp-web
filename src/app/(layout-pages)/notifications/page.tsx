@@ -49,7 +49,7 @@ function NotificationLog() {
   const filters = (
     <>
       {admin && (
-        <PlainSelect label={t("ntf.company")} className="w-52" value={companyId} onChange={(v) => update({ companyId: v, page: 0 })} none={t("ntf.chooseCompany")} options={companies.map((c) => ({ value: String(c.id), label: String(c.name) }))} />
+        <PlainSelect label={t("ntf.company")} className="w-52" value={companyId} onChange={(v) => update({ companyId: v, page: 0 })} none={t("ntf.chooseCompany")} options={[{ value: "platform", label: t("ntf.platform") }, ...companies.map((c) => ({ value: String(c.id), label: String(c.name) }))]} />
       )}
       <PlainSelect label={t("ntf.status")} className="w-40" value={status} onChange={(v) => update({ status: v, page: 0 })} none={t("ntf.allStatuses")} options={DELIVERY_STATUSES.map((x) => ({ value: x, label: t(`ntf.st.${x}` as TranslationKey) }))} />
       <PlainSelect label={t("ntf.channel")} className="w-36" value={channel} onChange={(v) => update({ channel: v, page: 0 })} none={t("ntf.allChannels")} options={DELIVERY_CHANNELS.map((c) => ({ value: c, label: t(`ntf.ch.${c}` as TranslationKey) }))} />
@@ -62,7 +62,9 @@ function NotificationLog() {
     id: `ntf-${companyId}-${status}-${channel}-${eventType}-${from}-${to}`,
     load: NotificationLogService.list as CrudConfig["load"],
     query: {
-      companyId: companyId || undefined,
+      // "platform" = the platform events' deliveries (platform webhooks), super admin only
+      companyId: companyId && companyId !== "platform" ? companyId : undefined,
+      platform: companyId === "platform" ? true : undefined,
       status: status || undefined,
       channel: channel || undefined,
       eventType: eventType || undefined,

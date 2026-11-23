@@ -233,6 +233,6 @@ export const CompanySettingsService = {
   webhooks: (q: { page?: number; size?: number; eventCode?: string }) => request<IPage<WebhookDto>>(withQuery("/v1/settings/webhooks", q)),
   saveWebhook: (id: string | undefined, body: unknown) => (id ? put<WebhookDto>(`/v1/settings/webhooks/${id}`, body) : post<WebhookDto>("/v1/settings/webhooks", body)),
   removeWebhook: (id: string) => del(`/v1/settings/webhooks/${id}`),
-  testWebhook: (id: string) => post<unknown>(`/v1/settings/webhooks/${id}/test`),
+  testWebhook: (id: string) => post<import("@/lib/webhook-test").WebhookTestResult>(`/v1/settings/webhooks/${id}/test`),
   events: () => request<{ module?: string; events?: { code?: string; name?: string }[] }[]>("/v1/settings/webhooks/events"),
 }

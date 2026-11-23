@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useT, type TranslationKey } from "@/lib/i18n"
 
 import { LanguagesTab } from "./_components/languages-tab"
+import { WebhooksTab } from "./_components/webhooks-tab"
 import { BrandTab, CookieTab, CurrencyTab, EmailTab, PaymentTab, RecaptchaTab, SeoTab, StorageTab, SystemTab } from "./_components/settings-tabs"
 
 const TABS: { value: string; label: TranslationKey; Comp: React.ComponentType }[] = [
@@ -22,6 +23,7 @@ const TABS: { value: string; label: TranslationKey; Comp: React.ComponentType }[
   { value: "recaptcha", label: "settings.recaptcha", Comp: RecaptchaTab },
   { value: "storage", label: "settings.storage", Comp: StorageTab },
   { value: "payment", label: "settings.payment", Comp: PaymentTab },
+  { value: "webhooks", label: "pwh.tab", Comp: WebhooksTab },
 ]
 
 export default function SettingsPage() {
