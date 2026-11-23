@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Switch } from "@/components/ui/switch"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Textarea } from "@/components/ui/textarea"
 import { useMoney } from "@/hooks/use-money"
@@ -38,6 +39,7 @@ function toForm(detail?: DocumentDetail): TDocumentSchema {
     dueDate: d?.dueDate?.slice(0, 10) ?? plusDays(30),
     paymentTerms: detail?.paymentTerms ?? "",
     notes: detail?.notes ?? "",
+    syncToGoogleCalendar: !!detail?.syncToGoogleCalendar,
     lines: detail?.lines?.length
       ? detail.lines.map((l) => ({
           itemId: l.itemId ?? "",
@@ -98,7 +100,7 @@ export function DocumentFormDialog({
     const body: DocumentForm = {
       customerId: Number(v.customerId),
       warehouseId: service_ || !v.warehouseId ? null : Number(v.warehouseId),
-      ...(kind === "INVOICE" ? { invoiceType: v.invoiceType } : {}),
+      ...(kind === "INVOICE" ? { invoiceType: v.invoiceType, syncToGoogleCalendar: v.syncToGoogleCalendar } : {}),
       docDate: v.docDate,
       dueDate: v.dueDate,
       paymentTerms: v.paymentTerms.trim() || null,
@@ -217,6 +219,21 @@ export function DocumentFormDialog({
                 <Input id="doc-paymentTerms" {...form.register("paymentTerms")} />
                 <FieldError message={errors.paymentTerms?.message} />
               </div>
+              {kind === "INVOICE" && (
+                <div className="grid gap-1 sm:col-span-2">
+                  <Controller
+                    control={form.control}
+                    name="syncToGoogleCalendar"
+                    render={({ field }) => (
+                      <label className="flex items-center gap-2 text-sm">
+                        <Switch id="doc-syncToGoogleCalendar" checked={field.value} onCheckedChange={field.onChange} aria-label={t("sales.syncGoogle")} />
+                        {t("sales.syncGoogle")}
+                      </label>
+                    )}
+                  />
+                  <p className="text-muted-foreground text-xs">{t("sales.syncGoogleHint")}</p>
+                </div>
+              )}
             </div>
 
             <div className="grid gap-2">
@@ -344,7 +361,7 @@ export function DocumentFormDialog({
                 </div>
                 <div className="flex justify-between">
                   <dt>{t("sales.discount")}</dt>
-                  <dd>-{money(totals.discount)}</dd>
+                  <dd>{totals.discount ? `-${money(totals.discount)}` : money(0)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>{t("sales.tax")}</dt>

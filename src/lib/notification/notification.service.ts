@@ -8,7 +8,7 @@ import { request, withQuery, type IPage } from "@/lib/api"
 // POST /{id}/retry (NOTIFICATION_LOG_MANAGE, FAILED only: NTF_003) answers the outcome. Every field optional.
 
 export const DELIVERY_STATUSES = ["PENDING", "SENT", "FAILED", "SKIPPED"] as const
-export const DELIVERY_CHANNELS = ["EMAIL", "SLACK", "TELEGRAM", "WEBHOOK", "SMS"] as const
+export const DELIVERY_CHANNELS = ["EMAIL", "SLACK", "TELEGRAM", "WEBHOOK", "SMS", "GOOGLE_CALENDAR"] as const
 
 export interface Delivery {
   id?: string

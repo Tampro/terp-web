@@ -32,6 +32,7 @@ export function getDocumentSchema(t: T) {
       dueDate: z.string().min(1, t("sales.v.date")),
       paymentTerms: z.string().max(100, t("sales.v.max", { n: 100 })),
       notes: z.string().max(5000, t("sales.v.max", { n: 5000 })),
+      syncToGoogleCalendar: z.boolean(),
       lines: z.array(line).min(1, t("sales.v.lines")).max(200, t("sales.v.linesMax")),
     })
     .refine((v) => !v.docDate || !v.dueDate || v.dueDate >= v.docDate, {

@@ -192,6 +192,7 @@ export function DocumentList({ kind }: { kind: EDocumentKind }) {
           value: lookups.warehouses.find((w) => w.id === doc.warehouseId)?.name ?? (doc.warehouseId ? `#${doc.warehouseId}` : "-"),
         },
         { label: t("sales.paymentTerms"), value: d.paymentTerms || "-" },
+        ...(kind === "INVOICE" ? [{ label: t("sales.syncGoogle"), value: t(d.syncToGoogleCalendar ? "sales.yes" : "sales.no") }] : []),
       ],
       lines: d.lines,
       totals: [

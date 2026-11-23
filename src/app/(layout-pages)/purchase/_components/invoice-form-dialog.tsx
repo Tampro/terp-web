@@ -307,7 +307,7 @@ export function PurchaseInvoiceFormDialog({
                 </div>
                 <div className="flex justify-between">
                   <dt>{t("sales.discount")}</dt>
-                  <dd>-{money(totals.discount)}</dd>
+                  <dd>{totals.discount ? `-${money(totals.discount)}` : money(0)}</dd>
                 </div>
                 <div className="flex justify-between">
                   <dt>{t("sales.tax")}</dt>

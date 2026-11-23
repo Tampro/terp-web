@@ -182,6 +182,7 @@ const hrmKo: Record<keyof typeof hrmEn, string> = {
   "hr.f.comment": "의견",
   "hr.f.maxDaysPerYear": "연간 최대 일수",
   "hr.f.paid": "유급",
+  "hr.f.calendarSync": "Google 캘린더 동기화",
   "hr.f.daysPerApplication": "신청당 일수",
   "hr.f.minDays": "신청당 최소 일수",
   "hr.f.maxDays": "신청당 최대 일수",

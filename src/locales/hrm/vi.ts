@@ -182,6 +182,7 @@ const hrmVi: Record<keyof typeof hrmEn, string> = {
   "hr.f.comment": "Nhận xét",
   "hr.f.maxDaysPerYear": "Tối đa ngày / năm",
   "hr.f.paid": "Có lương",
+  "hr.f.calendarSync": "Đồng bộ Google Calendar",
   "hr.f.daysPerApplication": "Số ngày mỗi đơn",
   "hr.f.minDays": "Tối thiểu ngày mỗi đơn",
   "hr.f.maxDays": "Tối đa ngày mỗi đơn",

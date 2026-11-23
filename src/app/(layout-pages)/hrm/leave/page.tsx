@@ -159,6 +159,7 @@ function Leave() {
       { label: "hr.f.period", render: (r) => `${formatDate(String(r.startDate ?? ""), language)} → ${formatDate(String(r.endDate ?? ""), language)}` },
       { label: "hr.f.days", path: "days" },
       { label: "hr.f.paid", path: "isPaid", kind: "bool" },
+      { label: "hr.f.calendarSync", path: "calendarSync", kind: "bool" },
       { label: "hr.f.branches", render: (r) => (r.allBranches ? t("hr.allBranches") : ((r.branches as { name?: string }[] | undefined) ?? []).map((b) => b.name).join(", ") || "-") },
     ],
     rowName: (r) => String(r.name ?? ""),
@@ -169,6 +170,9 @@ function Leave() {
       { name: "startDate", label: "hr.f.startDate", type: "date", required: true },
       { name: "endDate", label: "hr.f.endDate", type: "date", required: true, check: endAfterStart },
       { name: "isPaid", label: "hr.f.paid", type: "switch" },
+      // employee-service HolidayForm.calendarSync: created / updated / deleted on the company's Google Calendar
+      // (notification-service, Google Calendar integration on); omitted = false
+      { name: "calendarSync", label: "hr.f.calendarSync", type: "switch" },
       { name: "branchIds", label: "hr.f.branchesHint", type: "multi", options: branches },
       { name: "description", label: "hr.f.description", type: "textarea", max: 500 },
     ],
