@@ -155,7 +155,7 @@ function PurchaseInvoices() {
       lines: d.lines,
       totals: [
         { label: t("sales.subtotal"), value: money(doc.subtotal) },
-        { label: t("sales.discount"), value: `-${money(doc.discount)}` },
+        { label: t("sales.discount"), value: doc.discount ? `-${money(doc.discount)}` : money(0) },
         { label: t("sales.tax"), value: money(doc.tax) },
         { label: t("sales.total"), value: money(doc.total), strong: true },
         { label: t("sales.balance"), value: money(doc.balance) },
@@ -345,7 +345,7 @@ function PurchaseInvoices() {
       </Card>
 
       <PurchaseInvoiceFormDialog state={editing} lookups={lookups} onClose={() => setEditing(null)} onSaved={reload} />
-      <SalesDetailDialog id={viewParam} load={loadDetail} view={detailView} onClose={() => update({ view: "" })} />
+      <SalesDetailDialog docLabel={t("menu.purchase.invoices")} id={viewParam} load={loadDetail} view={detailView} onClose={() => update({ view: "" })} />
       <ConfirmDialog
         open={!!pending}
         onOpenChange={(o) => !o && setPending(undefined)}

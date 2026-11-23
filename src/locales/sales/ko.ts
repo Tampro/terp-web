@@ -89,6 +89,8 @@ const salesKo: Record<keyof typeof salesEn, string> = {
   "sales.reason": "사유",
   "sales.choose": "선택…",
   "sales.detail": "상세",
+  "sales.print": "인쇄 / PDF",
+  "sales.printBlocked": "브라우저가 인쇄 창을 차단했습니다. 이 사이트의 팝업을 허용한 후 다시 시도하세요.",
   "sales.formDesc": "임시 문서만 수정할 수 있습니다. 단가를 비우면 품목 판매가가 적용됩니다.",
   "sales.previewHint": "미리보기이며 서버가 할인·세금·합계를 다시 계산합니다.",
   "sales.actionsFor": "{number} 작업",

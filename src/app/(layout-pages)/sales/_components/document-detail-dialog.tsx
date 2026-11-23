@@ -1,16 +1,21 @@
 "use client"
 
 import * as React from "react"
+import { Printer } from "lucide-react"
+import { toast } from "sonner"
 
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { useMoney } from "@/hooks/use-money"
 import { formatNumber } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
+import { printDocument } from "@/lib/print-document"
 import type { LineDto } from "@/lib/sales/sales.service"
+import { useBrandStore } from "@/store/brand.store"
 
 import { SalesStatusBadge } from "./sales-status-badge"
 
@@ -26,13 +31,20 @@ export interface DetailView {
   notes?: string | null
 }
 
-/** Read-only view of a document or a return; `load` is called whenever `id` changes. */
+/**
+ * Read-only view of a document or a return; `load` is called whenever `id` changes. "Print / PDF" opens a printable
+ * copy of what is shown (the browser's "Save as PDF" gives the file): the backend has no staff PDF endpoint for sales
+ * or purchase documents (only the client portal /portal/client/{kind}/{id}/pdf, checked 2026-11-23).
+ */
 export function SalesDetailDialog<D>({
   id,
   load,
   view,
   onClose,
+  docLabel,
 }: {
+  /** kind of document for the printed heading and PDF file name, e.g. "Hóa đơn bán hàng" */
+  docLabel?: string
   id?: string
   load: (id: string) => Promise<D>
   view: (d: D) => DetailView
@@ -54,13 +66,51 @@ export function SalesDetailDialog<D>({
     }
   }, [id, load])
 
+  const brand = useBrandStore((s) => s.brand)
   const ready = state.id === id
   const v = ready && state.data ? view(state.data) : undefined
+  const lineText = (l: LineDto) => [l.itemName ?? "-", [l.sku, l.itemType ? t(`sales.itemType.${l.itemType}` as TranslationKey) : ""].filter(Boolean).join(" · ")].filter(Boolean).join("\n")
+
+  function print() {
+    if (!v) return
+    const opened = printDocument(
+      {
+        title: [docLabel, v.title].filter(Boolean).join(" "),
+        issuer: [brand?.titleText, brand?.companyAddress, brand?.companyMobile].filter(Boolean).join(" · ") || undefined,
+        status: v.status ? t(`sales.status.${v.status}` as TranslationKey) : undefined,
+        fields: v.fields,
+        columns: [
+          { label: t("sales.item") },
+          { label: t("sales.quantity"), align: "right" },
+          { label: t("sales.unitPrice"), align: "right" },
+          { label: t("sales.discount"), align: "right" },
+          { label: t("sales.tax"), align: "right" },
+          { label: t("sales.lineTotal"), align: "right" },
+          ...(v.withReason ? [{ label: t("sales.reason") }] : []),
+        ],
+        rows: (v.lines ?? []).map((l) => [
+          lineText(l),
+          formatNumber(l.quantity, language, 2),
+          money(l.unitPrice),
+          l.discountPct ? `${formatNumber(l.discountPct, language, 2)}%` : "-",
+          l.taxRate ? `${formatNumber(l.taxRate, language, 2)}% · ${money(l.taxAmount)}` : t("sales.noTax"),
+          money(l.lineTotal),
+          ...(v.withReason ? [l.reason ?? "-"] : []),
+        ]),
+        totals: v.totals,
+        notesLabel: t("sales.notes"),
+        notes: v.notes,
+        footer: brand?.footerText ?? undefined,
+      },
+      language,
+    )
+    if (!opened) toast.error(t("sales.printBlocked"))
+  }
 
   return (
     <Dialog open={!!id} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-4xl">
-        <DialogHeader>
+        <DialogHeader className="pr-8">
           <DialogTitle className="flex flex-wrap items-center gap-2">
             {v?.title ?? t("sales.detail")}
             {v && <SalesStatusBadge status={v.status} />}
@@ -69,6 +119,11 @@ export function SalesDetailDialog<D>({
                 {f}
               </Badge>
             ))}
+            {v && (
+              <Button variant="outline" size="sm" className="ml-auto" onClick={print} data-testid="sales-print">
+                <Printer className="size-4" /> {t("sales.print")}
+              </Button>
+            )}
           </DialogTitle>
           <DialogDescription className="sr-only">{t("sales.detail")}</DialogDescription>
         </DialogHeader>
