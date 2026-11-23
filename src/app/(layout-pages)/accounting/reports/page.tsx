@@ -66,8 +66,18 @@ function Reports() {
   const s = state?.key === key ? state : undefined
   async function pdf() {
     try {
-      const blob = tab === "invoice-aging" ? await AccountingReportService.invoiceAgingPdf(asOf) : await AccountingReportService.billAgingPdf(asOf)
-      saveBlob(blob, `${tab}-${asOf}.pdf`)
+      // every report has a PDF (manual 12.6): aging as of a date, tax for the period, balances with the zero toggle
+      const blob =
+        tab === "invoice-aging"
+          ? await AccountingReportService.invoiceAgingPdf(asOf)
+          : tab === "bill-aging"
+            ? await AccountingReportService.billAgingPdf(asOf)
+            : tab === "tax"
+              ? await AccountingReportService.taxSummaryPdf(from, to)
+              : tab === "customer-balances"
+                ? await AccountingReportService.customerBalancesPdf(showZero)
+                : await AccountingReportService.vendorBalancesPdf(showZero)
+      saveBlob(blob, `${tab}-${tab === "tax" ? `${from}_${to}` : aging ? asOf : today()}.pdf`)
     } catch (e) {
       toast.error(errorMessage(e))
     }
@@ -80,9 +90,6 @@ function Reports() {
         {aging && (
           <>
             <Input type="date" className="w-40" aria-label={t("acc.reports.asOf")} value={asOf} onChange={(e) => update({ asOf: e.target.value })} />
-            <Button variant="outline" disabled={!s?.aging} onClick={pdf}>
-              <Download className="size-4" /> {t("pos.downloadPdf")}
-            </Button>
           </>
         )}
         {tab === "tax" && (
@@ -96,6 +103,9 @@ function Reports() {
             <Switch checked={showZero} onCheckedChange={(c) => update({ zero: c ? "1" : "" })} aria-label={t("acc.reports.showZero")} /> {t("acc.reports.showZero")}
           </label>
         )}
+        <Button variant="outline" disabled={!s || !!s.error} onClick={pdf}>
+          <Download className="size-4" /> {t("pos.downloadPdf")}
+        </Button>
       </PageHeader>
       <Tabs value={tab} onValueChange={(v) => update({ tab: v === "invoice-aging" ? "" : v })}>
         <div className="overflow-x-auto">

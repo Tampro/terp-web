@@ -34,9 +34,10 @@ import { useT, type TranslationKey } from "@/lib/i18n"
 import { toNumber } from "@/lib/sales/sales.schema"
 
 import { accountLabel, attempt, Field, PlainSelect } from "../_components/acc-kit"
+import { AccountMapping } from "./_components/account-mapping"
 
-type Tab = "accounts" | "types" | "revenue" | "expense"
-const TABS: Tab[] = ["accounts", "types", "revenue", "expense"]
+type Tab = "accounts" | "types" | "revenue" | "expense" | "mapping"
+const TABS: Tab[] = ["accounts", "types", "revenue", "expense", "mapping"]
 const CATEGORIES: ECategory[] = ["ASSETS", "LIABILITIES", "EQUITY", "REVENUE", "EXPENSES"]
 const NORMALS: ENormal[] = ["DEBIT", "CREDIT"]
 const PAGE_SIZE = 50
@@ -89,6 +90,8 @@ function Coa() {
   }, [reloadKey])
 
   React.useEffect(() => {
+    // the mapping tab loads its own data (AccountMapping)
+    if (tab === "mapping") return
     let cancelled = false
     const load: Promise<IPage<Row>> =
       tab === "accounts"
@@ -117,7 +120,7 @@ function Coa() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       <PageHeader title={t("menu.acc.coa")} description={t("acc.coa.subtitle")}>
-        {manage && (
+        {manage && tab !== "mapping" && (
           <Button onClick={() => setEditing({})}>
             <Plus className="size-4" /> {t(`acc.coa.create.${tab}` as TranslationKey)}
           </Button>
@@ -132,6 +135,9 @@ function Coa() {
           ))}
         </TabsList>
       </Tabs>
+      {tab === "mapping" ? (
+        <AccountMapping manage={manage} />
+      ) : (
       <Card>
         <CardContent className="flex flex-col gap-4">
           {tab === "accounts" && (
@@ -241,6 +247,7 @@ function Coa() {
           <Pager page={data?.page?.page ?? page} size={data?.page?.size ?? PAGE_SIZE} total={data?.page?.totalElements ?? 0} totalPages={data?.page?.totalPages ?? 0} onPage={(p) => update({ page: p })} />
         </CardContent>
       </Card>
+      )}
 
       <Dialog open={!!editing} onOpenChange={(o) => !o && setEditing(null)}>
         <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-lg">
