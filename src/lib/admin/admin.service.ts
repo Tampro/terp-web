@@ -82,6 +82,15 @@ export interface LoginDto {
   ipAddress?: string
   browser?: string
   os?: string
+  deviceType?: "DESKTOP" | "MOBILE" | "TABLET" | "BOT" | "UNKNOWN"
+  language?: string | null
+  /** X-Client-Timezone sent at login; null when the client did not send it */
+  timezone?: string | null
+  roleAtLogin?: string | null
+  /** null until the backend has a GeoIP source */
+  city?: string | null
+  country?: string | null
+  isp?: string | null
   userAgent?: string
   loginAt?: string
 }
@@ -139,8 +148,11 @@ export const CompanyService = {
 }
 
 export const LoginHistoryService = {
-  list: (p: { companyId?: string; userType?: EUserType; keyword?: string; page?: number; size?: number }) =>
+  /** keyword = username or IP (contains); ipAddress = exact IP; companyId / userType for the super admin */
+  list: (p: { companyId?: string; userType?: EUserType; keyword?: string; ipAddress?: string; page?: number; size?: number }) =>
     request<IPage<LoginDto>>(withQuery("/v1/iam/login-history", { ...p })),
+  /** IP, browser, OS and the full User-Agent */
+  get: (id: string) => request<LoginDto>(`/v1/iam/login-history/${id}`),
   remove: (id: string) => request<void>(`/v1/iam/login-history/${id}`, { method: "DELETE" }),
 }
 
