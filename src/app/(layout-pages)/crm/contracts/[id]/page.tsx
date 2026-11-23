@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
-import { ArrowLeft, Paperclip, Pencil, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, FileDown, Paperclip, Pencil, Plus, Printer, Trash2 } from "lucide-react"
 import { Controller, useForm } from "react-hook-form"
 import { toast } from "sonner"
 
@@ -27,6 +27,7 @@ import {
   ContractService,
   ContractTypeService,
   type ContractDetail,
+  type SignatureDto,
   type ContractTypeDto,
   type EContractStatus,
   type RenewalDto,
@@ -34,17 +35,20 @@ import {
 } from "@/lib/crm/crm.service"
 import { formatDate } from "@/lib/format"
 import { MediaService } from "@/lib/media/media.service"
+import { openBlob, saveBlob } from "@/lib/pos/pos.service"
 import { SalesLookupService, type CustomerOption } from "@/lib/sales/sales.service"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 import { CONTRACT_STATUSES, contractBody, ContractFormDialog } from "../../_components/contract-form-dialog"
 import { attempt, ContractStatusBadge, errorMessage, FormField, NameDialog } from "../../_components/crm-kit"
+import { ContractSignatures } from "./_components/contract-signatures"
 
 type Removing = { title: string; run: () => Promise<unknown> }
 
 /**
- * §7.5 contract detail: info panel, agreement text, renewals, notes, comments, attachments.
- * TODO(assumption): signatures and the printable preview have no backend API yet; not shown.
+ * §7.5 contract detail: info panel, agreement text, signatures (company side signs here, the client on the portal),
+ * contract PDF (download / print), renewals, notes, comments, attachments. Once a side has signed, the contract can't
+ * be edited (CTR_018): the edit button and the agreement editor are hidden.
  */
 export default function ContractDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -66,12 +70,24 @@ export default function ContractDetailPage() {
   const [removing, setRemoving] = React.useState<Removing>()
   const [uploading, setUploading] = React.useState(false)
   const fileInput = React.useRef<HTMLInputElement>(null)
+  const [signatures, setSignatures] = React.useState<{ key?: number; list?: SignatureDto[] }>({})
+  const [pdfBusy, setPdfBusy] = React.useState(false)
 
   React.useEffect(() => {
     let cancelled = false
     ContractService.get(id)
       .then((d) => !cancelled && (setDetail(d), setError(undefined)))
       .catch((e: Error) => !cancelled && setError(e.message))
+    return () => {
+      cancelled = true
+    }
+  }, [id, reloadKey])
+
+  React.useEffect(() => {
+    let cancelled = false
+    ContractService.signatures(id)
+      .then((list) => !cancelled && setSignatures({ key: reloadKey, list }))
+      .catch(() => !cancelled && setSignatures({ key: reloadKey, list: [] }))
     return () => {
       cancelled = true
     }
@@ -111,6 +127,21 @@ export default function ContractDetailPage() {
     )
 
   const c = detail.contract ?? {}
+  const signed = !!signatures.list?.length
+  // CTR_018: no edit once a side has signed (status changes stay allowed)
+  const editable = manage && !signed
+  async function pdf(print: boolean) {
+    setPdfBusy(true)
+    try {
+      const blob = await ContractService.pdf(id)
+      if (print) openBlob(blob)
+      else saveBlob(blob, `${c.number ?? `contract-${id}`}.pdf`)
+    } catch (e) {
+      toast.error(errorMessage(e))
+    } finally {
+      setPdfBusy(false)
+    }
+  }
   const text = agreement ?? detail.description ?? ""
 
   async function upload(files: FileList | null) {
@@ -159,6 +190,12 @@ export default function ContractDetailPage() {
         </Button>
       </div>
       <PageHeader title={c.subject ?? "-"} description={c.number}>
+        <Button variant="outline" disabled={pdfBusy} onClick={() => pdf(false)}>
+          <FileDown className="size-4" /> {t("crm.sign.pdf")}
+        </Button>
+        <Button variant="outline" disabled={pdfBusy} onClick={() => pdf(true)}>
+          <Printer className="size-4" /> {t("crm.sign.print")}
+        </Button>
         {manage && (
           <>
             <Select value={c.status ?? ""} onValueChange={(s) => run(() => ContractService.status(id, s as EContractStatus), "common.saved")}>
@@ -173,21 +210,28 @@ export default function ContractDetailPage() {
                 ))}
               </SelectContent>
             </Select>
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="size-4" /> {t("common.edit")}
-            </Button>
+            {editable && (
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <Pencil className="size-4" /> {t("common.edit")}
+              </Button>
+            )}
           </>
         )}
       </PageHeader>
 
       <div className="grid gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
+          {signed && (
+            <Alert data-testid="contract-locked">
+              <AlertDescription>{t("crm.sign.locked")}</AlertDescription>
+            </Alert>
+          )}
           <Card>
             <CardHeader>
               <CardTitle className="text-base">{t("crm.contract.agreement")}</CardTitle>
             </CardHeader>
             <CardContent className="flex flex-col gap-2">
-              {manage ? (
+              {editable ? (
                 <>
                   <Textarea rows={10} value={text} onChange={(e) => setAgreement(e.target.value)} aria-label={t("crm.contract.agreement")} />
                   <div>
@@ -208,6 +252,14 @@ export default function ContractDetailPage() {
               )}
             </CardContent>
           </Card>
+
+          <ContractSignatures
+            contractId={id}
+            signatures={signatures.list}
+            loading={signatures.key !== reloadKey}
+            canSign={manage && c.status === "PENDING"}
+            onSigned={reload}
+          />
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
