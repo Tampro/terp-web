@@ -19,7 +19,7 @@ export function StatCard({
 }: {
   label: string
   value: string
-  hint?: string
+  hint?: React.ReactNode
   icon: React.ElementType
   loading?: boolean
   testId?: string
@@ -36,7 +36,7 @@ export function StatCard({
               {value}
             </p>
           )}
-          {hint && !loading && <p className="text-muted-foreground text-xs">{hint}</p>}
+          {hint && !loading && <div className="text-muted-foreground text-xs">{hint}</div>}
         </div>
         <span className="bg-primary/10 text-primary flex size-10 shrink-0 items-center justify-center rounded-lg">
           <Icon className="size-5" />
