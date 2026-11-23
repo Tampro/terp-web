@@ -202,3 +202,61 @@ test("CMP-010 công ty bị chặn: không có 'Đăng nhập với tư cách c�
   await rowActions(page, "Công ty TNHH Thương mại Dịch vụ O'Brien Việt Nam").click()
   await expect(page.getByRole("menuitem", { name: "Đăng nhập với tư cách công ty" })).toBeDisabled()
 })
+
+test("CMP-011 thông tin công ty: gói, số tài khoản so với giới hạn, quản trị viên", async ({ page }) => {
+  await openCompanies(page)
+  const info = await mockApi(page, "/v1/iam/companies/101/info", {
+    body: ok({ company: COMPANIES[0], userCount: 10, maxUsers: 10, administrators: [{ id: "5", username: "e2e.admin", email: "admin@acme.example", fullName: "E2E Admin", status: "ACTIVE" }] }),
+  })
+  await rowActions(page, "E2E Acme Co., Ltd").click()
+  await page.getByRole("menuitem", { name: "Thông tin công ty" }).click()
+  const dlg = page.getByRole("dialog")
+  await expect(dlg.getByTestId("company-accounts")).toContainText("10 / 10")
+  await expect(dlg.getByTestId("company-accounts")).toContainText("Đã đạt giới hạn")
+  await expect(dlg.getByText("E2E Admin")).toBeVisible()
+  await expect(dlg.getByText("E2E Pro")).toBeVisible()
+  expect(info.length).toBeGreaterThan(0)
+})
+
+test("CMP-012 nâng cấp gói: gói không có giá năm thì khóa Theo năm; gửi planId + billingCycle", async ({ page }) => {
+  await openCompanies(page)
+  await mockApi(page, "/v1/saas/admin/plans", {
+    body: ok([
+      { id: "1", name: "E2E Starter", monthlyPrice: 100000, yearlyPrice: null, enabled: true },
+      { id: "2", name: "E2E Pro", monthlyPrice: 200000, yearlyPrice: 2000000, enabled: true },
+      { id: "3", name: "E2E Old", monthlyPrice: 1, enabled: false },
+    ]),
+  })
+  const put = await mockApi(page, "/v1/iam/companies/101/plan", { method: "PUT", body: ok({ id: "9", status: "APPROVED" }) })
+  await rowActions(page, "E2E Acme Co., Ltd").click()
+  await page.getByRole("menuitem", { name: "Nâng cấp gói" }).click()
+  const dlg = page.getByRole("dialog")
+  await dlg.getByRole("combobox", { name: "Gói" }).click()
+  await expect(page.getByRole("option", { name: "E2E Old" })).toHaveCount(0)
+  await page.getByRole("option", { name: "E2E Starter" }).click()
+  await expect(dlg.getByText("Gói này không có giá theo năm.")).toBeVisible()
+  await dlg.getByRole("combobox", { name: "Chu kỳ thanh toán" }).click()
+  await expect(page.getByRole("option", { name: "Theo năm" })).toBeDisabled()
+  await page.keyboard.press("Escape")
+  await dlg.getByRole("combobox", { name: "Gói" }).click()
+  await page.getByRole("option", { name: "E2E Pro" }).click()
+  await dlg.getByRole("combobox", { name: "Chu kỳ thanh toán" }).click()
+  await page.getByRole("option", { name: "Theo năm" }).click()
+  await expect(dlg.getByTestId("upgrade-summary")).toContainText("2.000.000")
+  await dlg.getByRole("button", { name: "Nâng cấp" }).click()
+  await expect.poll(() => put.length).toBe(1)
+  expect(put[0]).toEqual({ planId: 2, billingCycle: "YEARLY" })
+})
+
+test("CMP-013 xem dạng lưới: giữ trong URL, mỗi công ty là một thẻ có thao tác", async ({ page }) => {
+  await openCompanies(page)
+  await page.getByRole("button", { name: "Xem dạng lưới" }).click()
+  await expect(page).toHaveURL(/view=grid/)
+  const grid = page.getByTestId("companies-grid")
+  await expect(grid.getByText("E2E Acme Co., Ltd")).toBeVisible()
+  await expect(grid.getByRole("button", { name: /^Thao tác cho/ })).toHaveCount(3)
+  await page.reload()
+  await expect(page.getByTestId("companies-grid")).toBeVisible()
+  await page.getByRole("button", { name: "Xem dạng danh sách" }).click()
+  await expect(page.getByRole("table")).toBeVisible()
+})
