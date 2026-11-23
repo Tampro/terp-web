@@ -15,6 +15,7 @@ import type { Row } from "@/lib/hrm/hrm.service"
 import { useT, type TranslationKey } from "@/lib/i18n"
 
 import { attempt, CrudSection, errorMessage, fieldErrors, FormFields, initialValues, TabbedPage, toBody, useAuthStore, type CrudConfig, type FieldDef, type Values } from "../../hrm/_components/crud-kit"
+import { ChatTemplatesTab } from "./_components/chat-templates-tab"
 import { EmailTemplatesTab } from "./_components/email-templates-tab"
 
 const url = /^https?:\/\/\S+$/
@@ -93,6 +94,7 @@ function CompanySettings() {
         { key: "email", label: "co.tab.email", content: () => <EmailBlock manage={manage} /> },
         { key: "notifications", label: "co.tab.notifications", content: () => <Notifications manage={notif} /> },
         { key: "email-templates", label: "etpl.tab", content: () => <EmailTemplatesTab manage={notif} />, visible: notif },
+        { key: "notification-templates", label: "ctpl.tab", content: () => <ChatTemplatesTab manage={manage} />, visible: manage },
         { key: "integrations", label: "co.tab.integrations", content: () => <IntegrationsTab manage={manage} /> },
         { key: "webhooks", label: "co.tab.webhooks", content: () => <Webhooks manage={manage} /> },
       ]}
