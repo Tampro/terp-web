@@ -381,7 +381,18 @@ export const noteService = (kind: ENoteKind) => ({
   approve: (id: string) => post<NoteDto>(`${A}/${kind}/${id}/approve`),
 })
 
+/** GET /accounting/account-mapping: one row per system key (ESystemAccount) with the account playing it */
+export interface MappingDto {
+  key?: string
+  accountId?: string | null
+  accountCode?: string | null
+  accountName?: string | null
+}
+
 export const CoaService = {
+  mapping: () => request<MappingDto[]>(`${A}/account-mapping`),
+  /** full replacement: every key → an active account id (ACC_017 otherwise); applies to later postings */
+  saveMapping: (accounts: Record<string, number>) => put<MappingDto[]>(`${A}/account-mapping`, { accounts }),
   accounts: (f: { accountTypeId?: string; normalBalance?: string; active?: boolean; keyword?: string } & Paging) =>
     request<IPage<AccountDto>>(withQuery(`${A}/chart-of-accounts`, { ...f })),
   saveAccount: (id: string | undefined, body: AccountForm) =>
@@ -400,6 +411,9 @@ export const AccountingReportService = {
   billAging: (asOf: string) => request<AgingReport>(withQuery(`${A}/reports/bill-aging`, { asOf })),
   billAgingPdf: (asOf: string) => request<Blob>(withQuery(`${A}/reports/bill-aging/pdf`, { asOf }), { as: "blob" }),
   taxSummary: (from: string, to: string) => request<TaxSummary>(withQuery(`${A}/reports/tax-summary`, { from, to })),
+  taxSummaryPdf: (from: string, to: string) => request<Blob>(withQuery(`${A}/reports/tax-summary/pdf`, { from, to }), { as: "blob" }),
   customerBalances: (showZero: boolean) => request<BalanceRow[]>(withQuery(`${A}/reports/customer-balances`, { showZero })),
   vendorBalances: (showZero: boolean) => request<BalanceRow[]>(withQuery(`${A}/reports/vendor-balances`, { showZero })),
+  customerBalancesPdf: (showZero: boolean) => request<Blob>(withQuery(`${A}/reports/customer-balances/pdf`, { showZero }), { as: "blob" }),
+  vendorBalancesPdf: (showZero: boolean) => request<Blob>(withQuery(`${A}/reports/vendor-balances/pdf`, { showZero }), { as: "blob" }),
 }

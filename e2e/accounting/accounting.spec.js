@@ -8,7 +8,7 @@
  * (aging, tax summary, balances), CoaControllers (AccountForm code [A-Za-z0-9_.-]{1,20}).
  */
 import { expect, test } from "../fixtures/index.js"
-import { mockApi, mockLoggedIn, ok, pageOf } from "../utils/mock-api.js"
+import { fail, mockApi, mockLoggedIn, ok, pageOf } from "../utils/mock-api.js"
 
 const ALL = [
   "CUSTOMER_VIEW", "CUSTOMER_MANAGE", "VENDOR_VIEW", "VENDOR_MANAGE", "REVENUE_VIEW", "REVENUE_MANAGE", "REVENUE_APPROVE",
@@ -255,4 +255,60 @@ test("ACC-060 hệ thống tài khoản: mã tài khoản theo mẫu, gửi Acco
   expect(save[0]).toEqual({ accountTypeId: 33, code: "1121", name: "E2E VCB", normalBalance: "DEBIT", openingBalance: 0, active: true, parentId: 209, description: null })
   await page.getByRole("tab", { name: "Danh mục thu" }).click()
   await expect(page.getByRole("row").filter({ hasText: "E2E Service" })).toContainText("711 · Thu nhập khác")
+})
+
+// §12.6 "PDF export" for every report: /reports/{tax-summary,customer-balances,vendor-balances}/pdf
+test("ACC-051 báo cáo: PDF thuế (from/to) và số dư (showZero) gọi đúng endpoint", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/accounting/reports/tax-summary", { body: ok({ outputTax: 0, netTaxLiability: 0 }) })
+  await mockApi(page, "/v1/accounting/reports/vendor-balances", { body: ok([]) })
+  /** @type {URL[]} */
+  const pdfs = []
+  await page.route("**/api/v1/accounting/reports/*/pdf**", (r) => {
+    pdfs.push(new URL(r.request().url()))
+    return r.fulfill({ status: 200, contentType: "application/pdf", body: Buffer.from("%PDF-1.4 e2e") })
+  })
+  await page.goto("/accounting/reports?tab=tax&from=2026-01-01&to=2026-06-30")
+  const [tax] = await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Tải PDF" }).click()])
+  expect(tax.suggestedFilename()).toBe("tax-2026-01-01_2026-06-30.pdf")
+  expect(pdfs[0].pathname).toBe("/api/v1/accounting/reports/tax-summary/pdf")
+  expect(pdfs[0].searchParams.get("from")).toBe("2026-01-01")
+  expect(pdfs[0].searchParams.get("to")).toBe("2026-06-30")
+  await page.goto("/accounting/reports?tab=vendor-balances&zero=1")
+  await Promise.all([page.waitForEvent("download"), page.getByRole("button", { name: "Tải PDF" }).click()])
+  expect(pdfs[1].pathname).toBe("/api/v1/accounting/reports/vendor-balances/pdf")
+  expect(pdfs[1].searchParams.get("showZero")).toBe("true")
+})
+
+// LedgerController GET / PUT /accounting/account-mapping: full replacement {accounts: {KEY: accountId}}
+const MAPPING = [
+  { key: "BANK", accountId: "210", accountCode: "112", accountName: "Tiền gửi ngân hàng" },
+  { key: "CASH", accountId: "209", accountCode: "111", accountName: "Tiền mặt" },
+]
+test("ACC-061 ánh xạ hệ thống: đổi tài khoản của một khóa, PUT gửi đủ mọi khóa; lỗi ACC_017 hiện message", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/accounting/account-mapping", { method: "GET", body: ok(MAPPING) })
+  const put = await mockApi(page, "/v1/accounting/account-mapping", { method: "PUT", status: 400, body: fail("ACC_017", "E2E Khóa CASH chưa ánh xạ tài khoản hợp lệ.") })
+  await page.goto("/accounting/chart-of-accounts?tab=mapping")
+  const table = page.getByTestId("account-mapping")
+  await expect(table.locator("tbody tr")).toHaveCount(2)
+  await expect(page.getByRole("button", { name: "Tạo tài khoản" })).toHaveCount(0)
+  const save = page.getByRole("button", { name: "Lưu" })
+  await expect(save).toBeDisabled()
+  await page.getByRole("combobox", { name: "Tiền mặt" }).click()
+  await page.getByRole("option", { name: "711 · Thu nhập khác" }).click()
+  await save.click()
+  await expect.poll(() => put.length).toBe(1)
+  expect(put[0]).toEqual({ accounts: { BANK: 210, CASH: 260 } })
+  await expect(page.getByText("E2E Khóa CASH chưa ánh xạ tài khoản hợp lệ.")).toBeVisible()
+})
+
+test("ACC-062 ánh xạ hệ thống chỉ xem (COA_VIEW): hiện mã · tên, không có ô chọn và nút Lưu", async ({ page }) => {
+  await mockLoggedIn(page, { permissions: ["COA_VIEW"] })
+  await mockApi(page, "/v1/accounting/chart-of-accounts", { method: "GET", body: pageOf(ACCOUNTS) })
+  await mockApi(page, "/v1/accounting/account-mapping", { method: "GET", body: ok(MAPPING) })
+  await page.goto("/accounting/chart-of-accounts?tab=mapping")
+  await expect(page.getByTestId("account-mapping")).toContainText("112 · Tiền gửi ngân hàng")
+  await expect(page.getByTestId("account-mapping").getByRole("combobox")).toHaveCount(0)
+  await expect(page.getByRole("button", { name: "Lưu" })).toHaveCount(0)
 })
