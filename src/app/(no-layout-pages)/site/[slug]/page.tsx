@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 
+import { CookieBanner } from "@/components/site/cookie-banner"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useT } from "@/lib/i18n"
 import { SiteService, type SitePage } from "@/lib/site/site.service"
@@ -54,6 +55,7 @@ export default function PublicCustomPage() {
           </article>
         )}
       </div>
+      <CookieBanner />
     </div>
   )
 }

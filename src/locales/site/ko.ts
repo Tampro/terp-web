@@ -147,5 +147,15 @@ const siteKo: Record<keyof typeof siteEn, string> = {
   "site.v.failed": "문제가 발생했습니다. 다시 시도해 주세요.",
   "site.v.off": "웹사이트를 사용할 수 없습니다.",
   "site.v.home": "홈",
+  "cookie.title": "쿠키 동의",
+  "cookie.description": "웹사이트 운영을 위해 쿠키를 사용하며, 동의하시면 이용 방식을 파악하는 데에도 사용합니다.",
+  "cookie.necessary": "필수 쿠키",
+  "cookie.cat.analytics": "분석",
+  "cookie.cat.marketing": "마케팅",
+  "cookie.contact": "문의하기",
+  "cookie.acceptAll": "모두 허용",
+  "cookie.necessaryOnly": "필수만 허용",
+  "cookie.customize": "사용자 지정",
+  "cookie.save": "선택 저장",
 }
 export default siteKo

@@ -184,6 +184,18 @@ export interface SeoSettings {
   metaImageUrl?: string | null
 }
 
+/** Cookie banner texts and consent logging (SettingsDtos.CookieSettings; PUT = full replacement). */
+export interface CookieSettings {
+  enableLogging?: boolean
+  cookieTitle?: string | null
+  cookieDescription?: string | null
+  strictlyTitle?: string | null
+  strictlyDescription?: string | null
+  contactDescription?: string | null
+  /** "" or http(s)://… (@Pattern) */
+  contactUrl?: string | null
+}
+
 export interface EmailSettingsView {
   host?: string | null
   port?: number | null
@@ -218,6 +230,11 @@ export const PlatformSettingsService = {
   saveCurrency: (b: CurrencyFormat) => put<CurrencySettingsView>("currency", b),
   seo: () => request<SeoSettings>(admin("seo")),
   saveSeo: (b: SeoSettings) => put<SeoSettings>("seo", b),
+  cookie: () => request<CookieSettings>(admin("cookie")),
+  saveCookie: (b: CookieSettings) => put<CookieSettings>("cookie", b),
+  /** Accepted cookies CSV (SiteAdminController): UTC dates, both included, at most 366 days (SITE_007). */
+  cookieConsentsCsv: (from: string, to: string) =>
+    request<Blob>(withQuery(admin("site/cookie-consents/export"), { from, to }), { as: "blob" }),
   email: () => request<EmailSettingsView>(admin("email")),
   /** password: omitted = keep the stored one; "" = remove it (write-only). */
   saveEmail: (b: Omit<EmailSettingsView, "passwordSet"> & { password?: string }) => put<EmailSettingsView>("email", b),

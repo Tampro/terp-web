@@ -146,5 +146,15 @@ const siteEn = {
   "site.v.failed": "Something went wrong, please try again.",
   "site.v.off": "The website is not available.",
   "site.v.home": "Home",
+  "cookie.title": "Cookie Consent",
+  "cookie.description": "We use cookies to run this website and, with your consent, to understand how it is used.",
+  "cookie.necessary": "Strictly Necessary Cookies",
+  "cookie.cat.analytics": "Analytics",
+  "cookie.cat.marketing": "Marketing",
+  "cookie.contact": "Contact us",
+  "cookie.acceptAll": "Accept all",
+  "cookie.necessaryOnly": "Necessary only",
+  "cookie.customize": "Customize",
+  "cookie.save": "Save my choice",
 }
 export default siteEn
