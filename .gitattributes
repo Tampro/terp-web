@@ -1,0 +1,13 @@
+# Every text file is stored and checked out with LF (Windows editors and scripts may write CRLF).
+* text=auto eol=lf
+
+# Binary files: never touch their bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
