@@ -41,6 +41,12 @@ const adminEn = {
   "dash.recentCompanies": "Recent Companies",
   "dash.topPlans": "Top Plans",
   "dash.subscribers": "{n} subscribers",
+  "dash.totalOrders": "Total Orders",
+  "dash.orderPayments": "Order Payments",
+  "dash.tickets": "Helpdesk tickets",
+  "dash.ticketsCreated": "New tickets",
+  "dash.ticketsResolved": "Resolved",
+  "dash.ticketStatus": "Tickets by status",
 
   "companies.title": "Companies",
   "companies.subtitle": "Manage the companies (tenants) of the platform.",

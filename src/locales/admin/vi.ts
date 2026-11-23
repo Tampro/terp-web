@@ -42,6 +42,12 @@ const adminVi: Record<keyof typeof adminEn, string> = {
   "dash.recentCompanies": "Công ty mới đăng ký",
   "dash.topPlans": "Gói phổ biến",
   "dash.subscribers": "{n} công ty",
+  "dash.totalOrders": "Tổng đơn hàng",
+  "dash.orderPayments": "Tiền thanh toán đơn hàng",
+  "dash.tickets": "Yêu cầu hỗ trợ",
+  "dash.ticketsCreated": "Yêu cầu mới",
+  "dash.ticketsResolved": "Đã giải quyết",
+  "dash.ticketStatus": "Yêu cầu theo trạng thái",
 
   "companies.title": "Công ty",
   "companies.subtitle": "Quản lý các công ty (tenant) trên nền tảng.",

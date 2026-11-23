@@ -2,14 +2,14 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Building2, CircleDollarSign, Clock, Layers, TrendingDown, TrendingUp, Users } from "lucide-react"
-import { Bar, BarChart, CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts"
+import { Building2, CircleDollarSign, Clock, Layers, Receipt, TrendingDown, TrendingUp, Users, Wallet } from "lucide-react"
+import { Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, XAxis, YAxis } from "recharts"
 
 import { PageHeader } from "@/components/common/page-header"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart"
 import {
   Select,
   SelectContent,
@@ -18,21 +18,38 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useMoney } from "@/hooks/use-money"
 import { AdminDashboardService, type AdminDashboard } from "@/lib/admin/admin.service"
 import { formatDate, formatNumber } from "@/lib/format"
+import { HD_STATUSES, HelpdeskService, type HdStats } from "@/lib/helpdesk/helpdesk.service"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => i)
 
-/** §3.1 Super Admin dashboard — GET /saas/admin/dashboard?year=. */
+/**
+ * §3.1 Super Admin dashboard — GET /saas/admin/dashboard?year= (cards, companies, revenue) and the helpdesk figures of
+ * the same year from GET /helpdesk/stats?year= (tickets vs resolved by month, share by status).
+ */
 export function SuperAdminDashboard() {
   const t = useT()
   const language = useLanguageStore((s) => s.language)
+  const money = useMoney()
   const currentYear = new Date().getFullYear()
   const [year, setYear] = React.useState(currentYear)
   const [state, setState] = React.useState<{ data?: AdminDashboard; error?: string; loading: boolean }>({
     loading: true,
   })
+
+  const [hd, setHd] = React.useState<{ data?: HdStats; error?: string; loading: boolean }>({ loading: true })
+  React.useEffect(() => {
+    let cancelled = false
+    HelpdeskService.stats(year)
+      .then((data) => !cancelled && setHd({ data, loading: false }))
+      .catch((e: Error) => !cancelled && setHd({ error: e.message, loading: false }))
+    return () => {
+      cancelled = true
+    }
+  }, [year])
 
   React.useEffect(() => {
     let cancelled = false
@@ -50,11 +67,17 @@ export function SuperAdminDashboard() {
     month: monthLabel(m),
     companies: d?.newCompaniesByMonth?.[m] ?? 0,
     revenue: Number(d?.revenueByMonth?.[m] ?? 0),
+    created: hd.data?.months?.find((x) => x.month === m + 1)?.created ?? 0,
+    resolved: hd.data?.months?.find((x) => x.month === m + 1)?.resolved ?? 0,
   }))
+  const statusShare = HD_STATUSES.map((s, i) => ({ status: s, label: t(`hr.status.${s}` as TranslationKey), value: hd.data?.byStatus?.[s] ?? 0, fill: `var(--chart-${i + 1})` }))
+  const hdTotal = statusShare.reduce((a, x) => a + x.value, 0)
   const growth = d?.monthlyGrowthPercent
 
   const cards: { key: TranslationKey; value: string; icon: React.ElementType; hint?: string }[] = [
-    { key: "dash.totalRevenue", value: formatNumber(d?.totalRevenue, language, 2), icon: CircleDollarSign },
+    { key: "dash.totalOrders", value: formatNumber(d?.totalOrders, language), icon: Receipt },
+    { key: "dash.orderPayments", value: money(d?.orderPayments), icon: Wallet },
+    { key: "dash.totalRevenue", value: money(d?.totalRevenue), icon: CircleDollarSign },
     {
       key: "dash.totalCompanies",
       value: formatNumber(d?.totalCompanies, language),
@@ -68,6 +91,11 @@ export function SuperAdminDashboard() {
 
   const companiesConfig = { companies: { label: t("dash.newCompanies"), color: "var(--primary)" } } satisfies ChartConfig
   const revenueConfig = { revenue: { label: t("dash.revenue"), color: "var(--chart-2)" } } satisfies ChartConfig
+  const ticketsConfig = {
+    created: { label: t("dash.ticketsCreated"), color: "var(--chart-1)" },
+    resolved: { label: t("dash.ticketsResolved"), color: "var(--chart-2)" },
+  } satisfies ChartConfig
+  const shareConfig = Object.fromEntries(statusShare.map((x) => [x.status, { label: x.label, color: x.fill }])) satisfies ChartConfig
 
   return (
     <div className="flex flex-col gap-6 p-4 md:p-6">
@@ -92,7 +120,7 @@ export function SuperAdminDashboard() {
         </Alert>
       )}
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {cards.map(({ key, value, icon: Icon, hint }) => (
           <Card key={key}>
             <CardContent className="flex items-start justify-between gap-3">
@@ -159,6 +187,73 @@ export function SuperAdminDashboard() {
         </Card>
       </div>
 
+
+      <div className="grid gap-4 lg:grid-cols-3">
+        <Card className="lg:col-span-2">
+          <CardHeader>
+            <CardTitle>{t("dash.tickets")}</CardTitle>
+            <CardDescription>{t("dash.byMonth", { year })}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {hd.error ? (
+              <p className="text-destructive text-sm">{hd.error}</p>
+            ) : (
+              <ChartContainer config={ticketsConfig} className="h-64 w-full" data-testid="dash-tickets">
+                <BarChart data={series}>
+                  <CartesianGrid vertical={false} />
+                  <XAxis dataKey="month" tickLine={false} axisLine={false} />
+                  <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} />
+                  <ChartTooltip content={<ChartTooltipContent />} />
+                  <ChartLegend content={<ChartLegendContent />} />
+                  <Bar dataKey="created" fill="var(--color-created)" radius={4} />
+                  <Bar dataKey="resolved" fill="var(--color-resolved)" radius={4} />
+                </BarChart>
+              </ChartContainer>
+            )}
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle>{t("dash.ticketStatus")}</CardTitle>
+            <Link href="/helpdesk?tab=stats" className="text-primary text-sm hover:underline">
+              {t("common.viewAll")}
+            </Link>
+          </CardHeader>
+          <CardContent>
+            {hd.error ? (
+              <p className="text-destructive text-sm">{hd.error}</p>
+            ) : !hd.loading && hdTotal === 0 ? (
+              <p className="text-muted-foreground text-sm">{t("common.noData")}</p>
+            ) : (
+              <>
+                <ChartContainer config={shareConfig} className="mx-auto h-48 w-full">
+                  <PieChart>
+                    <ChartTooltip content={<ChartTooltipContent nameKey="status" hideLabel />} />
+                    <Pie data={statusShare} dataKey="value" nameKey="status" innerRadius={45} outerRadius={80} strokeWidth={2}>
+                      {statusShare.map((x) => (
+                        <Cell key={x.status} fill={x.fill} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ChartContainer>
+                <ul className="mt-2 grid gap-1 text-sm" data-testid="dash-ticket-status">
+                  {statusShare.map((x) => (
+                    <li key={x.status} className="flex items-center gap-2">
+                      <span className="size-2.5 rounded-sm" style={{ background: x.fill }} />
+                      <span className="text-muted-foreground">{x.label}</span>
+                      <span className="ml-auto font-medium" data-testid={`dash-hd-${x.status}`}>
+                        {formatNumber(x.value, language)}
+                        {hdTotal > 0 && <span className="text-muted-foreground ml-1 text-xs">({Math.round((x.value / hdTotal) * 100)}%)</span>}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <div className="grid gap-4 lg:grid-cols-2">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
@@ -198,7 +293,7 @@ export function SuperAdminDashboard() {
                 <span className="truncate font-medium">{p.name ?? "-"}</span>
                 <span className="text-muted-foreground shrink-0 text-xs">
                   {t("dash.subscribers", { n: formatNumber(p.subscribers, language) })} ·{" "}
-                  {formatNumber(p.revenue, language, 2)}
+                  {money(p.revenue)}
                 </span>
               </div>
             ))}
