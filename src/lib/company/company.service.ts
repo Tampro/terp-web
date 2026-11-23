@@ -172,6 +172,26 @@ export interface EmailTemplateView {
   languages?: EmailTemplateLang[]
 }
 
+/** Notification templates of Slack / Telegram / SMS (ChatNotificationTemplateController, IAM_SETTINGS_MANAGE). */
+export const CHAT_CHANNELS = ["slack", "telegram", "sms"] as const
+export type ChatChannel = (typeof CHAT_CHANNELS)[number]
+export interface ChatTemplatesView {
+  channel?: string
+  /** false: the integration is not set up; read-only until it is (saving = SETTINGS_022) */
+  configured?: boolean
+  modules?: { module?: string; events?: { eventType?: string; name?: string; customisedLanguages?: string[]; variables?: string[] }[] }[]
+}
+export interface ChatTemplateView {
+  channel?: string
+  configured?: boolean
+  eventType?: string
+  name?: string
+  module?: string
+  variables?: string[]
+  /** text null = the built-in default */
+  languages?: { lang?: string; customised?: boolean; text?: string | null }[]
+}
+
 export const CompanySettingsService = {
   profile: () => request<CompanyProfile>(`${C}/profile`),
   saveProfile: (b: CompanyProfile) => put<CompanyProfile>(`${C}/profile`, b),
@@ -188,6 +208,14 @@ export const CompanySettingsService = {
   testEmail: (to: string) => post<unknown>(`${C}/email/test`, { to }),
   notifications: () => request<NotificationGroup[]>("/v1/settings/email-notifications"),
   toggleNotification: (code: string, enabled: boolean) => put<unknown>(`/v1/settings/email-notifications/${code}`, { enabled }),
+  chatTemplates: (channel: ChatChannel) => request<ChatTemplatesView>(`/v1/settings/notification-templates/${channel}`),
+  chatTemplate: (channel: ChatChannel, eventType: string) => request<ChatTemplateView>(`/v1/settings/notification-templates/${channel}/${eventType}`),
+  /** plain text ≤1000 (Slack / Telegram) or ≤1600 (SMS) SETTINGS_024; unknown {placeholder} SETTINGS_025; not configured SETTINGS_022 */
+  saveChatTemplate: (channel: ChatChannel, eventType: string, lang: string, text: string) =>
+    put<ChatTemplateView>(`/v1/settings/notification-templates/${channel}/${eventType}/${lang}`, { text }),
+  resetChatTemplate: (channel: ChatChannel, eventType: string, lang: string) => del(`/v1/settings/notification-templates/${channel}/${eventType}/${lang}`),
+  previewChatTemplate: (channel: ChatChannel, eventType: string, lang: string, text?: string) =>
+    post<{ text?: string }>(`/v1/settings/notification-templates/${channel}/${eventType}/${lang}/preview`, { text }),
   emailTemplates: () => request<EmailTemplateGroup[]>("/v1/settings/email-notification-templates"),
   emailTemplate: (code: string) => request<EmailTemplateView>(`/v1/settings/email-notification-templates/${code}`),
   /** full replacement of one language; the body is sanitised HTML; unknown {placeholder} = SETTINGS_025 */
