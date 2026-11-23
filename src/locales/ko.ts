@@ -1,3 +1,4 @@
+import site from "./site/ko"
 import helpdesk from "./helpdesk/ko"
 import company from "./company/ko"
 import support from "./support/ko"
@@ -135,6 +136,7 @@ const ko: Record<keyof typeof en, string> = {
   ...support,
   ...company,
   ...helpdesk,
+  ...site,
 }
 
 export default ko
