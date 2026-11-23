@@ -1,3 +1,4 @@
+import notification from "./notification/ko"
 import emailTemplate from "./email-template/ko"
 import site from "./site/ko"
 import helpdesk from "./helpdesk/ko"
@@ -139,6 +140,7 @@ const ko: Record<keyof typeof en, string> = {
   ...helpdesk,
   ...site,
   ...emailTemplate,
+  ...notification,
 }
 
 export default ko
