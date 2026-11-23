@@ -20,7 +20,7 @@ import type { IPage } from "@/lib/api"
 import { formatDate, formatNumber } from "@/lib/format"
 import { useLanguageStore, useT } from "@/lib/i18n"
 import { PosService, saveBlob, type PosOrderDetail, type PosOrderRow } from "@/lib/pos/pos.service"
-import { SalesLookupService, type WarehouseOption } from "@/lib/sales/sales.service"
+import { SalesLookupService, type CustomerOption, type WarehouseOption } from "@/lib/sales/sales.service"
 
 import { ReceiptView } from "../_components/receipt-view"
 
@@ -42,6 +42,7 @@ function PosOrders() {
   const language = useLanguageStore((s) => s.language)
   const { searchParams, update } = useUrlQuery()
   const keyword = searchParams.get("keyword") ?? ""
+  const customerId = searchParams.get("customerId") ?? undefined
   const warehouseId = searchParams.get("warehouseId") ?? undefined
   const from = searchParams.get("from") ?? undefined
   const to = searchParams.get("to") ?? undefined
@@ -49,6 +50,7 @@ function PosOrders() {
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
   const [data, setData] = React.useState<IPage<PosOrderRow>>()
   const [warehouses, setWarehouses] = React.useState<WarehouseOption[]>([])
+  const [customers, setCustomers] = React.useState<CustomerOption[]>([])
   const [loading, setLoading] = React.useState(true)
   const [search, setSearch] = React.useState(keyword)
   const [detail, setDetail] = React.useState<{ id: string; data?: PosOrderDetail; error?: string }>()
@@ -58,6 +60,10 @@ function PosOrders() {
     SalesLookupService.warehouses()
       .then((p) => !cancelled && setWarehouses(p.content ?? []))
       .catch(() => undefined)
+    // filter by customer (GET /pos/orders?customerId=); walk-in orders have no customer and can't be filtered on
+    SalesLookupService.customers()
+      .then((p) => !cancelled && setCustomers(p.content ?? []))
+      .catch(() => undefined)
     return () => {
       cancelled = true
     }
@@ -65,14 +71,14 @@ function PosOrders() {
 
   React.useEffect(() => {
     let cancelled = false
-    PosService.list({ keyword: keyword || undefined, warehouseId, from, to, page, size: PAGE_SIZE })
+    PosService.list({ keyword: keyword || undefined, customerId, warehouseId, from, to, page, size: PAGE_SIZE })
       .then((p) => !cancelled && setData(p))
       .catch((e: Error) => !cancelled && toast.error(e.message))
       .finally(() => !cancelled && setLoading(false))
     return () => {
       cancelled = true
     }
-  }, [keyword, warehouseId, from, to, page])
+  }, [keyword, customerId, warehouseId, from, to, page])
 
   React.useEffect(() => {
     if (!view) return
@@ -102,6 +108,19 @@ function PosOrders() {
       <Card>
         <CardContent className="flex flex-col gap-4">
           <div className="flex flex-wrap items-end gap-3">
+            <Select value={customerId ?? ALL} onValueChange={(v) => update({ customerId: v === ALL ? "" : v, page: 0 })}>
+              <SelectTrigger className="w-52" aria-label={t("sales.customer")}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={ALL}>{t("sales.allCustomers")}</SelectItem>
+                {customers.map((c) => (
+                  <SelectItem key={c.id} value={c.id ?? ""}>
+                    {c.companyName ?? c.customerCode}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
             <Select value={warehouseId ?? ALL} onValueChange={(v) => update({ warehouseId: v === ALL ? "" : v, page: 0 })}>
               <SelectTrigger className="w-44" aria-label={t("sales.warehouse")}>
                 <SelectValue />
