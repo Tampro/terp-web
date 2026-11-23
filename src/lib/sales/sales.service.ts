@@ -61,6 +61,8 @@ export interface DocumentDetail {
   paymentTerms?: string | null
   notes?: string | null
   lines?: LineDto[]
+  /** invoices: the due date goes to the company's Google Calendar when posted (commerce DocumentDetail) */
+  syncToGoogleCalendar?: boolean
 }
 
 export interface DocumentLineForm {
@@ -82,6 +84,11 @@ export interface DocumentForm {
   paymentTerms?: string | null
   notes?: string | null
   lines: DocumentLineForm[]
+  /**
+   * Invoices only: notification-service adds the due date to the company's Google Calendar when the invoice is posted
+   * (Google Calendar integration on, else nothing); omitted = false. A converted / duplicated invoice starts off.
+   */
+  syncToGoogleCalendar?: boolean
 }
 
 export interface DocumentFilter {

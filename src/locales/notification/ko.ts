@@ -2,7 +2,7 @@ import type notificationEn from "./en"
 
 const notificationKo: Record<keyof typeof notificationEn, string> = {
   "menu.notificationLog": "알림 기록",
-  "ntf.subtitle": "업무 이벤트로 발송된 이메일, Slack, Telegram, 웹훅, SMS",
+  "ntf.subtitle": "업무 이벤트로 발송된 이메일, Slack, Telegram, 웹훅, SMS, Google 캘린더",
   "ntf.company": "회사",
   "ntf.chooseCompany": "회사 선택",
   "ntf.platform": "플랫폼 (플랫폼 웹훅)",
@@ -29,6 +29,7 @@ const notificationKo: Record<keyof typeof notificationEn, string> = {
   "ntf.ch.TELEGRAM": "Telegram",
   "ntf.ch.WEBHOOK": "웹훅",
   "ntf.ch.SMS": "SMS",
+  "ntf.ch.GOOGLE_CALENDAR": "Google 캘린더",
   "ntf.allStatuses": "모든 상태",
   "ntf.st.PENDING": "발송 대기",
   "ntf.st.SENT": "발송됨",

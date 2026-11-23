@@ -181,6 +181,7 @@ const hrmEn = {
   "hr.f.comment": "Comment",
   "hr.f.maxDaysPerYear": "Max days / year",
   "hr.f.paid": "Paid",
+  "hr.f.calendarSync": "Sync to Google Calendar",
   "hr.f.daysPerApplication": "Days per application",
   "hr.f.minDays": "Min days per application",
   "hr.f.maxDays": "Max days per application",

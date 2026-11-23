@@ -2,7 +2,7 @@ import type notificationEn from "./en"
 
 const notificationVi: Record<keyof typeof notificationEn, string> = {
   "menu.notificationLog": "Nhật ký thông báo",
-  "ntf.subtitle": "Email, Slack, Telegram, webhook và SMS được gửi cho các sự kiện nghiệp vụ",
+  "ntf.subtitle": "Email, Slack, Telegram, webhook, SMS và Google Calendar được gửi cho các sự kiện nghiệp vụ",
   "ntf.company": "Công ty",
   "ntf.chooseCompany": "Chọn công ty",
   "ntf.platform": "Nền tảng (webhook nền tảng)",
@@ -29,6 +29,7 @@ const notificationVi: Record<keyof typeof notificationEn, string> = {
   "ntf.ch.TELEGRAM": "Telegram",
   "ntf.ch.WEBHOOK": "Webhook",
   "ntf.ch.SMS": "SMS",
+  "ntf.ch.GOOGLE_CALENDAR": "Google Calendar",
   "ntf.allStatuses": "Tất cả trạng thái",
   "ntf.st.PENDING": "Đang chờ gửi",
   "ntf.st.SENT": "Đã gửi",

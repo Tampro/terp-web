@@ -1,7 +1,7 @@
 /** Notification delivery log. Spread into locales/en.ts. */
 const notificationEn = {
   "menu.notificationLog": "Notification log",
-  "ntf.subtitle": "Emails, Slack, Telegram, webhook and SMS messages sent for business events",
+  "ntf.subtitle": "Emails, Slack, Telegram, webhook, SMS and Google Calendar deliveries for business events",
   "ntf.company": "Company",
   "ntf.chooseCompany": "Choose a company",
   "ntf.platform": "Platform (platform webhooks)",
@@ -28,6 +28,7 @@ const notificationEn = {
   "ntf.ch.TELEGRAM": "Telegram",
   "ntf.ch.WEBHOOK": "Webhook",
   "ntf.ch.SMS": "SMS",
+  "ntf.ch.GOOGLE_CALENDAR": "Google Calendar",
   "ntf.allStatuses": "All statuses",
   "ntf.st.PENDING": "Waiting to send",
   "ntf.st.SENT": "Sent",
