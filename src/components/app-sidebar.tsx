@@ -69,6 +69,7 @@ import {
   ListChecks,
   SlidersHorizontal,
   Headset,
+  Globe,
   LifeBuoy,
   LibraryBig,
   MailOpen,
@@ -106,6 +107,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
           { title: t("menu.coupons"), url: "/coupons", icon: TicketPercent },
           { title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset },
+          { title: t("menu.website"), url: "/website", icon: Globe },
           { title: t("menu.media"), url: "/media", icon: Images },
           { title: t("menu.settings"), url: "/settings", icon: Settings },
         ]
