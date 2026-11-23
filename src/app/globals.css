@@ -608,3 +608,11 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Brand › Sidebar Style (data-sidebar-style on <html>, set by BrandApplier). Custom colour themes keep their own sidebar. */
+html[data-sidebar-style="colored"]:not(.dark-blue):not(.gaussian-black):not(.semi-dark):not(.classic-light) [data-slot="sidebar-inner"] {
+  background: color-mix(in oklab, var(--primary) 14%, var(--sidebar));
+}
+html[data-sidebar-style="gradient"]:not(.dark-blue):not(.gaussian-black):not(.semi-dark):not(.classic-light) [data-slot="sidebar-inner"] {
+  background: linear-gradient(180deg, color-mix(in oklab, var(--primary) 28%, var(--sidebar)) 0%, var(--sidebar) 70%);
+}
