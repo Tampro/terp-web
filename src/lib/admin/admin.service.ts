@@ -196,6 +196,33 @@ export interface CookieSettings {
   contactUrl?: string | null
 }
 
+/** Bank Transfer details shown with pending plan orders (SettingsDtos.BankTransferSettings, full replacement). */
+export interface BankTransferSettings {
+  enabled?: boolean
+  bankName?: string | null
+  accountNumber?: string | null
+  accountName?: string | null
+  details?: string | null
+}
+
+export type StripeMode = "TEST" | "LIVE"
+/** Stripe settings as read: secrets are never returned, only whether they are stored. */
+export interface StripeSettingsView {
+  enabled?: boolean
+  mode?: StripeMode
+  publishableKey?: string | null
+  secretKeySet?: boolean
+  webhookSecretSet?: boolean
+}
+/** secretKey / webhookSecret: omitted = keep the stored one, "" = remove it (write-only). */
+export interface StripeSettingsForm {
+  enabled: boolean
+  mode: StripeMode
+  publishableKey: string
+  secretKey?: string
+  webhookSecret?: string
+}
+
 export interface EmailSettingsView {
   host?: string | null
   port?: number | null
@@ -235,6 +262,11 @@ export const PlatformSettingsService = {
   /** Accepted cookies CSV (SiteAdminController): UTC dates, both included, at most 366 days (SITE_007). */
   cookieConsentsCsv: (from: string, to: string) =>
     request<Blob>(withQuery(admin("site/cookie-consents/export"), { from, to }), { as: "blob" }),
+  bankTransfer: () => request<BankTransferSettings>(admin("payment/bank-transfer")),
+  saveBankTransfer: (b: BankTransferSettings) => put<BankTransferSettings>("payment/bank-transfer", b),
+  stripe: () => request<StripeSettingsView>(admin("payment/stripe")),
+  /** SETTINGS_010 enabled without all keys, SETTINGS_011 keys not of the mode, SETTINGS_002 no encryption key */
+  saveStripe: (b: StripeSettingsForm) => put<StripeSettingsView>("payment/stripe", b),
   email: () => request<EmailSettingsView>(admin("email")),
   /** password: omitted = keep the stored one; "" = remove it (write-only). */
   saveEmail: (b: Omit<EmailSettingsView, "passwordSet"> & { password?: string }) => put<EmailSettingsView>("email", b),
