@@ -144,6 +144,34 @@ export interface WebhookDto {
 }
 
 const C = "/v1/settings/company"
+/** Business email templates (EmailNotificationTemplateController, NOTIFICATION_SETTINGS_UPDATE). Per language: the
+ *  company's own subject + body (customised) or the built-in default (subject / body null, not readable here). */
+export interface EmailTemplateRow {
+  code?: string
+  name?: string
+  module?: string
+  customisedLanguages?: string[]
+  customised?: boolean
+  variables?: string[]
+}
+export interface EmailTemplateGroup {
+  module?: string
+  templates?: EmailTemplateRow[]
+}
+export interface EmailTemplateLang {
+  lang?: string
+  customised?: boolean
+  subject?: string | null
+  body?: string | null
+}
+export interface EmailTemplateView {
+  code?: string
+  name?: string
+  module?: string
+  variables?: string[]
+  languages?: EmailTemplateLang[]
+}
+
 export const CompanySettingsService = {
   profile: () => request<CompanyProfile>(`${C}/profile`),
   saveProfile: (b: CompanyProfile) => put<CompanyProfile>(`${C}/profile`, b),
@@ -160,6 +188,16 @@ export const CompanySettingsService = {
   testEmail: (to: string) => post<unknown>(`${C}/email/test`, { to }),
   notifications: () => request<NotificationGroup[]>("/v1/settings/email-notifications"),
   toggleNotification: (code: string, enabled: boolean) => put<unknown>(`/v1/settings/email-notifications/${code}`, { enabled }),
+  emailTemplates: () => request<EmailTemplateGroup[]>("/v1/settings/email-notification-templates"),
+  emailTemplate: (code: string) => request<EmailTemplateView>(`/v1/settings/email-notification-templates/${code}`),
+  /** full replacement of one language; the body is sanitised HTML; unknown {placeholder} = SETTINGS_025 */
+  saveEmailTemplate: (code: string, lang: string, body: { subject: string; body: string }) =>
+    put<EmailTemplateView>(`/v1/settings/email-notification-templates/${code}/${lang}`, body),
+  /** back to the built-in default for that language */
+  resetEmailTemplate: (code: string, lang: string) => del(`/v1/settings/email-notification-templates/${code}/${lang}`),
+  /** sample values [key], nothing sent; the given text, else the saved one (SETTINGS_023 = nothing to preview) */
+  previewEmailTemplate: (code: string, lang: string, body: { subject?: string; body?: string }) =>
+    post<{ subject?: string; body?: string }>(`/v1/settings/email-notification-templates/${code}/${lang}/preview`, body),
   integrations: () => request<Integrations>("/v1/settings/integrations"),
   saveIntegration: (type: EIntegration, body: unknown) => put<unknown>(`/v1/settings/integrations/${type}`, body),
   removeIntegration: (type: EIntegration) => del(`/v1/settings/integrations/${type}`),
