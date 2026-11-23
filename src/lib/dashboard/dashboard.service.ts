@@ -222,6 +222,15 @@ export interface SupportStats {
   faqs?: number
   monthly?: { month?: number; created?: number; closed?: number }[]
 }
+// Client portal (manual 5, role view Client), report-service /v1/reports/client-dashboard?year (PORTAL_CLIENT): parts
+// payments = accounting /portal/client/payments/summary (ACC_098 = account not linked to a customer: Customer.userId),
+// deals / openTickets = {count}. Only rows of the customer linked to the caller.
+export interface PortalClientParts {
+  payments?: Part<{ year?: number; totalSettled?: number; monthly?: { month?: number; amount?: number }[]; notesTotal?: number; notesCount?: number }>
+  deals?: Part<{ count?: number }>
+  openTickets?: Part<{ count?: number }>
+}
+
 const moduleDashboard = <P,>(name: string) => (year: number) => request<ModuleDashboard<P>>(withQuery(`/v1/reports/${name}-dashboard`, { year }))
 
 export const ModuleDashboardService = {
@@ -230,6 +239,7 @@ export const ModuleDashboardService = {
   pos: moduleDashboard<{ sales?: Part<PosSales>; stock?: Part<PosStock> }>("pos"),
   crm: moduleDashboard<{ stats?: Part<CrmStats> }>("crm"),
   support: moduleDashboard<{ stats?: Part<SupportStats> }>("support"),
+  client: moduleDashboard<PortalClientParts>("client"),
 }
 
 export const DashboardService = {
