@@ -113,3 +113,20 @@ test("REG-002 đăng ký khi bật + xác minh email → gửi payload, nhắc m
     { name: "E2E O'Brien", email: "e2e.owner@example.com", password: "Abcdefg1!", confirmPassword: "Abcdefg1!" },
   ])
 })
+
+test("REG-003 đường dẫn /register?ref= tự điền mã giới thiệu (viết hoa) và gửi referralCode; mã sai hiện lỗi backend", async ({ page }) => {
+  await page.unrouteAll({ behavior: "ignoreErrors" })
+  await mockPublic(page, { userRegistration: true })
+  const calls = await mockApi(page, "/v1/auth/register", { status: 400, body: fail("SAAS_026", "E2E Mã giới thiệu không tồn tại.") })
+
+  await page.goto("/register?ref=ref000039")
+  await expect(page.getByLabel("Mã giới thiệu (tùy chọn)")).toHaveValue("REF000039")
+  await page.getByLabel("Họ tên").fill("E2E Referred")
+  await page.getByLabel("Email").fill("e2e.referred@example.com")
+  await page.getByLabel("Mật khẩu", { exact: true }).fill("Abcdefg1!")
+  await page.getByLabel("Xác nhận mật khẩu").fill("Abcdefg1!")
+  await page.getByRole("button", { name: "Đăng ký" }).click()
+
+  await expect(page.getByText("E2E Mã giới thiệu không tồn tại.")).toBeVisible()
+  expect(calls[0]).toEqual({ name: "E2E Referred", email: "e2e.referred@example.com", password: "Abcdefg1!", confirmPassword: "Abcdefg1!", referralCode: "REF000039" })
+})

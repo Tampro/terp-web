@@ -77,7 +77,8 @@ export const AuthService = {
     tokenStore.set(t, remember)
     return t
   },
-  register: (body: { name: string; email: string; password: string; confirmPassword: string; companyName?: string }) =>
+  /** referralCode: code of the referring company (case-insensitive); unknown = SAAS_026 */
+  register: (body: { name: string; email: string; password: string; confirmPassword: string; companyName?: string; referralCode?: string }) =>
     request<unknown>("/v1/auth/register", { method: "POST", body, ...pub }),
   forgotPassword: (email: string) => request<void>("/v1/auth/forgot-password", { method: "POST", body: { email }, ...pub }),
   resetPassword: (token: string, newPassword: string) =>

@@ -70,6 +70,7 @@ import {
   SlidersHorizontal,
   Headset,
   Globe,
+  Share2,
   BellRing,
   MailPlus,
   LifeBuoy,
@@ -123,6 +124,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           { title: t("menu.orders"), url: "/orders", icon: Receipt },
           { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
           { title: t("menu.coupons"), url: "/coupons", icon: TicketPercent },
+          { title: t("menu.referral"), url: "/referral", icon: Share2 },
           { title: t("menu.helpdesk"), url: "/helpdesk", icon: Headset },
           { title: t("menu.website"), url: "/website", icon: Globe },
           { title: t("menu.emailTemplates"), url: "/email-templates", icon: MailPlus },
@@ -260,6 +262,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             ? [
                 { title: t("menu.orders"), url: "/orders", icon: Receipt },
                 { title: t("menu.planRequests"), url: "/plan-requests", icon: Inbox },
+                { title: t("menu.referral"), url: "/referral", icon: Share2 },
               ]
             : []),
         ]),
