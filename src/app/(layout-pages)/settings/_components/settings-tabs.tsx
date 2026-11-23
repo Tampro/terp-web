@@ -6,13 +6,16 @@ import { toast } from "sonner"
 
 import { FieldError, PasswordInput } from "@/components/auth/password-input"
 import { Button } from "@/components/ui/button"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useLanguages } from "@/hooks/use-public-settings"
 import {
   PlatformSettingsService as S,
+  type BankTransferSettings,
   type BrandSettings,
   type CookieSettings,
   type CurrencyFormat,
@@ -21,6 +24,8 @@ import {
   type RecaptchaSettingsView,
   type SeoSettings,
   type StorageSettings,
+  type StripeMode,
+  type StripeSettingsView,
   type SystemSettings,
 } from "@/lib/admin/admin.service"
 import { formatMoney } from "@/lib/format"
@@ -612,5 +617,167 @@ function ConsentExport() {
         <FieldError message={bad} />
       </CardContent>
     </Card>
+  )
+}
+
+// ---------------------------------------------------------------- Payment (bank transfer, Stripe)
+
+/** Payment methods companies can use on plan orders (§3.7 Payment settings; /settings/admin/payment/*). */
+export function PaymentTab() {
+  return (
+    <div className="grid gap-4">
+      <BankTransferCard />
+      <StripeCard />
+    </div>
+  )
+}
+
+const BANK_FIELDS: { key: "bankName" | "accountNumber" | "accountName"; label: TranslationKey; max: number }[] = [
+  { key: "bankName", label: "settings.bankName", max: 100 },
+  { key: "accountNumber", label: "settings.accountNumber", max: 50 },
+  { key: "accountName", label: "settings.accountName", max: 100 },
+]
+
+function BankTransferCard() {
+  const t = useT()
+  const b = useSettingsBlock<BankTransferSettings>(S.bankTransfer, S.saveBankTransfer, (v) => ({ ...v, enabled: !!v.enabled }))
+  const f = b.form
+  return (
+    <SettingsCard title={t("settings.bankTransfer")} description={t("settings.bankTransferDesc")} {...cardProps(b)}>
+      {f && (
+        <>
+          <SwitchRow label={t("settings.bankTransferEnable")} checked={!!f.enabled} onChange={(v) => b.patch({ enabled: v })} />
+          <div className="grid gap-4 sm:grid-cols-3">
+            {BANK_FIELDS.map((x) => (
+              <FieldRow key={x.key} id={x.key} label={t(x.label)}>
+                <Input id={x.key} maxLength={x.max} value={f[x.key] ?? ""} onChange={(e) => b.patch({ [x.key]: e.target.value })} />
+              </FieldRow>
+            ))}
+          </div>
+          <FieldRow id="bankDetails" label={t("settings.bankDetails")} hint={t("settings.bankEnvHint")}>
+            <Textarea id="bankDetails" maxLength={1000} value={f.details ?? ""} onChange={(e) => b.patch({ details: e.target.value })} />
+          </FieldRow>
+        </>
+      )}
+    </SettingsCard>
+  )
+}
+
+type StripeForm = {
+  enabled: boolean
+  mode: StripeMode
+  publishableKey: string
+  secretKey: string
+  webhookSecret: string
+  secretKeySet: boolean
+  webhookSecretSet: boolean
+  /** "remove the stored secret" ticked: sent as "" */
+  clearSecret: boolean
+  clearWebhook: boolean
+  /** mode of the stored keys: the backend checks only keys that are sent, so a mode change needs them re-entered */
+  savedMode: StripeMode
+}
+const PK_RE = /^pk_(test|live)_[A-Za-z0-9]+$/
+const WEBHOOK_PATH = "/api/v1/public/payments/stripe/webhook"
+
+/** A write-only secret: typed = the new value, "remove" ticked = "", otherwise omitted (keep the stored one). */
+const secretOut = (value: string, clear: boolean) => (value.trim() ? { v: value.trim() } : clear ? { v: "" } : undefined)
+
+function StripeCard() {
+  const t = useT()
+  const b = useSettingsBlock<StripeSettingsView, StripeForm>(
+    S.stripe,
+    (f) => {
+      const sk = secretOut(f.secretKey, f.clearSecret)
+      const wh = secretOut(f.webhookSecret, f.clearWebhook)
+      return S.saveStripe({
+        enabled: f.enabled,
+        mode: f.mode,
+        publishableKey: f.publishableKey.trim(),
+        ...(sk ? { secretKey: sk.v } : {}),
+        ...(wh ? { webhookSecret: wh.v } : {}),
+      })
+    },
+    (v) => ({
+      enabled: !!v.enabled,
+      mode: v.mode ?? "TEST",
+      publishableKey: v.publishableKey ?? "",
+      secretKey: "",
+      webhookSecret: "",
+      secretKeySet: !!v.secretKeySet,
+      webhookSecretSet: !!v.webhookSecretSet,
+      clearSecret: false,
+      clearWebhook: false,
+      savedMode: v.mode ?? "TEST",
+    })
+  )
+  const f = b.form
+  const prefix = f?.mode === "LIVE" ? "live" : "test"
+  const pk = f?.publishableKey.trim() ?? ""
+  const sk = f?.secretKey.trim() ?? ""
+  const wh = f?.webhookSecret.trim() ?? ""
+  const pkErr = pk && !PK_RE.test(pk) ? t("settings.stripePkBad") : pk && !pk.startsWith(`pk_${prefix}_`) ? t("settings.stripeModeBad") : undefined
+  const keptOtherMode = !!f && f.mode !== f.savedMode && f.secretKeySet && !f.clearSecret && !sk
+  const skErr = sk && !sk.startsWith(`sk_${prefix}_`) && !sk.startsWith(`rk_${prefix}_`) ? t("settings.stripeModeBad") : keptOtherMode ? t("settings.stripeReenter") : undefined
+  const whErr = wh && !wh.startsWith("whsec_") ? t("settings.stripeWhBad") : undefined
+  const hasSk = !!f && (!!sk || (f.secretKeySet && !f.clearSecret))
+  const hasWh = !!f && (!!wh || (f.webhookSecretSet && !f.clearWebhook))
+  const incomplete = !!f?.enabled && (!pk || !hasSk || !hasWh)
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (pkErr || skErr || whErr || incomplete) return
+    void b.submit()
+  }
+  const secretField = (id: "secretKey" | "webhookSecret", label: TranslationKey, set: boolean, clearKey: "clearSecret" | "clearWebhook", err?: string) =>
+    f && (
+      <FieldRow id={id} label={t(label)} hint={set ? t(f[clearKey] ? "settings.secretWillRemove" : "settings.secretKept") : t("settings.secretNone")}>
+        <PasswordInput id={id} withIcon={false} autoComplete="off" maxLength={255} value={f[id]} disabled={f[clearKey]} onChange={(e) => b.patch({ [id]: e.target.value })} aria-invalid={!!err} />
+        <FieldError message={err} />
+        {set && (
+          <label className="flex items-center gap-2 text-xs">
+            <Checkbox checked={f[clearKey]} onCheckedChange={(v) => b.patch({ [clearKey]: v === true, [id]: "" })} aria-label={t("settings.secretRemoveOf", { name: t(label) })} />
+            {t("settings.secretRemove")}
+          </label>
+        )}
+      </FieldRow>
+    )
+  return (
+    <SettingsCard title="Stripe" description={t("settings.stripeDesc")} {...cardProps(b)} onSubmit={submit}>
+      {f && (
+        <>
+          <SwitchRow label={t("settings.stripeEnable")} checked={f.enabled} onChange={(v) => b.patch({ enabled: v })} />
+          {incomplete && (
+            <Alert>
+              <AlertDescription>{t("settings.stripeIncomplete")}</AlertDescription>
+            </Alert>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <SelectRow
+              id="stripeMode"
+              label={t("settings.stripeMode")}
+              value={f.mode}
+              onChange={(v) => b.patch({ mode: v })}
+              options={[
+                { value: "TEST", label: t("settings.stripeTest") },
+                { value: "LIVE", label: t("settings.stripeLive") },
+              ]}
+            />
+            <FieldRow id="publishableKey" label={t("settings.stripePk")}>
+              <Input id="publishableKey" maxLength={255} placeholder={`pk_${prefix}_…`} value={f.publishableKey} onChange={(e) => b.patch({ publishableKey: e.target.value })} aria-invalid={!!pkErr} />
+              <FieldError message={pkErr} />
+            </FieldRow>
+            {secretField("secretKey", "settings.stripeSk", f.secretKeySet, "clearSecret", skErr)}
+            {secretField("webhookSecret", "settings.stripeWh", f.webhookSecretSet, "clearWebhook", whErr)}
+          </div>
+          <div className="bg-muted/50 grid gap-1 rounded-md p-3 text-sm">
+            <span className="font-medium">{t("settings.stripeWebhookUrl")}</span>
+            <code className="text-xs break-all" data-testid="stripe-webhook-path">
+              {WEBHOOK_PATH}
+            </code>
+            <span className="text-muted-foreground text-xs">{t("settings.stripeWebhookHint")}</span>
+          </div>
+        </>
+      )}
+    </SettingsCard>
   )
 }
