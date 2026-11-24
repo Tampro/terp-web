@@ -172,3 +172,18 @@ test("PRJ-020 giai đoạn: đổi thứ tự gửi đủ danh sách (PRJ_013), 
   await page.getByRole("button", { name: "Chuyển In Progress lên" }).click()
   await expect.poll(() => order[0]).toEqual({ kind: "TASK", stageIds: [2, 1, 4] })
 })
+
+test("PRJ-003 thẻ thống kê từ /projects/stats: tổng, theo trạng thái, quá hạn", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/projects", { method: "GET", body: pageOf([PROJECT]) })
+  await mockApi(page, "/v1/projects/stats", {
+    body: ok({ totalProjects: 9, overdueProjects: 2, byStatus: { ONGOING: 5, ON_HOLD: 3, FINISHED: 1 } }),
+  })
+  await page.goto("/projects")
+  const cards = page.getByTestId("project-stats")
+  await expect(cards).toContainText("Tổng dự án9")
+  await expect(cards).toContainText("Đang thực hiện5")
+  await expect(cards).toContainText("Tạm dừng3")
+  await expect(cards).toContainText("Hoàn thành1")
+  await expect(cards).toContainText("Quá hạn2")
+})
