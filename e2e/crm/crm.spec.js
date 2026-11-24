@@ -247,3 +247,13 @@ test("CRM-011 báo cáo: tên nhân viên lấy từ /iam/users, theo giai đo�
   await page.getByRole("option", { name: "E2E Pipeline" }).click()
   await expect.poll(() => leads.requests.at(-1)?.url.searchParams.get("pipelineId")).toBe("1")
 })
+
+test("CRM-012 lead và deal có nút Lịch công việc mở lịch chung lọc theo loại công việc", async ({ page }) => {
+  await crm(page)
+  await mockApi(page, "/v1/crm/leads", { method: "GET", body: pageOf(LEADS) })
+  await mockApi(page, "/v1/crm/deals", { method: "GET", body: pageOf([]) })
+  await page.goto("/crm/leads")
+  await expect(page.getByRole("link", { name: "Lịch công việc" })).toHaveAttribute("href", "/calendar?kinds=LEAD_TASK")
+  await page.goto("/crm/deals")
+  await expect(page.getByRole("link", { name: "Lịch công việc" })).toHaveAttribute("href", "/calendar?kinds=DEAL_TASK")
+})

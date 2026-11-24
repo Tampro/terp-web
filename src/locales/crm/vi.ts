@@ -272,6 +272,7 @@ const crmVi: Record<keyof typeof crmEn, string> = {
   "crm.v.endBeforeStart": "Ngày kết thúc phải bằng hoặc sau ngày bắt đầu",
   "crm.contract.owner": "Người phụ trách",
   "crm.contractType.count": "Số hợp đồng",
+  "crm.taskCalendar": "Lịch công việc",
 }
 
 export default crmVi

@@ -271,6 +271,7 @@ const crmEn = {
   "crm.v.endBeforeStart": "The end date must be on or after the start date",
   "crm.contract.owner": "Assigned to",
   "crm.contractType.count": "Contracts",
+  "crm.taskCalendar": "Task calendar",
 }
 
 export default crmEn

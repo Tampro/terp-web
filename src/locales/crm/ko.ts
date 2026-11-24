@@ -272,6 +272,7 @@ const crmKo: Record<keyof typeof crmEn, string> = {
   "crm.v.endBeforeStart": "종료일은 시작일과 같거나 이후여야 합니다",
   "crm.contract.owner": "담당자",
   "crm.contractType.count": "계약 수",
+  "crm.taskCalendar": "작업 캘린더",
 }
 
 export default crmKo
