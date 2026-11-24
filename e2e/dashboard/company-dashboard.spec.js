@@ -168,3 +168,15 @@ test("STAFF-002 không có hồ sơ nhân viên (EMP_041 / EMP_001) → báo m�
   await expect(page.getByText("Hiện chưa lấy được dữ liệu.")).toHaveCount(0)
   await expect(page.getByText("E2E Ngày Nhà giáo")).toBeVisible() // the calendar card still shows
 })
+
+test("CDASH-006 thao tác nhanh HRM theo quyền; tab Tuyển dụng có nút sao chép link cổng tuyển dụng", async ({ page }) => {
+  await open(page, ["EMPLOYEE_VIEW", "EMPLOYEE_CREATE", "LEAVE_VIEW", "RECRUITMENT_VIEW"])
+  const qa = page.getByTestId("hrm-quick-actions")
+  await expect(qa.getByRole("link")).toHaveText(["Thêm nhân viên", "Nộp đơn nghỉ phép"]) // no payroll / lifecycle rights
+  await expect(qa.getByRole("link", { name: "Thêm nhân viên" })).toHaveAttribute("href", "/hrm/employees")
+  await page.getByRole("tab", { name: "Tuyển dụng" }).click()
+  await page.context().grantPermissions(["clipboard-read", "clipboard-write"])
+  await page.getByTestId("copy-career-link").click()
+  await expect(page.getByTestId("copy-career-link")).toHaveText("Đã sao chép")
+  expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/\/careers\/e2e-acme$/)
+})

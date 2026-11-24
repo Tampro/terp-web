@@ -40,6 +40,7 @@ import { SectionCard, StatCard } from "./dashboard-kit"
 import { AccountDashboard, CrmDashboard, PosDashboard, ProjectDashboard, SupportDashboard, type DashboardModule } from "./module-dashboards"
 import { ClockCard } from "./clock-card"
 import { HrOverview } from "./hr-overview"
+import { CopyLinkButton, HrmQuickActions } from "./quick-actions"
 import { MyDashboard } from "./my-dashboard"
 import { UpcomingEvents, useUpcomingCalendar } from "./upcoming-events"
 
@@ -127,6 +128,9 @@ export function CompanyDashboard({ hrm, recruitment, modules = [] }: { hrm: bool
         {hrm && (
           <TabsContent value="hrm">
             <HrmDashboard data={state.data} loading={state.loading} year={year} calendar={calendar} />
+            <div className="mt-4">
+              <HrmQuickActions />
+            </div>
             {/* /reports/hr-dashboard: fetched only while this tab is shown */}
             {tab === "hrm" && (
               <div className="mt-4">
@@ -409,9 +413,10 @@ function RecruitmentDashboardView({ data, loading }: { data?: TDashboard; loadin
       </div>
 
       {!loading && !data?.recruitment?.error && (
-        <p className="text-muted-foreground text-sm" data-testid="cdash.career">
-          {rec?.careerSlug ? t("cdash.careerOn", { slug: rec.careerSlug }) : t("cdash.careerOff")}
-        </p>
+        <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
+          <span data-testid="cdash.career">{rec?.careerSlug ? t("cdash.careerOn", { slug: rec.careerSlug }) : t("cdash.careerOff")}</span>
+          {rec?.careerSlug && <CopyLinkButton path={`/careers/${rec.careerSlug}`} label="qa.copyPortal" testId="copy-career-link" />}
+        </div>
       )}
 
       <div className="grid gap-4 lg:grid-cols-2">
