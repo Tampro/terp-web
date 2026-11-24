@@ -294,3 +294,21 @@ test("HR-050 khiếu nại giao người xử lý (AssignForm); chấp nhận ng
   await expect.poll(() => status.length).toBe(1)
   expect(status[0]).toEqual({ status: "ACCEPTED", exitInterviewConducted: true, exitInterviewDate: "2026-11-25", exitFeedback: "E2E feedback" })
 })
+
+test("HR-041 tab trạng thái có số đếm từ /status-counts, tìm kiếm gửi keyword cho cả danh sách và số đếm", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/lifecycle/resignations", { method: "GET", body: pageOf([]) })
+  const counts = await mockApi(page, "/v1/lifecycle/resignations/status-counts", { body: ok({ all: 30, byStatus: { PENDING: 9, ACCEPTED: 17, REJECTED: 4 } }) })
+  await page.goto("/hrm/career?tab=resignations")
+  await expect(page.getByRole("tab", { name: "Tất cả (30)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Chờ duyệt (9)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Đã chấp nhận (17)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Từ chối (4)" })).toBeVisible()
+  const before = counts.requests.length
+  await page.getByRole("tab", { name: "Chờ duyệt (9)" }).click()
+  await expect(page).toHaveURL(/status=PENDING/)
+  expect(counts.requests.length).toBe(before) // a status change does not reload the counts
+  await page.getByRole("textbox", { name: "Tìm kiếm" }).fill("E2E")
+  await page.getByRole("textbox", { name: "Tìm kiếm" }).press("Enter")
+  await expect.poll(() => counts.requests.at(-1)?.url.searchParams.get("keyword")).toBe("E2E")
+})
