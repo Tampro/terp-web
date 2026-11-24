@@ -268,6 +268,8 @@ function PurchaseInvoices() {
                   <TableHead>{t("sales.warehouse")}</TableHead>
                   <TableHead>{t("sales.invoice.date")}</TableHead>
                   <TableHead>{t("sales.dueDate")}</TableHead>
+                  <TableHead className="text-right">{t("sales.subtotal")}</TableHead>
+                  <TableHead className="text-right">{t("sales.tax")}</TableHead>
                   <TableHead className="text-right">{t("sales.total")}</TableHead>
                   <TableHead className="text-right">{t("sales.balance")}</TableHead>
                   <TableHead>{t("orders.status")}</TableHead>
@@ -279,14 +281,14 @@ function PurchaseInvoices() {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={9}>
+                    <TableCell colSpan={11}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
+                    <TableCell colSpan={11} className="text-muted-foreground h-24 text-center">
                       {t("purchase.invoice.empty")}
                     </TableCell>
                   </TableRow>
@@ -306,6 +308,8 @@ function PurchaseInvoices() {
                           </Badge>
                         )}
                       </TableCell>
+                      <TableCell className="text-right">{money(row.subtotal)}</TableCell>
+                      <TableCell className="text-right">{money(row.tax)}</TableCell>
                       <TableCell className="text-right font-medium">{money(row.total)}</TableCell>
                       <TableCell className="text-right">{money(row.balance)}</TableCell>
                       <TableCell>

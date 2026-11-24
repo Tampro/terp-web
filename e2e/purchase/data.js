@@ -25,6 +25,8 @@ export const INVOICES = [
     warehouseId: "801",
     invoiceDate: "2026-11-01",
     dueDate: "2026-11-15",
+    subtotal: 800000,
+    tax: 80000,
     total: 880000,
     balance: 880000,
     status: "POSTED",
