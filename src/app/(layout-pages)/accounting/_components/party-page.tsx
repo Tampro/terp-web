@@ -95,6 +95,10 @@ export function PartyPage({ kind }: { kind: EPartyKind }) {
 
   // Client-role users for customers, Vendor-role users for vendors (the backend links one user to one party)
   const role = kind === "customers" ? "CLIENT" : "VENDOR"
+  const userOf = (id?: string | null) => {
+    const u = id ? users.find((x) => x.id === id) : undefined
+    return u ? u.fullName || u.username : id || "-"
+  }
   const roleUsers = users.filter((u) => u.roles?.includes(role))
   const rows = data?.content ?? []
   const code = (p: PartyDto) => p.customerCode ?? p.vendorCode ?? "-"
@@ -135,6 +139,8 @@ export function PartyPage({ kind }: { kind: EPartyKind }) {
                   <TableHead>{t("crm.email")}</TableHead>
                   <TableHead>{t("crm.phone")}</TableHead>
                   <TableHead>{t("sales.paymentTerms")}</TableHead>
+                  <TableHead>{t("acc.party.taxNumber")}</TableHead>
+                  <TableHead>{t("acc.party.user")}</TableHead>
                   <TableHead className="w-12">
                     <span className="sr-only">{t("common.actions")}</span>
                   </TableHead>
@@ -143,14 +149,14 @@ export function PartyPage({ kind }: { kind: EPartyKind }) {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={7}>
+                    <TableCell colSpan={9}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-muted-foreground h-24 text-center">
+                    <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
                       {t(`acc.${k}.empty` as TranslationKey)}
                     </TableCell>
                   </TableRow>
@@ -164,6 +170,8 @@ export function PartyPage({ kind }: { kind: EPartyKind }) {
                       <TableCell>{p.email}</TableCell>
                       <TableCell>{p.mobile || "-"}</TableCell>
                       <TableCell>{p.paymentTerms || "-"}</TableCell>
+                      <TableCell>{p.taxNumber || "-"}</TableCell>
+                      <TableCell>{userOf(p.userId)}</TableCell>
                       <TableCell>
                         {(manage || canReport) && (
                           <DropdownMenu>

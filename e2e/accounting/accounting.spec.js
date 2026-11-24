@@ -312,3 +312,41 @@ test("ACC-062 ánh xạ hệ thống chỉ xem (COA_VIEW): hiện mã · tên, k
   await expect(page.getByTestId("account-mapping").getByRole("combobox")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Lưu" })).toHaveCount(0)
 })
+
+test("ACC-070 cột như màn tham chiếu: MST + người dùng liên kết, người duyệt, tài khoản cha + lọc Nợ/Có, tìm tài khoản ngân hàng", async ({ page }) => {
+  await mockLoggedIn(page, { permissions: [...ALL, "IAM_USER_VIEW"] })
+  await mockApi(page, "/v1/iam/users", { body: pageOf([{ id: "58", username: "e2e.client", fullName: "E2E Client", roles: ["CLIENT"] }, { id: "7", username: "e2e.boss", fullName: "E2E Kế toán trưởng" }]) })
+  const banks = await mockApi(page, "/v1/accounting/bank-accounts", { method: "GET", body: pageOf(BANKS) })
+  const coa = await mockApi(page, "/v1/accounting/chart-of-accounts", {
+    method: "GET",
+    body: pageOf([...ACCOUNTS, { id: "210", code: "1111", name: "E2E Tiền mặt VND", accountTypeId: "33", normalBalance: "DEBIT", active: true, parentId: "209" }]),
+  })
+  await mockApi(page, "/v1/accounting/account-types", { body: pageOf([{ id: "33", category: "ASSETS", code: "CA", name: "E2E Current assets", normalBalance: "DEBIT", active: true }]) })
+  await mockApi(page, "/v1/accounting/customers", {
+    method: "GET",
+    body: pageOf([{ id: "5", customerCode: "CUST-0001", companyName: "E2E Ánh Dương", contactPerson: "E2E A", email: "a@example.com", taxNumber: "0312345678", userId: "58" }]),
+  })
+  await mockApi(page, "/v1/accounting/revenue-categories", { method: "GET", body: pageOf([]) })
+  await mockApi(page, "/v1/accounting/revenues", { method: "GET", body: pageOf([{ id: "1", number: "REV-2026-11-001", date: "2026-11-20", bankAccountId: "11", amount: 100000, status: "APPROVED", approvedBy: "7" }]) })
+
+  await page.goto("/accounting/customers")
+  const row = page.getByRole("row", { name: /E2E Ánh Dương/ })
+  await expect(row).toContainText("0312345678")
+  await expect(row).toContainText("E2E Client")
+
+  await page.goto("/accounting/revenues")
+  await expect(page.getByRole("columnheader", { name: "Người duyệt" })).toBeVisible()
+  await expect(page.getByRole("row", { name: /REV-2026-11-001/ })).toContainText("E2E Kế toán trưởng")
+
+  await page.goto("/accounting/chart-of-accounts")
+  await expect(page.getByRole("row", { name: /E2E Tiền mặt VND/ })).toContainText("111")
+  await page.getByRole("combobox", { name: "Số dư thông thường" }).click()
+  await page.getByRole("option", { name: "Có" }).click()
+  await expect.poll(() => coa.requests.at(-1)?.url.searchParams.get("normalBalance")).toBe("CREDIT")
+  await expect(page).toHaveURL(/normal=CREDIT/)
+
+  await page.goto("/accounting/banking")
+  await page.getByRole("textbox", { name: "Tìm kiếm" }).fill("VCB")
+  await page.getByRole("button", { name: "Tìm kiếm" }).click()
+  await expect.poll(() => banks.requests.at(-1)?.url.searchParams.get("keyword")).toBe("VCB")
+})

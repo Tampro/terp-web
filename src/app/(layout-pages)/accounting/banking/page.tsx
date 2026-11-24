@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { ArrowRightLeft, CheckCheck, List, MoreHorizontal, Pencil, Plus, Trash2 } from "lucide-react"
+import { ArrowRightLeft, CheckCheck, List, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog"
@@ -56,6 +56,8 @@ function Banking() {
   const { searchParams, update } = useUrlQuery()
   const tab = searchParams.get("tab") === "transfers" ? "transfers" : "accounts"
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
+  const keyword = searchParams.get("keyword") ?? ""
+  const [search, setSearch] = React.useState(keyword)
   const [accounts, setAccounts] = React.useState<IPage<BankAccountDto>>()
   const [transfers, setTransfers] = React.useState<IPage<TransferDto>>()
   const [reloadKey, setReloadKey] = React.useState(0)
@@ -69,13 +71,13 @@ function Banking() {
     let cancelled = false
     const load =
       tab === "accounts"
-        ? BankService.accounts({ page, size: PAGE_SIZE }).then((p) => !cancelled && setAccounts(p))
+        ? BankService.accounts({ keyword: keyword || undefined, page, size: PAGE_SIZE }).then((p) => !cancelled && setAccounts(p))
         : BankService.transfers({ page, size: PAGE_SIZE }).then((p) => !cancelled && setTransfers(p))
     load.catch((e: Error) => !cancelled && toast.error(e.message))
     return () => {
       cancelled = true
     }
-  }, [tab, page, reloadKey])
+  }, [tab, keyword, page, reloadKey])
 
   const bank = (id?: string) => lookups.banks.find((b) => b.id === id) ?? accounts?.content?.find((b) => b.id === id)
   const data = tab === "accounts" ? accounts : transfers
@@ -93,7 +95,7 @@ function Banking() {
             </Button>
           ))}
       </PageHeader>
-      <Tabs value={tab} onValueChange={(v) => update({ tab: v === "accounts" ? "" : v, page: 0 })}>
+      <Tabs value={tab} onValueChange={(v) => update({ tab: v === "accounts" ? "" : v, page: 0, keyword: "" })}>
         <TabsList>
           <TabsTrigger value="accounts">{t("acc.bank.accounts")}</TabsTrigger>
           <TabsTrigger value="transfers">{t("acc.bank.transfers")}</TabsTrigger>
@@ -101,6 +103,23 @@ function Banking() {
       </Tabs>
       <Card>
         <CardContent className="flex flex-col gap-4">
+          {tab === "accounts" && (
+            <form
+              className="flex max-w-md items-center gap-2"
+              onSubmit={(e) => {
+                e.preventDefault()
+                update({ keyword: search.trim(), page: 0 })
+              }}
+            >
+              <div className="relative flex-1">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("acc.bank.searchPlaceholder")} aria-label={t("common.search")} className="pl-9" />
+              </div>
+              <Button type="submit" variant="secondary">
+                {t("common.search")}
+              </Button>
+            </form>
+          )}
           <div className="overflow-x-auto">
             {!data ? (
               <Skeleton className="h-32 w-full" />
