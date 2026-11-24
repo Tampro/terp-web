@@ -146,6 +146,7 @@ const ledgerEn = {
   "le.closingDate": "Closing date",
   "le.closingEntry": "Closing entry",
   "le.closedAt": "Closed on",
+  "le.sheet.yearFilter": "Filter by financial year",
 }
 
 export default ledgerEn

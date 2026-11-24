@@ -227,3 +227,20 @@ test("LE-002 lọc theo nguồn gửi sourceType; nguồn có trang chi tiết t
   await expect(page).toHaveURL(/sourceType=VENDOR_PAYMENT/)
   await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("sourceType")).toBe("VENDOR_PAYMENT")
 })
+
+test("LE-031 bảng cân đối: tab trạng thái gửi status, lọc năm tài chính gửi financialYear, giữ trên URL", async ({ page }) => {
+  await base(page)
+  const list = await mockApi(page, "/v1/accounting/balance-sheets", {
+    method: "GET",
+    body: pageOf([{ id: "8", date: "2025-12-31", financialYear: 2025, status: "FINALISED", totalAssets: 1, totalLiabilities: 0, totalEquity: 1, balanced: true }]),
+  })
+  await page.goto("/accounting/balance-sheets")
+  await page.getByRole("tab", { name: "Đã chốt" }).click()
+  await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("status")).toBe("FINALISED")
+  await page.getByRole("textbox", { name: "Lọc theo năm tài chính" }).fill("2025")
+  await page.getByRole("button", { name: "Tìm kiếm" }).click()
+  await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("financialYear")).toBe("2025")
+  expect(list.requests.at(-1)?.url.searchParams.get("status")).toBe("FINALISED")
+  await expect(page).toHaveURL(/status=FINALISED/)
+  await expect(page).toHaveURL(/year=2025/)
+})

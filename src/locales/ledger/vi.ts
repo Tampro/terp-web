@@ -147,6 +147,7 @@ const ledgerVi: Record<keyof typeof ledgerEn, string> = {
   "le.closingDate": "Ngày khóa sổ",
   "le.closingEntry": "Bút toán kết chuyển",
   "le.closedAt": "Ngày thực hiện",
+  "le.sheet.yearFilter": "Lọc theo năm tài chính",
 }
 
 export default ledgerVi
