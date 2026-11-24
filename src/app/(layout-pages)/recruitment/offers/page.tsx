@@ -6,12 +6,16 @@ import { Check, Download, Handshake, Send, ThumbsDown, ThumbsUp, UserPlus, X } f
 import { Badge } from "@/components/ui/badge"
 import { EMPLOYMENT_TYPES, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { REC, RecOptions, RecruitmentService } from "@/lib/recruitment/recruitment.service"
-import { useT, type TranslationKey } from "@/lib/i18n"
+import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
+import { formatDate } from "@/lib/format"
 import { saveBlob } from "@/lib/pos/pos.service"
 
+import { BoardCard, StatusBoard } from "../_components/status-board"
 import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../../hrm/_components/crud-kit"
 
 const OFFER_STATUSES = ["DRAFT", "SENT", "NEGOTIATING", "ACCEPTED", "DECLINED", "EXPIRED"] as const
+/** no status move or approval change any more (REC_067) */
+const FINAL = ["ACCEPTED", "DECLINED", "EXPIRED"]
 const APPROVAL_VARIANT: Record<string, "default" | "outline" | "destructive"> = { APPROVED: "default", PENDING: "outline", REJECTED: "destructive" }
 
 export default function OffersPage() {
@@ -25,6 +29,7 @@ export default function OffersPage() {
 /** §17 offers: Draft → Sent → Negotiating / Accepted / Declined / Expired, approval Approved / Rejected (needed before sending, REC_058), letter from a template, Convert to Employee once accepted. */
 function Offers() {
   const t = useT()
+  const language = useLanguageStore((s) => s.language)
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("RECRUITMENT_MANAGE")
   const candidates = toSelect(useOptions("rec:candidates", RecOptions.candidates))
   const postings = toSelect(useOptions("rec:postings", RecOptions.postings))
@@ -43,6 +48,7 @@ function Offers() {
   const cfg: CrudConfig = {
     id: "offers",
     load: REC.offers.list,
+    countsPath: "/v1/recruitment/offers/status-counts",
     keyword: true,
     statuses: [...OFFER_STATUSES],
     columns: [
@@ -108,5 +114,42 @@ function Offers() {
     ],
     manage,
   }
-  return <TabbedPage title={t("menu.rc.offers")} description={t("rc.offers.subtitle")} tabs={[{ key: "list", label: "menu.rc.offers", content: () => <CrudSection config={cfg} /> }]} />
+  /** moves the backend refuses (OfferService.changeStatus): out of a final status (REC_067), SENT before approval (REC_058) */
+  const check = (r: Row, to: string): TranslationKey | undefined => {
+    if (FINAL.includes(String(r.status))) return "rc.board.final"
+    if (to === "SENT" && !approved(r)) return "rc.board.notApproved"
+    return undefined
+  }
+  return (
+    <TabbedPage
+      title={t("menu.rc.offers")}
+      description={t("rc.offers.subtitle")}
+      tabs={[
+        { key: "list", label: "menu.rc.offers", content: () => <CrudSection config={cfg} /> },
+        {
+          key: "board",
+          label: "rc.board",
+          content: () => (
+            <StatusBoard
+              path="/v1/recruitment/offers/kanban"
+              manage={manage}
+              check={check}
+              move={(r, s) => setStatus(s)(r)}
+              renderCard={(r) => (
+                <BoardCard
+                  title={String(pick(r, "candidate.fullName") ?? "-")}
+                  label={String(pick(r, "candidate.fullName") ?? "")}
+                  lines={[
+                    String(pick(r, "job.title") ?? "-"),
+                    `${t("rc.approval")}: ${t(`hr.status.${String(r.approvalStatus ?? "PENDING")}` as TranslationKey)}`,
+                    r.expirationDate ? `${t("rc.expires")}: ${formatDate(String(r.expirationDate), language)}` : "",
+                  ].filter(Boolean)}
+                />
+              )}
+            />
+          ),
+        },
+      ]}
+    />
+  )
 }

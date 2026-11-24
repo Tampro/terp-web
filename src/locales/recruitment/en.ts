@@ -221,6 +221,12 @@ const recruitmentEn = {
   "cp.status.OFFER": "Offer",
   "cp.status.HIRED": "Hired",
   "cp.status.REJECTED": "Not selected",
+  "rc.board": "Kanban",
+  "rc.board.hint": "Drag a card to another column to change the stage",
+  "rc.board.open": "Open {name}",
+  "rc.board.of": "of {n}",
+  "rc.board.final": "An accepted, declined or expired offer can no longer change status",
+  "rc.board.notApproved": "Approve the offer before sending it",
 }
 
 export default recruitmentEn

@@ -222,6 +222,12 @@ const recruitmentKo: Record<keyof typeof recruitmentEn, string> = {
   "cp.status.OFFER": "제안",
   "cp.status.HIRED": "채용",
   "cp.status.REJECTED": "불합격",
+  "rc.board": "칸반",
+  "rc.board.hint": "카드를 다른 열로 끌어 단계를 변경하세요",
+  "rc.board.open": "{name} 열기",
+  "rc.board.of": "전체 {n}",
+  "rc.board.final": "수락·거절·만료된 오퍼는 더 이상 상태를 바꿀 수 없습니다",
+  "rc.board.notApproved": "오퍼를 보내기 전에 먼저 승인하세요",
 }
 
 export default recruitmentKo

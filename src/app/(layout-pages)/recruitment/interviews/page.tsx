@@ -14,6 +14,7 @@ import { RECOMMENDATIONS, REC, RecOptions, RecruitmentService, type InterviewDet
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
+import { BoardCard, StatusBoard } from "../_components/status-board"
 import { attempt, CrudSection, FormDialogBody, HrStatus, initialValues, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef } from "../../hrm/_components/crud-kit"
 
 const REC_VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive"> = { STRONG_HIRE: "default", HIRE: "default", MAYBE: "secondary", REJECT: "destructive", STRONG_REJECT: "destructive" }
@@ -49,6 +50,7 @@ function Interviews() {
   const cfg: CrudConfig = {
     id: "interviews",
     load: REC.interviews.list,
+    countsPath: "/v1/recruitment/interviews/summary",
     keyword: true,
     statuses: ["SCHEDULED", "COMPLETED", "CANCELLED", "NO_SHOW"],
     reloadKey: reload,
@@ -98,7 +100,30 @@ function Interviews() {
   }
   return (
     <>
-      <TabbedPage title={t("menu.rc.interviews")} description={t("rc.interviews.subtitle")} tabs={[{ key: "list", label: "menu.rc.interviews", content: () => <CrudSection config={cfg} /> }]} />
+      <TabbedPage title={t("menu.rc.interviews")} description={t("rc.interviews.subtitle")} tabs={[
+          { key: "list", label: "menu.rc.interviews", content: () => <CrudSection config={cfg} /> },
+          {
+            key: "board",
+            label: "rc.board",
+            content: () => (
+              <StatusBoard
+                path="/v1/recruitment/interviews/kanban"
+                manage={manage}
+                reloadKey={reload}
+                move={(r, s) => REC.interviews.put(r.id ?? "", "status", { status: s })}
+                renderCard={(r) => (
+                  <BoardCard
+                    title={String(pick(r, "candidate.fullName") ?? "-")}
+                    label={t("rc.board.open", { name: String(pick(r, "candidate.fullName") ?? "") })}
+                    lines={[String(pick(r, "round.name") ?? "-"), `${formatDate(String(r.date ?? "") || undefined, language)} ${String(r.startTime ?? "").slice(0, 5)}`]}
+                    onOpen={() => setViewing(r.id)}
+                  />
+                )}
+              />
+            ),
+          },
+        ]}
+      />
       <Dialog open={!!viewing} onOpenChange={(o) => !o && setViewing(undefined)}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">{viewing && <InterviewView key={viewing} id={viewing} manage={manage} onChanged={() => setReload((x) => x + 1)} />}</DialogContent>
       </Dialog>

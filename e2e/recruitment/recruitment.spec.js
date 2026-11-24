@@ -222,3 +222,67 @@ test("RC-040 cổng công khai: bắt buộc CV + điều khoản + câu hỏi; 
   await page.getByRole("button", { name: "Xem trạng thái" }).click()
   await expect(page.getByTestId("track-result")).toContainText("Đang xem xét")
 })
+
+test("RC-050 ứng viên: tab có số đếm; Kanban theo giai đoạn, kéo thẻ sang cột khác gửi PUT /status", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/recruitment/candidate-sources/options", { body: ok([]) })
+  const rows = [
+    { id: "7", fullName: "E2E Lan", status: "NEW", job: { title: "E2E Accountant" }, applicationDate: "2026-11-20" },
+    { id: "8", fullName: "E2E Minh", status: "SCREENING", job: { title: "E2E Developer" }, applicationDate: "2026-11-21" },
+  ]
+  await mockApi(page, "/v1/recruitment/candidates", { method: "GET", body: pageOf(rows) })
+  await mockApi(page, "/v1/recruitment/candidates/kanban", { body: ok([{ status: "NEW", count: 3, cards: [rows[0]] }, { status: "SCREENING", count: 1, cards: [rows[1]] }]) })
+  const counts = await mockApi(page, "/v1/recruitment/candidates/status-counts", { body: ok({ all: 2, byStatus: { NEW: 1, SCREENING: 1 } }) })
+  const put = await mockApi(page, "/v1/recruitment/candidates/7/status", { method: "PUT", body: ok({ id: "7", status: "SCREENING" }) })
+  await page.goto("/recruitment/candidates")
+  await expect(page.getByRole("tab", { name: "Tất cả (2)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Sàng lọc (1)" })).toBeVisible()
+  expect(counts.requests.length).toBeGreaterThan(0)
+  await page.getByRole("tab", { name: "Kanban" }).click()
+  const screening = page.getByRole("region", { name: "Sàng lọc" })
+  await expect(page.getByRole("region", { name: "Mới" }).getByText("E2E Lan")).toBeVisible()
+  await expect(page.getByRole("region", { name: "Mới" }).getByText("trên 3")).toBeVisible()
+  await page.locator("[data-card-id='7']").dragTo(screening.getByRole("heading", { name: "Sàng lọc" }))
+  await expect.poll(() => put.length).toBe(1)
+  expect(put[0]).toEqual({ status: "SCREENING" })
+  expect(put.length).toBe(1)
+})
+
+test("RC-051 thiết lập: địa điểm tuyển dụng có số đếm {all, active, inactive}", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/recruitment/job-locations", { method: "GET", body: pageOf([]) })
+  await mockApi(page, "/v1/recruitment/job-locations/status-counts", { body: ok({ all: 3, active: 2, inactive: 1 }) })
+  await page.goto("/recruitment/setup?tab=locations")
+  await expect(page.getByRole("tab", { name: "Tất cả (3)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Đang hoạt động (2)" })).toBeVisible()
+})
+
+test("RC-052 Kanban offer: chặn gửi khi chưa duyệt và đổi trạng thái offer đã chốt; kéo hợp lệ gửi PUT /status", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/recruitment/offers", { method: "GET", body: pageOf([]) })
+  await mockApi(page, "/v1/recruitment/offers/status-counts", { body: ok({ all: 3, byStatus: {} }) })
+  const card = (/** @type {string} */ id, /** @type {string} */ name, /** @type {string} */ status, /** @type {string} */ approvalStatus) => ({ id, status, approvalStatus, candidate: { fullName: name }, job: { title: "E2E Accountant" } })
+  await mockApi(page, "/v1/recruitment/offers/kanban", {
+    body: ok([
+      { status: "DRAFT", count: 1, cards: [card("1", "E2E Draft", "DRAFT", "PENDING")] },
+      { status: "SENT", count: 1, cards: [card("2", "E2E Sent", "SENT", "APPROVED")] },
+      { status: "NEGOTIATING", count: 0, cards: [] },
+      { status: "ACCEPTED", count: 1, cards: [card("3", "E2E Done", "ACCEPTED", "APPROVED")] },
+      { status: "DECLINED", count: 0, cards: [] },
+      { status: "EXPIRED", count: 0, cards: [] },
+    ]),
+  })
+  const put1 = await mockApi(page, "/v1/recruitment/offers/1/status", { method: "PUT", body: ok({}) })
+  const put2 = await mockApi(page, "/v1/recruitment/offers/2/status", { method: "PUT", body: ok({}) })
+  const put3 = await mockApi(page, "/v1/recruitment/offers/3/status", { method: "PUT", body: ok({}) })
+  await page.goto("/recruitment/offers?tab=board")
+  const col = (/** @type {string} */ n) => page.getByRole("region", { name: n }).getByRole("heading", { name: n })
+  await page.locator("[data-card-id='1']").dragTo(col("Đã gửi"))
+  await expect(page.getByText("Hãy duyệt offer trước khi gửi")).toBeVisible()
+  await page.locator("[data-card-id='3']").dragTo(col("Đã gửi"))
+  await expect(page.getByText("Offer đã chấp nhận, từ chối hoặc hết hạn không thể đổi trạng thái nữa")).toBeVisible()
+  await page.locator("[data-card-id='2']").dragTo(col("Đang thương lượng"))
+  await expect.poll(() => put2.length).toBe(1)
+  expect(put2[0]).toEqual({ status: "NEGOTIATING" })
+  expect(put1.length + put3.length).toBe(0)
+})
