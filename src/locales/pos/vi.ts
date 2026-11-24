@@ -65,6 +65,8 @@ const posVi: Record<keyof typeof posEn, string> = {
   "pos.report.average": "Giá trị đơn TB",
   "pos.report.lastOrder": "Đơn gần nhất",
   "pos.report.empty": "Không có doanh số trong khoảng này",
+  "pos.addBySku": "Thêm vào giỏ theo SKU (quét hoặc gõ + Enter)",
+  "pos.skuNotFound": "Không có sản phẩm có SKU {sku}",
 }
 
 export default posVi

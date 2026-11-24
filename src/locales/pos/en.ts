@@ -64,6 +64,8 @@ const posEn = {
   "pos.report.average": "Average order",
   "pos.report.lastOrder": "Last order",
   "pos.report.empty": "No sales in this period",
+  "pos.addBySku": "Add to cart by SKU (scan or type + Enter)",
+  "pos.skuNotFound": "No product with SKU {sku}",
 }
 
 export default posEn

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
-import { Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react"
+import { Barcode, Minus, Plus, Search, ShoppingCart, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { PageHeader } from "@/components/common/page-header"
@@ -46,6 +46,7 @@ export default function PosPage() {
   const [banks, setBanks] = React.useState<BankAccountOption[]>([])
   const [category, setCategory] = React.useState(ALL)
   const [search, setSearch] = React.useState("")
+  const [sku, setSku] = React.useState("")
   const [customerId, setCustomerId] = React.useState(WALK_IN)
   const [warehouseId, setWarehouseId] = React.useState("")
   const [bankAccountId, setBankAccountId] = React.useState("")
@@ -133,6 +134,30 @@ export default function PosPage() {
     if (!canAdd(i)) return toast.error(t("pos.noMoreStock", { name: i.name ?? "" }))
     setCart((c) => (c.some((l) => l.itemId === i.id) ? c.map((l) => (l.itemId === i.id ? { ...l, quantity: l.quantity + 1 } : l)) : [...c, { itemId: i.id!, quantity: 1 }]))
   }
+  /** "Add to cart by SKU" (barcode scanner types the code + Enter): exact SKU, case-insensitive; field cleared on success */
+  async function addBySku(e: React.FormEvent) {
+    e.preventDefault()
+    const code = sku.trim().toLowerCase()
+    if (!code) return
+    let found = items?.find((i) => i.sku?.toLowerCase() === code)
+    if (!found) {
+      // the grid holds only the first 100 items: ask the backend (keyword = name or SKU, ItemController)
+      try {
+        const page = await ItemService.list({ keyword: sku.trim(), size: 50 })
+        found = (page.content ?? []).find((i) => i.sku?.toLowerCase() === code)
+      } catch (err) {
+        return toast.error(err instanceof Error ? err.message : String(err))
+      }
+      if (found) {
+        const extra = found
+        setItems((list) => (list?.some((i) => i.id === extra.id) ? list : [...(list ?? []), extra]))
+      }
+    }
+    if (!found) return toast.error(t("pos.skuNotFound", { sku: sku.trim() }))
+    if (stocked(found) && !canAdd(found)) return toast.error(t("pos.noMoreStock", { name: found.name ?? "" }))
+    add(found)
+    setSku("")
+  }
   const change = (id: string, d: number) =>
     setCart((c) => c.map((l) => (l.itemId === id ? { ...l, quantity: l.quantity + d } : l)).filter((l) => l.quantity > 0))
 
@@ -188,9 +213,15 @@ export default function PosPage() {
       <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
         <Card className="min-w-0">
           <CardContent className="flex flex-col gap-4">
-            <div className="relative">
-              <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("pos.searchPlaceholder")} aria-label={t("common.search")} className="pl-9" />
+            <div className="grid gap-2 sm:grid-cols-2">
+              <div className="relative">
+                <Search className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t("pos.searchPlaceholder")} aria-label={t("common.search")} className="pl-9" />
+              </div>
+              <form onSubmit={addBySku} className="relative">
+                <Barcode className="text-muted-foreground absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input value={sku} onChange={(e) => setSku(e.target.value)} placeholder={t("pos.addBySku")} aria-label={t("pos.addBySku")} className="pl-9 font-mono" autoComplete="off" />
+              </form>
             </div>
             <Tabs value={category} onValueChange={setCategory}>
               <TabsList className="flex-wrap">

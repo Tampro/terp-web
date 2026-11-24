@@ -240,3 +240,35 @@ test("POS-011 đơn POS: lọc theo khách hàng gửi customerId và giữ trê
   await page.getByRole("option", { name: "Tất cả khách hàng" }).click()
   await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("customerId")).toBeNull()
 })
+
+test("POS-005 thêm vào giỏ theo SKU: Enter thêm đúng sản phẩm (không phân biệt hoa thường), sai SKU hoặc hết tồn thì báo", async ({ page }) => {
+  const preview = await openPos(page)
+  const sku = page.getByLabel(/Thêm vào giỏ theo SKU/)
+  await sku.fill("kb-01")
+  await sku.press("Enter")
+  await expect(sku).toHaveValue("") // cleared for the next scan
+  await expect.poll(() => /** @type {any} */ (preview.at(-1))?.lines).toEqual([{ itemId: 601, quantity: 1 }])
+  await sku.fill("KB-01")
+  await sku.press("Enter")
+  await expect.poll(() => /** @type {any} */ (preview.at(-1))?.lines).toEqual([{ itemId: 601, quantity: 2 }])
+  await sku.fill("KB-01")
+  await sku.press("Enter")
+  await expect(page.getByText("E2E Keyboard đã hết tồn ở kho này")).toBeVisible() // only 2 in stock
+  await expect(sku).toHaveValue("KB-01")
+  await sku.fill("NOPE-9")
+  await sku.press("Enter")
+  await expect(page.getByText("Không có sản phẩm có SKU NOPE-9")).toBeVisible()
+})
+
+test("POS-006 SKU ngoài 100 sản phẩm đã tải: hỏi backend theo keyword rồi thêm vào giỏ", async ({ page }) => {
+  const preview = await openPos(page)
+  const extra = { id: "699", type: "SERVICE", name: "E2E Late Service", sku: "LATE-99", categoryId: "2", salePrice: 90000, quantity: 0 }
+  const search = await mockApi(page, "/v1/inventory/items", { body: pageOf([extra]) })
+  const sku = page.getByLabel(/Thêm vào giỏ theo SKU/)
+  await sku.fill("late-99")
+  await sku.press("Enter")
+  await expect(sku).toHaveValue("")
+  expect(search.requests[0].url.searchParams.get("keyword")).toBe("late-99")
+  await expect.poll(() => /** @type {any} */ (preview.at(-1))?.lines).toEqual([{ itemId: 699, quantity: 1 }])
+  await expect(page.getByRole("button", { name: "Bỏ E2E Late Service" })).toBeVisible() // cart line resolves the item
+})
