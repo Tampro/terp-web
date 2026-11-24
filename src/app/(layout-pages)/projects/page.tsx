@@ -28,7 +28,7 @@ import type { IPage } from "@/lib/api"
 import { useAuthStore } from "@/lib/auth/auth.store"
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
-import { ProjectService, type EProjectStatus, type ProjectDto } from "@/lib/project/project.service"
+import { ProjectService, type EProjectStatus, type ProjectDto, type ProjectStats } from "@/lib/project/project.service"
 
 import { DuplicateDialog, ProjectFormDialog } from "./_components/project-dialogs"
 import { attempt, People, ProjectStatusBadge } from "./_components/project-kit"
@@ -66,6 +66,17 @@ function Projects() {
   const [editing, setEditing] = React.useState<{ project?: ProjectDto } | null>(null)
   const [duplicating, setDuplicating] = React.useState<ProjectDto>()
   const [deleting, setDeleting] = React.useState<ProjectDto>()
+  const [stats, setStats] = React.useState<ProjectStats>()
+
+  React.useEffect(() => {
+    let cancelled = false
+    ProjectService.stats()
+      .then((s) => !cancelled && setStats(s))
+      .catch(() => undefined) // the cards are a summary: the list still works without them
+    return () => {
+      cancelled = true
+    }
+  }, [reloadKey])
 
   React.useEffect(() => {
     let cancelled = false
@@ -88,6 +99,26 @@ function Projects() {
           </Button>
         )}
       </PageHeader>
+      {stats && (
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-5" data-testid="project-stats">
+          {(
+            [
+              ["project.stats.total", stats.totalProjects, ""],
+              ["project.status.ONGOING", stats.byStatus?.ONGOING, ""],
+              ["project.status.ON_HOLD", stats.byStatus?.ON_HOLD, ""],
+              ["project.status.FINISHED", stats.byStatus?.FINISHED, ""],
+              ["project.stats.overdue", stats.overdueProjects, "text-destructive"],
+            ] as const
+          ).map(([label, value, tone]) => (
+            <Card key={label} className="py-4">
+              <CardContent className="px-4">
+                <p className="text-muted-foreground text-sm">{t(label)}</p>
+                <p className={`text-2xl font-semibold ${tone}`}>{value ?? 0}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-3">
         <Tabs value={status} onValueChange={(v) => update({ status: v === ALL ? "" : v, page: 0 })}>
           <TabsList>

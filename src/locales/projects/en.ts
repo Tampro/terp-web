@@ -272,6 +272,8 @@ const projectsEn = {
   "timesheet.v.hours": "Enter 0 to 24 hours",
   "timesheet.v.minutes": "Enter 0 to 59 minutes",
   "timesheet.v.total": "An entry is 15 minutes to 24 hours",
+  "project.stats.total": "Total projects",
+  "project.stats.overdue": "Overdue",
 }
 
 export default projectsEn

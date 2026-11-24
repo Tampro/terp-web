@@ -273,6 +273,8 @@ const projectsVi: Record<keyof typeof projectsEn, string> = {
   "timesheet.v.hours": "Nhập từ 0 đến 24 giờ",
   "timesheet.v.minutes": "Nhập từ 0 đến 59 phút",
   "timesheet.v.total": "Mỗi bản ghi từ 15 phút đến 24 giờ",
+  "project.stats.total": "Tổng dự án",
+  "project.stats.overdue": "Quá hạn",
 }
 
 export default projectsVi

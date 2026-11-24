@@ -273,6 +273,8 @@ const projectsKo: Record<keyof typeof projectsEn, string> = {
   "timesheet.v.hours": "0에서 24시간 사이로 입력하세요",
   "timesheet.v.minutes": "0에서 59분 사이로 입력하세요",
   "timesheet.v.total": "항목은 15분에서 24시간 사이여야 합니다",
+  "project.stats.total": "전체 프로젝트",
+  "project.stats.overdue": "기한 초과",
 }
 
 export default projectsKo

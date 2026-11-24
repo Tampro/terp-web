@@ -193,7 +193,15 @@ const put = <T,>(path: string, body?: unknown) => request<T>(path, { method: "PU
 const post = <T,>(path: string, body?: unknown) => request<T>(path, { method: "POST", body })
 const del = (path: string) => request<void>(path, { method: "DELETE" })
 
+/** GET /v1/projects/stats (ProjectStatsService.ProjectStats): only the fields this app reads */
+export interface ProjectStats {
+  totalProjects?: number
+  overdueProjects?: number
+  byStatus?: Partial<Record<EProjectStatus, number>>
+}
+
 export const ProjectService = {
+  stats: () => request<ProjectStats>("/v1/projects/stats"),
   list: (f: { status?: string; q?: string; page?: number; size?: number }) => request<IPage<ProjectDto>>(withQuery("/v1/projects", { ...f })),
   get: (id: string) => request<ProjectDetailDto>(`/v1/projects/${id}`),
   create: (body: ProjectForm) => post<ProjectDto>("/v1/projects", body),
