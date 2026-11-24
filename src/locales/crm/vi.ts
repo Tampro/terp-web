@@ -270,6 +270,7 @@ const crmVi: Record<keyof typeof crmEn, string> = {
   "crm.v.amount": "Nhập số tiền từ 0 trở lên",
   "crm.v.date": "Chọn ngày",
   "crm.v.endBeforeStart": "Ngày kết thúc phải bằng hoặc sau ngày bắt đầu",
+  "crm.taskCalendar": "Lịch công việc",
 }
 
 export default crmVi

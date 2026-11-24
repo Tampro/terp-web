@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { Eye, Handshake, Kanban, List, MoreHorizontal, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react"
+import { CalendarDays, Eye, Handshake, Kanban, List, MoreHorizontal, Pencil, Plus, Search, Tag, Trash2 } from "lucide-react"
 import { toast } from "sonner"
 
 import { ConfirmDialog } from "@/components/common/confirm-dialog"
@@ -120,6 +120,12 @@ function Leads() {
   return (
     <div className="flex flex-col gap-4 p-4 md:p-6">
       <PageHeader title={t("menu.crm.leads")} description={t("crm.lead.subtitle")}>
+        {/* core's CRM tasks page: the unified calendar (crm-service /crm/tasks/calendar) filtered on LEAD_TASK */}
+        <Button variant="outline" asChild>
+          <Link href="/calendar?kinds=LEAD_TASK">
+            <CalendarDays className="size-4" /> {t("crm.taskCalendar")}
+          </Link>
+        </Button>
         {manage && pipelineId && (
           <Button onClick={() => setEditing({})}>
             <Plus className="size-4" /> {t("crm.lead.create")}
