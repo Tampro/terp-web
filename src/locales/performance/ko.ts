@@ -13,6 +13,7 @@ const perfKo: Record<keyof typeof perfEn, string> = {
   "pf.cycle": "평가 주기",
   "pf.overall": "종합 평점",
   "pf.review.create": "평가 일정 등록",
+  "pf.review.cancel": "평가 취소",
   "pf.review.start": "시작",
   "pf.review.title": "{name} 평가",
   "pf.v.selfReview": "직원은 자기 자신을 평가할 수 없습니다",

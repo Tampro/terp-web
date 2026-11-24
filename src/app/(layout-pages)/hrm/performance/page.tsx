@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Gauge, Play, Star } from "lucide-react"
+import { Gauge, Play, Star, X } from "lucide-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -45,8 +45,9 @@ function Performance() {
   const reviews: CrudConfig = {
     id: "reviews",
     load: PERF.reviews.list,
+    countsPath: "/v1/performance/reviews/status-counts",
     keyword: true,
-    statuses: ["PENDING", "IN_PROGRESS", "COMPLETED"],
+    statuses: ["PENDING", "IN_PROGRESS", "COMPLETED", "CANCELLED"],
     reloadKey: reloadReviews,
     onRowClick: (r) => setConducting(r.id),
     columns: [
@@ -69,9 +70,10 @@ function Performance() {
     save: PERF.reviews.save,
     remove: PERF.reviews.remove,
     canEdit: is("PENDING", "IN_PROGRESS"),
-    canDelete: is("PENDING"),
+    canDelete: is("PENDING", "CANCELLED"),
     actions: [
       { key: "start", label: "pf.review.start", icon: <Play className="size-4" />, when: is("PENDING"), run: (r) => PERF.reviews.put(r.id ?? "", "status", { status: "IN_PROGRESS" }) },
+      { key: "cancel", label: "pf.review.cancel", icon: <X className="size-4" />, when: is("PENDING", "IN_PROGRESS"), destructive: true, run: (r) => PERF.reviews.put(r.id ?? "", "status", { status: "CANCELLED" }) },
     ],
     manage,
   }
@@ -79,6 +81,7 @@ function Performance() {
   const goals: CrudConfig = {
     id: "goals",
     load: PERF.goals.list,
+    countsPath: "/v1/performance/goals/status-counts",
     keyword: true,
     statuses: ["NOT_STARTED", "IN_PROGRESS", "COMPLETED", "OVERDUE"],
     columns: [
@@ -155,6 +158,7 @@ function Performance() {
   const indicators: CrudConfig = {
     id: "indicators",
     load: PERF.indicators.list,
+    countsPath: "/v1/performance/indicators/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [
@@ -245,7 +249,7 @@ function ConductReview({ id, manage, onClose, onSaved }: { id: string; manage: b
     }
   }, [id])
   if (!review) return <Skeleton className="h-64 w-full" />
-  const readOnly = !manage || review.status === "COMPLETED"
+  const readOnly = !manage || review.status === "COMPLETED" || review.status === "CANCELLED"
   const ids = Object.keys(ratings)
   const allRated = ids.length > 0 && ids.every((k) => ratings[k].rating)
   const rated = ids.map((k) => ratings[k].rating).filter((x): x is number => !!x)
@@ -365,6 +369,7 @@ function CatalogTab({ manage }: { manage: boolean }) {
   const cfg: CrudConfig = {
     id: `perf-${kind}`,
     load: api.list,
+    countsPath: `/v1/performance/${kind}/status-counts`,
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [

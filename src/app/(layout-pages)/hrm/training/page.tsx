@@ -44,6 +44,7 @@ function Training() {
   const sessions: CrudConfig = {
     id: "sessions",
     load: TRAINING.sessions.list,
+    countsPath: "/v1/training/sessions/status-counts",
     keyword: true,
     statuses: [...SESSION],
     columns: [
@@ -79,6 +80,7 @@ function Training() {
   const programsCfg: CrudConfig = {
     id: "programs",
     load: TRAINING.programs.list,
+    countsPath: "/v1/training/programs/status-counts",
     keyword: true,
     statuses: [...PROGRAM],
     columns: [
@@ -115,6 +117,7 @@ function Training() {
   const trainees: CrudConfig = {
     id: "trainees",
     load: TRAINING.trainings.list,
+    countsPath: "/v1/training/employee-trainings/status-counts",
     keyword: true,
     statuses: [...TRAINEE],
     columns: [
