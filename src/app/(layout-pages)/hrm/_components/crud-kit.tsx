@@ -412,7 +412,7 @@ export interface CrudConfig {
   statuses?: string[]
   /** the query parameter the status tabs set (default "status"); `tab` for announcements */
   statusParam?: string
-  /** GET …/status-counts ({all, byStatus}) for counts on the status tabs; same keyword / query filters as the list */
+  /** GET …/status-counts ({all | total, byStatus} or {all, active, inactive}) for counts on the status tabs; same keyword / query filters as the list */
   countsPath?: string
   keyword?: boolean
   /** extra query parameters always sent */
@@ -465,12 +465,13 @@ export function CrudSection({ config }: { config: CrudConfig }) {
 
   // tab counts: refreshed with the filters and after changes, not on a status / page change
   const countsKey = config.countsPath ? JSON.stringify({ path: config.countsPath, keyword, reload, ext: config.reloadKey, query }) : ""
-  const [counts, setCounts] = React.useState<{ key: string; all?: number; byStatus?: Record<string, number> }>()
+  // shape {all, byStatus} or, for ACTIVE / INACTIVE catalogs, {all, active, inactive}
+  const [counts, setCounts] = React.useState<{ key: string; all?: number; byStatus?: Record<string, number> } & Record<string, unknown>>()
   React.useEffect(() => {
     if (!countsKey) return
     let cancelled = false
     const q = JSON.parse(countsKey) as { path: string; keyword: string; query?: Record<string, string> }
-    request<{ all?: number; byStatus?: Record<string, number> }>(withQuery(q.path, { ...q.query, keyword: q.keyword || undefined }))
+    request<{ all?: number; byStatus?: Record<string, number> } & Record<string, unknown>>(withQuery(q.path, { ...q.query, keyword: q.keyword || undefined }))
       .then((c) => !cancelled && setCounts({ key: countsKey, ...c }))
       .catch(() => undefined) // the tabs simply show no count
     return () => {
@@ -479,7 +480,7 @@ export function CrudSection({ config }: { config: CrudConfig }) {
   }, [countsKey])
   const countOf = (s: string) => {
     if (!counts || counts.key !== countsKey) return ""
-    const n = s === "ALL" ? counts.all : counts.byStatus?.[s]
+    const n = s === "ALL" ? (counts.all ?? (counts.total as number | undefined)) : (counts.byStatus?.[s] ?? (counts[s.toLowerCase()] as number | undefined))
     return ` (${n ?? 0})`
   }
 

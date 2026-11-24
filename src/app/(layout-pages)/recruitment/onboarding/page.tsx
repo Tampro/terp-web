@@ -35,6 +35,7 @@ function Onboarding() {
   const cfg: CrudConfig = {
     id: "onboardings",
     load: REC.onboardings.list,
+    countsPath: "/v1/recruitment/onboardings/status-counts",
     keyword: true,
     statuses: ["PENDING", "IN_PROGRESS", "COMPLETED"],
     onRowClick: (r) => setViewing(r.id),

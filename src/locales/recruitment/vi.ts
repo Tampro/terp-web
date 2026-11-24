@@ -222,6 +222,12 @@ const recruitmentVi: Record<keyof typeof recruitmentEn, string> = {
   "cp.status.OFFER": "Mời nhận việc",
   "cp.status.HIRED": "Đã tuyển",
   "cp.status.REJECTED": "Không phù hợp",
+  "rc.board": "Kanban",
+  "rc.board.hint": "Kéo thẻ sang cột khác để đổi giai đoạn",
+  "rc.board.open": "Mở {name}",
+  "rc.board.of": "trên {n}",
+  "rc.board.final": "Offer đã chấp nhận, từ chối hoặc hết hạn không thể đổi trạng thái nữa",
+  "rc.board.notApproved": "Hãy duyệt offer trước khi gửi",
 }
 
 export default recruitmentVi

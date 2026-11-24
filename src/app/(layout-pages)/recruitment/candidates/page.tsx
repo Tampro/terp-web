@@ -13,6 +13,7 @@ import { CANDIDATE_STATUSES, REC, RecOptions, RecruitmentService, type Candidate
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
+import { BoardCard, StatusBoard } from "../_components/status-board"
 import { attempt, CrudSection, errorMessage, HrStatus, PlainSelect, pick, TabbedPage, toSelect, today, useAuthStore, useOptions, type CrudConfig } from "../../hrm/_components/crud-kit"
 
 export default function CandidatesPage() {
@@ -26,6 +27,7 @@ export default function CandidatesPage() {
 /** §17 candidates (New → Screening → Interview → Offer → Hired / Rejected) and assessments (only for candidates recommended Hire / Strong Hire). */
 function Candidates() {
   const t = useT()
+  const language = useLanguageStore((s) => s.language)
   const money = useMoney()
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("RECRUITMENT_MANAGE")
   const postings = toSelect(useOptions("rec:postings", RecOptions.postings))
@@ -38,6 +40,7 @@ function Candidates() {
   const list: CrudConfig = {
     id: "candidates",
     load: REC.candidates.list,
+    countsPath: "/v1/recruitment/candidates/status-counts",
     keyword: true,
     statuses: [...CANDIDATE_STATUSES],
     reloadKey: reload,
@@ -81,6 +84,7 @@ function Candidates() {
   const assessments: CrudConfig = {
     id: "assessments",
     load: REC.assessments.list,
+    countsPath: "/v1/recruitment/assessments/status-counts",
     keyword: true,
     statuses: ["PENDING", "PASS", "FAIL"],
     columns: [
@@ -116,6 +120,16 @@ function Candidates() {
         description={t("rc.candidates.subtitle")}
         tabs={[
           { key: "candidates", label: "menu.rc.candidates", content: () => <CrudSection config={list} /> },
+          { key: "board", label: "rc.board", content: () => (
+            <StatusBoard
+              path="/v1/recruitment/candidates/kanban"
+              manage={manage}
+              reloadKey={reload}
+              move={(r, status) => REC.candidates.put(r.id ?? "", "status", { status })}
+              renderCard={(r) => <BoardCard title={String(r.fullName ?? "-")} label={t("rc.board.open", { name: String(r.fullName ?? "") })} lines={[String(pick(r, "job.title") ?? "-"), formatDate(String(r.applicationDate ?? "") || undefined, language)]} onOpen={() => setViewing(r.id)} />}
+            />
+          ),
+        },
           { key: "assessments", label: "rc.assessments", content: () => <CrudSection config={assessments} /> },
         ]}
       />

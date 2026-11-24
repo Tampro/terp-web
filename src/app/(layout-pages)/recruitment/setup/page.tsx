@@ -43,6 +43,7 @@ function Setup() {
   const locations: CrudConfig = {
     id: "locations",
     load: REC.locations.list,
+    countsPath: "/v1/recruitment/job-locations/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [
@@ -72,6 +73,7 @@ function Setup() {
   const rounds: CrudConfig = {
     id: "rounds",
     load: REC.rounds.list,
+    countsPath: "/v1/recruitment/interview-rounds/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [
@@ -131,6 +133,7 @@ function Setup() {
   const checklistCfg: CrudConfig = {
     id: "checklists",
     load: REC.checklists.list,
+    countsPath: "/v1/recruitment/onboarding-checklists/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [
@@ -187,6 +190,7 @@ function Setup() {
   const templates: CrudConfig = {
     id: "templates",
     load: REC.templates.list,
+    countsPath: "/v1/recruitment/offer-templates/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     columns: [
