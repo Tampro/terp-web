@@ -6,6 +6,7 @@ import { Briefcase, Building2, Calculator, FileSignature, Package, TrendingUp, U
 import { LanguageSelect } from "@/components/auth/language-select"
 import { usePublicSettings } from "@/hooks/use-public-settings"
 import { useT, type TranslationKey } from "@/lib/i18n"
+import { CookieBanner } from "@/components/site/cookie-banner"
 
 /**
  * Sign-in pages layout: product overview on the left (large screens), form card on the right,
@@ -63,6 +64,8 @@ export function AuthShell({ title, subtitle, children }: { title: string; subtit
           {settings?.brand?.footerText || `© ${new Date().getFullYear()} ${brand}`}
         </p>
       </main>
+      {/* as on the reference sign-in pages: guests get the cookie consent banner here too (manual §3.7 Cookie) */}
+      <CookieBanner />
     </div>
   )
 }

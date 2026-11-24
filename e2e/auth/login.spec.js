@@ -5,7 +5,7 @@
  * GET /api/v1/settings/public (system.userRegistration), LoginForm (username ≤100, password ≤128), src/locales/vi.ts.
  */
 import { expect, test } from "../fixtures/index.js"
-import { FAKE_ME, FAKE_PROFILE, FAKE_TOKENS, fail, mockApi, mockPublic, ok } from "../utils/mock-api.js"
+import { FAKE_ME, FAKE_PROFILE, FAKE_TOKENS, fail, mockApi, mockPublic, ok, publicSettings } from "../utils/mock-api.js"
 
 const EMAIL = "e2e.tester@example.com"
 const PASSWORD = "E2e-Passw0rd!"
@@ -150,4 +150,22 @@ test("AUTH-010 đổi ngôn ngữ sang English → giao diện và Accept-Langua
   await page.getByRole("button", { name: "Login" }).click()
   await expect(loginPage.alertWith("Invalid username or password.")).toBeVisible()
   expect(sent).toEqual(["en"])
+})
+
+// As on the reference sign-in pages: guests get the cookie consent banner (GET /settings/public → cookie; choice sent to
+// POST /public/site/cookie-consent and kept in localStorage erp.cookieConsent)
+test("AUTH-020 trang đăng nhập hiện banner cookie khi có cấu hình; chọn xong thì ẩn và gửi lựa chọn", async ({ page }) => {
+  await mockPublic(page)
+  const settings = publicSettings()
+  await mockApi(page, "/v1/settings/public", { body: ok({ ...settings.data, cookie: { cookieTitle: "E2E Cookie Consent", cookieDescription: "E2E dùng cookie", enableLogging: true } }) })
+  const consent = await mockApi(page, "/v1/public/site/cookie-consent", { method: "POST", body: ok({}) })
+  await page.goto("/login")
+  const banner = page.getByRole("dialog", { name: "E2E Cookie Consent" })
+  await expect(banner).toBeVisible()
+  await banner.getByRole("button", { name: "Chỉ cookie bắt buộc" }).click()
+  await expect(banner).toHaveCount(0)
+  await expect.poll(() => consent.length).toBe(1)
+  expect(consent[0]).toMatchObject({ choice: "NECESSARY_ONLY" })
+  await page.reload()
+  await expect(page.getByRole("dialog", { name: "E2E Cookie Consent" })).toHaveCount(0)
 })
