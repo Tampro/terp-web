@@ -66,6 +66,9 @@ function SheetList() {
   const close = !!useAuthStore((s) => s.me?.permissions)?.includes("LEDGER_CLOSE")
   const { searchParams, update } = useUrlQuery()
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
+  const status = searchParams.get("status") ?? ""
+  const year = searchParams.get("year") ?? ""
+  const [yearInput, setYearInput] = React.useState(year)
   const [data, setData] = React.useState<IPage<SheetDto>>()
   const [loading, setLoading] = React.useState(true)
   const [reloadKey, setReloadKey] = React.useState(0)
@@ -77,14 +80,14 @@ function SheetList() {
 
   React.useEffect(() => {
     let cancelled = false
-    BalanceSheetService.list({ page, size: PAGE_SIZE })
+    BalanceSheetService.list({ status: status || undefined, financialYear: /^\d{4}$/.test(year) ? Number(year) : undefined, page, size: PAGE_SIZE })
       .then((p) => !cancelled && setData(p))
       .catch((e: Error) => !cancelled && toast.error(e.message))
       .finally(() => !cancelled && setLoading(false))
     return () => {
       cancelled = true
     }
-  }, [page, reloadKey])
+  }, [status, year, page, reloadKey])
 
   async function download(s: SheetDto) {
     try {
@@ -99,7 +102,27 @@ function SheetList() {
   return (
     <Card>
       <CardContent className="flex flex-col gap-4">
-        <div className="flex flex-wrap justify-end gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs value={status || "ALL"} onValueChange={(v) => update({ status: v === "ALL" ? "" : v, page: 0 })}>
+            <TabsList>
+              <TabsTrigger value="ALL">{t("companies.tabAll")}</TabsTrigger>
+              <TabsTrigger value="DRAFT">{t("le.sheet.DRAFT")}</TabsTrigger>
+              <TabsTrigger value="FINALISED">{t("le.sheet.FINALISED")}</TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <form
+            className="flex items-center gap-2"
+            onSubmit={(e) => {
+              e.preventDefault()
+              update({ year: yearInput.trim(), page: 0 })
+            }}
+          >
+            <Input value={yearInput} onChange={(e) => setYearInput(e.target.value)} inputMode="numeric" maxLength={4} placeholder={t("le.financialYear")} aria-label={t("le.sheet.yearFilter")} className="w-36" />
+            <Button type="submit" variant="secondary">
+              {t("common.search")}
+            </Button>
+          </form>
+          <div className="flex-1" />
           <Button variant="outline" disabled={finalised.length < 2} onClick={() => setComparing(true)}>
             <GitCompare className="size-4" /> {t("le.compare")}
           </Button>

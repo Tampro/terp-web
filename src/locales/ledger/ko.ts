@@ -147,6 +147,7 @@ const ledgerKo: Record<keyof typeof ledgerEn, string> = {
   "le.closingDate": "마감일",
   "le.closingEntry": "마감 분개",
   "le.closedAt": "마감 일시",
+  "le.sheet.yearFilter": "회계연도로 필터",
 }
 
 export default ledgerKo
