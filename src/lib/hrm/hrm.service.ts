@@ -348,7 +348,7 @@ export interface ReviewDto {
   reviewer?: { id?: string; fullName?: string }
   reviewCycle?: Ref
   reviewDate?: string
-  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED"
+  status?: "PENDING" | "IN_PROGRESS" | "COMPLETED" | "CANCELLED"
   overallRating?: number | null
   overallComments?: string | null
   pros?: string | null

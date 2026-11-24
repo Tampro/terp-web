@@ -12,6 +12,7 @@ const perfEn = {
   "pf.cycle": "Review cycle",
   "pf.overall": "Overall rating",
   "pf.review.create": "Schedule Review",
+  "pf.review.cancel": "Cancel review",
   "pf.review.start": "Start",
   "pf.review.title": "Review of {name}",
   "pf.v.selfReview": "An employee cannot review themselves",

@@ -13,6 +13,7 @@ const perfVi: Record<keyof typeof perfEn, string> = {
   "pf.cycle": "Chu kỳ",
   "pf.overall": "Điểm tổng",
   "pf.review.create": "Lên lịch đánh giá",
+  "pf.review.cancel": "Hủy đánh giá",
   "pf.review.start": "Bắt đầu",
   "pf.review.title": "Đánh giá {name}",
   "pf.v.selfReview": "Nhân viên không thể tự đánh giá",
