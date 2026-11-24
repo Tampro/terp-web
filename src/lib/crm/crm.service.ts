@@ -264,6 +264,9 @@ export interface ContractRow {
   status?: EContractStatus
   progressPercent?: number
   daysLeft?: number
+  /** owner = creator (Keycloak user id); name null on contracts created before 2026-11-24 */
+  ownerId?: string | null
+  ownerName?: string | null
   createdDate?: string
 }
 export interface RenewalDto {
@@ -363,6 +366,8 @@ export interface ContractTypeDto {
   id?: string
   companyId?: string
   name?: string
+  /** contracts (not deleted) of this type in the company */
+  contractCount?: number
   active?: boolean
 }
 export interface ContractSettingDto {

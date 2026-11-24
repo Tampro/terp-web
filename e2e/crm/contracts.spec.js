@@ -28,6 +28,9 @@ test("CTR-001 danh sách: thẻ số lượng lọc trạng thái, thời hạn 
   await expect(row).toContainText("Còn 160 ngày")
   await expect(row.getByRole("progressbar")).toBeVisible()
   await expect(page.getByRole("row").filter({ hasText: "CON0002" })).toContainText("Đã kết thúc")
+  // owner column (ContractRow.ownerName); a contract created before the field existed shows "-"
+  await expect(page.getByRole("columnheader", { name: "Người phụ trách" })).toBeVisible()
+  await expect(row).toContainText("E2E Nguyễn Văn An")
 
   await page.getByRole("button", { name: /Đã đóng/ }).click()
   await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("status")).toBe("CLOSED")
@@ -122,6 +125,7 @@ test("CTR-005 loại hợp đồng: tạo loại gửi TypeForm, lưu tiền t�
   const prefix = await mockApi(page, "/v1/crm/contract-settings", { method: "PUT", body: ok(SETTING) })
   await page.goto("/crm/contract-types")
   await expect(page.getByRole("row").filter({ hasText: "E2E Old type" })).toContainText("Ngừng hoạt động")
+  await expect(page.getByRole("row").filter({ hasText: "E2E Service" }).getByRole("cell").nth(1)).toHaveText("3") // contractCount
   await expect(page.getByText("Số tiếp theo: CON0003")).toBeVisible()
   await page.getByRole("button", { name: "Tạo loại hợp đồng" }).click()
   await page.getByRole("dialog").getByLabel("Tên").fill("E2E Lease")

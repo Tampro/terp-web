@@ -120,8 +120,8 @@ export const DEAL_BOARD = [
 ]
 
 export const TYPES = [
-  { id: "51", name: "E2E Service", active: true },
-  { id: "52", name: "E2E Old type", active: false },
+  { id: "51", name: "E2E Service", active: true, contractCount: 3 },
+  { id: "52", name: "E2E Old type", active: false, contractCount: 0 },
 ]
 export const CONTRACTS = [
   {
@@ -137,6 +137,8 @@ export const CONTRACTS = [
     status: "ACTIVE",
     progressPercent: 55,
     daysLeft: 160,
+    ownerId: "u-1",
+    ownerName: "E2E Nguyễn Văn An",
   },
   {
     id: "302",

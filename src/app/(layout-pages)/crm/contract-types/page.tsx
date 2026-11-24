@@ -60,6 +60,7 @@ export default function ContractTypesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("crm.name")}</TableHead>
+                  <TableHead className="text-right">{t("crm.contractType.count")}</TableHead>
                   <TableHead>{t("crm.status")}</TableHead>
                   <TableHead className="w-24">
                     <span className="sr-only">{t("common.actions")}</span>
@@ -69,14 +70,14 @@ export default function ContractTypesPage() {
               <TableBody>
                 {!types && (
                   <TableRow>
-                    <TableCell colSpan={3}>
+                    <TableCell colSpan={4}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {types?.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={3} className="text-muted-foreground h-20 text-center">
+                    <TableCell colSpan={4} className="text-muted-foreground h-20 text-center">
                       {t("crm.contractType.empty")}
                     </TableCell>
                   </TableRow>
@@ -84,6 +85,7 @@ export default function ContractTypesPage() {
                 {types?.map((x) => (
                   <TableRow key={x.id}>
                     <TableCell>{x.name}</TableCell>
+                    <TableCell className="text-right tabular-nums">{x.contractCount ?? 0}</TableCell>
                     <TableCell>
                       <Badge variant={x.active ? "default" : "outline"}>{t(x.active ? "crm.active" : "crm.inactive")}</Badge>
                     </TableCell>

@@ -241,6 +241,7 @@ function Contracts() {
                   <TableHead>{t("crm.subject")}</TableHead>
                   <TableHead>{t("crm.client")}</TableHead>
                   <TableHead>{t("crm.contract.type")}</TableHead>
+                  <TableHead>{t("crm.contract.owner")}</TableHead>
                   <TableHead className="text-right">{t("crm.value")}</TableHead>
                   <TableHead>{t("crm.contract.duration")}</TableHead>
                   <TableHead>{t("crm.status")}</TableHead>
@@ -252,14 +253,14 @@ function Contracts() {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8}>
+                    <TableCell colSpan={9}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
+                    <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
                       {t("crm.contract.empty")}
                     </TableCell>
                   </TableRow>
@@ -275,6 +276,8 @@ function Contracts() {
                       <TableCell>{row.subject}</TableCell>
                       <TableCell>{row.customerName ?? customers.find((c) => c.id === row.customerId)?.companyName ?? "-"}</TableCell>
                       <TableCell>{typeName(row.contractTypeId)}</TableCell>
+                      {/* owner = creator (crm-service ContractRow.ownerName; null on contracts created before the field existed) */}
+                      <TableCell>{row.ownerName || "-"}</TableCell>
                       <TableCell className="text-right">{row.value === null || row.value === undefined ? "-" : money(row.value)}</TableCell>
                       <TableCell className="min-w-44">
                         <div className="text-muted-foreground text-xs">
