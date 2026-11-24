@@ -186,6 +186,20 @@ const dashboardKo: Record<keyof typeof dashboardEn, string> = {
   "clock.grace": "근무 시작 후 {n}분 유예",
   "clock.doneToday": "오늘 출근과 퇴근을 모두 기록했습니다.",
   "clock.noProfile": "계정이 직원 정보와 연결되어 있지 않아 출근할 수 없습니다. 인사 담당자에게 연결을 요청하세요.",
+  "qa.title": "빠른 작업",
+  "qa.addEmployee": "새 직원 추가",
+  "qa.markAttendance": "출근 기록",
+  "qa.applyLeave": "휴가 신청",
+  "qa.processPayroll": "급여 처리",
+  "qa.promotion": "승진 등록",
+  "qa.resignation": "사직 등록",
+  "qa.holiday": "휴일 등록",
+  "qa.warning": "경고 등록",
+  "qa.copyPortal": "포털 링크 복사",
+  "qa.copyLink": "링크 복사",
+  "qa.copied": "복사됨",
+  "qa.createTicket": "티켓 생성",
+  "qa.ticketPortal": "티켓 포털",
 }
 
 export default dashboardKo

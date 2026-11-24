@@ -15,6 +15,7 @@ import { formatDate, formatNumber } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 import { SectionCard, StatCard } from "./dashboard-kit"
+import { SupportQuickActions } from "./quick-actions"
 
 export type DashboardModule = "project" | "account" | "pos" | "crm" | "support"
 
@@ -448,6 +449,7 @@ export function SupportDashboard({ year }: { year: number }) {
         const minutes = s.averageFirstResponseMinutes
         return (
           <div className="grid gap-4">
+            <SupportQuickActions />
             <ScopeNote scope={s.scope} />
             <div className={grid4}>
               <StatCard label={t("mdash.tickets")} value={n(s.total)} hint={t("mdash.todayN", { n: n(s.today) })} icon={Ticket} loading={loading} testId="mdash-support-total" />

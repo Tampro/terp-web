@@ -186,6 +186,20 @@ const dashboardVi: Record<keyof typeof dashboardEn, string> = {
   "clock.grace": "Được trễ {n} phút sau giờ bắt đầu ca",
   "clock.doneToday": "Hôm nay bạn đã chấm công vào và ra.",
   "clock.noProfile": "Tài khoản của bạn chưa gắn với hồ sơ nhân viên nên chưa chấm công được. Hãy nhờ bộ phận nhân sự liên kết.",
+  "qa.title": "Thao tác nhanh",
+  "qa.addEmployee": "Thêm nhân viên",
+  "qa.markAttendance": "Chấm công",
+  "qa.applyLeave": "Nộp đơn nghỉ phép",
+  "qa.processPayroll": "Xử lý bảng lương",
+  "qa.promotion": "Tạo thăng chức",
+  "qa.resignation": "Tạo đơn nghỉ việc",
+  "qa.holiday": "Tạo ngày lễ",
+  "qa.warning": "Tạo cảnh cáo",
+  "qa.copyPortal": "Sao chép link cổng tuyển dụng",
+  "qa.copyLink": "Sao chép link",
+  "qa.copied": "Đã sao chép",
+  "qa.createTicket": "Tạo ticket",
+  "qa.ticketPortal": "Cổng hỗ trợ",
 }
 
 export default dashboardVi

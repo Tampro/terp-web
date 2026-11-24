@@ -185,6 +185,20 @@ const dashboardEn = {
   "clock.grace": "Grace period {n} minutes after the shift start",
   "clock.doneToday": "You have clocked in and out today.",
   "clock.noProfile": "Your account is not linked to an employee profile, so you cannot clock in. Ask HR to link it.",
+  "qa.title": "Quick actions",
+  "qa.addEmployee": "Add new employee",
+  "qa.markAttendance": "Mark attendance",
+  "qa.applyLeave": "Apply for leave",
+  "qa.processPayroll": "Process payroll",
+  "qa.promotion": "Create promotion",
+  "qa.resignation": "Create resignation",
+  "qa.holiday": "Create holiday",
+  "qa.warning": "Create warning",
+  "qa.copyPortal": "Copy portal link",
+  "qa.copyLink": "Copy link",
+  "qa.copied": "Copied",
+  "qa.createTicket": "Create ticket",
+  "qa.ticketPortal": "Ticket portal",
 }
 
 export default dashboardEn

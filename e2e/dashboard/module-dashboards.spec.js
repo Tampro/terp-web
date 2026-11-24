@@ -61,3 +61,20 @@ test("MDASH-003 CRM phạm vi của tôi và việc sắp tới; Hỗ trợ: t�
   await expect(page.getByTestId("mdash-support-total")).toHaveText("3")
   await expect(page.getByText("0,7 phút")).toBeVisible()
 })
+
+test("MDASH-004 Hỗ trợ: nút Tạo ticket theo quyền và link cổng hỗ trợ từ cài đặt portal", async ({ page }) => {
+  await mockApi(page, "/v1/support/portal/settings", { body: ok({ slug: "e2e-help", enabled: true }) })
+  await open(page, ["SUPPORT_TICKET_VIEW", "SUPPORT_TICKET_MANAGE"])
+  await page.getByRole("tab", { name: "Hỗ trợ" }).click()
+  const qa = page.getByTestId("support-quick-actions")
+  await expect(qa.getByRole("link", { name: "Tạo ticket" })).toHaveAttribute("href", "/support/tickets")
+  await expect(qa.getByRole("link", { name: "Cổng hỗ trợ" })).toHaveAttribute("href", "/help/e2e-help")
+})
+
+test("MDASH-005 Hỗ trợ: chỉ quyền xem và không đọc được cài đặt portal → không có nút thao tác", async ({ page }) => {
+  await mockApi(page, "/v1/support/portal/settings", { status: 403, body: { result: false, code: "COMMON_004", message: "Forbidden" } })
+  await open(page, ["SUPPORT_TICKET_VIEW"])
+  await page.getByRole("tab", { name: "Hỗ trợ" }).click()
+  await expect(page.getByTestId("mdash-support-total")).toHaveText("3")
+  await expect(page.getByTestId("support-quick-actions")).toHaveCount(0)
+})
