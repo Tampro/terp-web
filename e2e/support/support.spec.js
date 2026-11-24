@@ -161,3 +161,22 @@ test("SP-030 cổng hỗ trợ công khai: tạo phiếu (trường tùy chỉnh
   await expect(page.getByText("Cảm ơn, tin nhắn của bạn đã được gửi.")).toBeVisible()
   expect(contact[0]).toEqual({ name: "E2E Lan", email: "lan@example.com", subject: "E2E Partner", message: "E2E hello" })
 })
+
+test("SP-003 phiếu: tab trạng thái có số đếm từ /tickets/status-counts (khóa camelCase)", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/support/tickets", { method: "GET", body: pageOf([]) })
+  await mockApi(page, "/v1/support/tickets/status-counts", { body: ok({ all: 20, inProgress: 10, onHold: 4, closed: 6 }) })
+  await page.goto("/support/tickets")
+  await expect(page.getByRole("tab", { name: "Tất cả (20)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Đang thực hiện (10)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Tạm dừng (4)" })).toBeVisible()
+})
+
+test("SP-004 phiếu: số đếm gửi cùng bộ lọc danh mục và từ khóa của danh sách", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/support/tickets", { method: "GET", body: pageOf([]) })
+  const counts = await mockApi(page, "/v1/support/tickets/status-counts", { body: ok({ all: 1, inProgress: 1, onHold: 0, closed: 0 }) })
+  await page.goto("/support/tickets?q=E2E")
+  await expect(page.getByRole("tab", { name: "Tất cả (1)" })).toBeVisible()
+  expect(counts.requests.at(-1)?.url.searchParams.get("keyword")).toBe("E2E")
+})

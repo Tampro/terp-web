@@ -64,6 +64,8 @@ function Tickets() {
   const cfg: CrudConfig = {
     id: `tickets-${categoryId}-${accountType}`,
     load: SUP.tickets.list,
+    // same filters as the list (categoryId, accountType, keyword), without status
+    countsPath: "/v1/support/tickets/status-counts",
     query: { categoryId: categoryId || undefined, accountType: accountType || undefined },
     keyword: true,
     statuses: [...TICKET_STATUSES],
