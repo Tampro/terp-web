@@ -210,6 +210,9 @@ const companyEn = {
   "co.v.secret": "At least 16 characters",
   "co.webhook.create": "Add Webhook",
   "co.webhook.testDesc": "A sample payload is posted to the URL.",
+  "co.mobile": "Mobile no.",
+  "co.roleFilter": "Filter by role",
+  "co.allRoles": "All roles",
 }
 
 export default companyEn

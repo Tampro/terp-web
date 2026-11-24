@@ -211,6 +211,9 @@ const companyVi: Record<keyof typeof companyEn, string> = {
   "co.v.secret": "Ít nhất 16 ký tự",
   "co.webhook.create": "Thêm webhook",
   "co.webhook.testDesc": "Một payload mẫu sẽ được gửi tới URL.",
+  "co.mobile": "Số di động",
+  "co.roleFilter": "Lọc theo vai trò",
+  "co.allRoles": "Tất cả vai trò",
 }
 
 export default companyVi

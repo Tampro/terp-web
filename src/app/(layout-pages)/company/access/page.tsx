@@ -13,9 +13,10 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { Textarea } from "@/components/ui/textarea"
 import { AccessService, type PermissionDto, type RoleDto } from "@/lib/company/company.service"
 import type { Row } from "@/lib/hrm/hrm.service"
-import { useLanguageStore, useT } from "@/lib/i18n"
+import { useUrlQuery } from "@/hooks/use-url-query"
+import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
-import { attempt, CrudSection, Field, TabbedPage, useAuthStore, type CrudConfig } from "../../hrm/_components/crud-kit"
+import { attempt, CrudSection, Field, PlainSelect, TabbedPage, useAuthStore, type CrudConfig } from "../../hrm/_components/crud-kit"
 
 export default function AccessPage() {
   return (
@@ -43,6 +44,25 @@ function Access() {
       cancelled = true
     }
   }, [rolesKey])
+  // users per role (GET /iam/users?roleId&size=1 → totalElements); roles are few, one call each
+  const [userCounts, setUserCounts] = React.useState<{ key: string; byRole: Record<string, number> }>()
+  const countsKey = roles.map((r) => r.id).join(",")
+  const canViewUsers = perms.includes("IAM_USER_VIEW")
+  const { searchParams, update } = useUrlQuery()
+  const onRolesTab = searchParams.get("tab") === "roles"
+  React.useEffect(() => {
+    // only while the roles tab is open
+    if (!countsKey || !canViewUsers || !onRolesTab) return
+    let cancelled = false
+    const ids = countsKey.split(",")
+    Promise.all(ids.map((id) => AccessService.users({ roleId: id, size: 1 }).then((p) => [id, p.totalElements ?? 0] as const).catch(() => [id, undefined] as const)))
+      .then((pairs) => !cancelled && setUserCounts({ key: countsKey, byRole: Object.fromEntries(pairs.filter(([, n]) => n !== undefined)) as Record<string, number> }))
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [countsKey, canViewUsers, onRolesTab])
+  const roleFilter = searchParams.get("role") ?? ""
   const roleOptions = roles.map((r) => ({ value: String(r.id), label: String(r.name ?? r.code) }))
   const roleIdsOf = (codes: unknown) => ((codes as string[] | undefined) ?? []).map((c) => roles.find((r) => r.code === c)?.id).filter(Boolean) as string[]
   const roleName = (code: string) => roles.find((r) => r.code === code)?.name ?? code
@@ -51,11 +71,14 @@ function Access() {
   const users: CrudConfig = {
     id: "users",
     load: AccessService.users as CrudConfig["load"],
+    query: { roleId: roleFilter || undefined },
     keyword: true,
+    toolbar: <PlainSelect label={t("co.roleFilter")} className="w-48" value={roleFilter} none={t("co.allRoles")} options={roleOptions} onChange={(v) => update({ role: v || undefined, page: undefined })} />,
     columns: [
       { label: "co.username", path: "username", kind: "mono" },
       { label: "hr.f.fullName", path: "fullName" },
       { label: "hr.f.email", path: "email" },
+      { label: "co.mobile", path: "mobile" },
       {
         label: "co.roles",
         render: (r) => (
@@ -128,6 +151,7 @@ function Access() {
       { label: "hr.f.code", path: "code", kind: "mono" },
       { label: "hr.f.description", path: "description" },
       { label: "co.permissions", render: (r) => String(((r.permissions as string[] | undefined) ?? []).length) },
+      { label: "co.users", render: (r) => (userCounts?.key === countsKey ? String(userCounts.byRole[String(r.id)] ?? "-") : "-") },
       { label: "hr.f.system", path: "systemRole", kind: "bool" },
     ],
     rowName: (r) => String(r.name ?? ""),
@@ -148,6 +172,9 @@ function Access() {
       { label: "co.loginAt", render: (r) => new Date(String(r.loginAt ?? "")).toLocaleString(language) },
       { label: "co.ip", path: "ipAddress", kind: "mono" },
       { label: "co.browser", render: (r) => [r.browser, r.os].filter(Boolean).join(" · ") || "-" },
+      { label: "loginHistory.deviceType", render: (r) => t(`loginHistory.device.${String(r.deviceType ?? "UNKNOWN")}` as TranslationKey) },
+      { label: "loginHistory.location", render: (r) => [r.city, r.country].filter(Boolean).join(", ") || String(r.timezone ?? "-") },
+      { label: "loginHistory.role", render: (r) => String(r.roleAtLogin ?? "-") },
     ],
     rowName: (r) => `${String(r.username ?? "")} ${String(r.loginAt ?? "")}`,
     remove: AccessService.removeLogin,
