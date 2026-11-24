@@ -65,6 +65,8 @@ const posKo: Record<keyof typeof posEn, string> = {
   "pos.report.average": "평균 주문액",
   "pos.report.lastOrder": "최근 주문",
   "pos.report.empty": "이 기간에 매출이 없습니다",
+  "pos.addBySku": "SKU로 장바구니 추가 (스캔 또는 입력 + Enter)",
+  "pos.skuNotFound": "SKU {sku} 상품이 없습니다",
 }
 
 export default posKo
