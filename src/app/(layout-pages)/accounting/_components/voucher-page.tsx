@@ -31,7 +31,7 @@ import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 import { toNumber } from "@/lib/sales/sales.schema"
 
-import { AccStatusBadge, accountLabel, attempt, bankLabel, Field, PlainSelect, today, useAccLookups } from "./acc-kit"
+import { AccStatusBadge, accountLabel, attempt, bankLabel, Field, PlainSelect, today, useAccLookups, useUserNames } from "./acc-kit"
 
 const PAGE_SIZE = 20
 const ALL = "ALL"
@@ -40,6 +40,7 @@ const STATUSES: EVoucherStatus[] = ["DRAFT", "APPROVED", "POSTED"]
 /** §12.2 revenue (REV-) and expense (EXP-): Date, Category, Bank Account, Chart of Account, Amount, Reference, Description; Draft → Approved → Posted. */
 export function VoucherPage({ kind }: { kind: EVoucherKind }) {
   const t = useT()
+  const userName = useUserNames()
   const money = useMoney()
   const language = useLanguageStore((s) => s.language)
   const k = kind === "revenues" ? "revenue" : "expense"
@@ -140,6 +141,7 @@ export function VoucherPage({ kind }: { kind: EVoucherKind }) {
                   <TableHead>{t("pos.bankAccount")}</TableHead>
                   <TableHead>{t("acc.reference")}</TableHead>
                   <TableHead className="text-right">{t("acc.amount")}</TableHead>
+                  <TableHead>{t("acc.approvedBy")}</TableHead>
                   <TableHead>{t("crm.status")}</TableHead>
                   <TableHead className="w-12">
                     <span className="sr-only">{t("common.actions")}</span>
@@ -149,14 +151,14 @@ export function VoucherPage({ kind }: { kind: EVoucherKind }) {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8}>
+                    <TableCell colSpan={9}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
+                    <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
                       {t(`acc.${k}.empty` as TranslationKey)}
                     </TableCell>
                   </TableRow>
@@ -170,6 +172,7 @@ export function VoucherPage({ kind }: { kind: EVoucherKind }) {
                       <TableCell>{bankLabel(lookups.banks.find((b) => b.id === v.bankAccountId))}</TableCell>
                       <TableCell>{v.reference || "-"}</TableCell>
                       <TableCell className="text-right font-medium">{money(v.amount)}</TableCell>
+                      <TableCell>{userName(v.approvedBy)}</TableCell>
                       <TableCell>
                         <AccStatusBadge status={v.status} />
                       </TableCell>

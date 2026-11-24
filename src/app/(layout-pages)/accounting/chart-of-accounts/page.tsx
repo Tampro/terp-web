@@ -67,6 +67,7 @@ function Coa() {
   const tab = (TABS.find((x) => x === searchParams.get("tab")) ?? "accounts") as Tab
   const keyword = searchParams.get("keyword") ?? ""
   const typeId = searchParams.get("typeId") ?? undefined
+  const normal = searchParams.get("normal") ?? undefined
   const page = Math.max(0, Number(searchParams.get("page") ?? 0) || 0)
   const manage =
     tab === "revenue" ? !!permissions?.includes("REVENUE_MANAGE") : tab === "expense" ? !!permissions?.includes("EXPENSE_MANAGE") : !!permissions?.includes("COA_MANAGE")
@@ -95,7 +96,7 @@ function Coa() {
     let cancelled = false
     const load: Promise<IPage<Row>> =
       tab === "accounts"
-        ? CoaService.accounts({ keyword: keyword || undefined, accountTypeId: typeId, page, size: PAGE_SIZE })
+        ? CoaService.accounts({ keyword: keyword || undefined, accountTypeId: typeId, normalBalance: normal, page, size: PAGE_SIZE })
         : tab === "types"
           ? CoaService.types({ page, size: PAGE_SIZE })
           : categoryService(tab === "revenue" ? "revenues" : "expenses").list({ page, size: PAGE_SIZE })
@@ -110,7 +111,7 @@ function Coa() {
     return () => {
       cancelled = true
     }
-  }, [tab, keyword, typeId, page, reloadKey])
+  }, [tab, keyword, typeId, normal, page, reloadKey])
 
   const typeName = (id?: string) => types.find((x) => x.id === id)?.name ?? "-"
   const rows = data?.tab === tab ? (data.page?.content ?? []) : undefined
@@ -126,7 +127,7 @@ function Coa() {
           </Button>
         )}
       </PageHeader>
-      <Tabs value={tab} onValueChange={(v) => update({ tab: v === "accounts" ? "" : v, page: 0, keyword: "", typeId: "" })}>
+      <Tabs value={tab} onValueChange={(v) => update({ tab: v === "accounts" ? "" : v, page: 0, keyword: "", typeId: "", normal: "" })}>
         <TabsList>
           {TABS.map((x) => (
             <TabsTrigger key={x} value={x}>
@@ -143,6 +144,7 @@ function Coa() {
           {tab === "accounts" && (
             <div className="flex flex-wrap items-end gap-3">
               <PlainSelect label={t("acc.coa.type")} className="w-52" value={typeId ?? ""} onChange={(v) => update({ typeId: v, page: 0 })} none={t("acc.coa.allTypes")} options={types.map((x) => ({ value: x.id ?? "", label: `${x.code} · ${x.name}` }))} />
+              <PlainSelect label={t("acc.coa.normal")} className="w-40" value={normal ?? ""} onChange={(v) => update({ normal: v, page: 0 })} none={t("acc.coa.allNormals")} options={NORMALS.map((n) => ({ value: n, label: t(`acc.coa.normalOf.${n}` as TranslationKey) }))} />
               <form
                 className="flex min-w-60 flex-1 items-center gap-2"
                 onSubmit={(e) => {
@@ -171,6 +173,7 @@ function Coa() {
                     <TableHead>{t("crm.name")}</TableHead>
                     {tab === "accounts" && (
                       <>
+                        <TableHead>{t("acc.coa.parent")}</TableHead>
                         <TableHead>{t("acc.coa.type")}</TableHead>
                         <TableHead>{t("acc.coa.normal")}</TableHead>
                         <TableHead className="text-right">{t("acc.bank.opening")}</TableHead>
@@ -193,7 +196,7 @@ function Coa() {
                 <TableBody>
                   {rows.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={8} className="text-muted-foreground h-20 text-center">
+                      <TableCell colSpan={9} className="text-muted-foreground h-20 text-center">
                         {t("crm.noEntries")}
                       </TableCell>
                     </TableRow>
@@ -209,6 +212,7 @@ function Coa() {
                         </TableCell>
                         {tab === "accounts" && (
                           <>
+                            <TableCell>{r.parentId ? accountLabel(allAccounts.find((a) => a.id === r.parentId)) || r.parentId : "-"}</TableCell>
                             <TableCell>{typeName(r.accountTypeId)}</TableCell>
                             <TableCell>{r.normalBalance ? t(`acc.coa.normalOf.${r.normalBalance}` as TranslationKey) : "-"}</TableCell>
                             <TableCell className="text-right">{money(r.openingBalance)}</TableCell>

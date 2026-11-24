@@ -251,6 +251,10 @@ const accountingVi: Record<keyof typeof accountingEn, string> = {
   "acc.v.notesOverInvoices": "Tiền note cấn trừ không được vượt số đã phân bổ",
   "acc.v.code": "Tối đa 20 ký tự gồm chữ, số, dấu chấm, gạch ngang hoặc gạch dưới",
   "acc.v.categoryCode": "Tối đa 30 ký tự gồm chữ, số, dấu chấm, gạch ngang hoặc gạch dưới",
+  "acc.approvedBy": "Người duyệt",
+  "acc.party.user": "Người dùng liên kết",
+  "acc.coa.allNormals": "Tất cả số dư",
+  "acc.bank.searchPlaceholder": "Chủ tài khoản, ngân hàng hoặc số tài khoản",
 }
 
 export default accountingVi

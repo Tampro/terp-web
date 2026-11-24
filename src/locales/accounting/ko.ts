@@ -251,6 +251,10 @@ const accountingKo: Record<keyof typeof accountingEn, string> = {
   "acc.v.notesOverInvoices": "적용 전표 금액은 배분액을 초과할 수 없습니다",
   "acc.v.code": "문자, 숫자, 점, 하이픈, 밑줄로 최대 20자",
   "acc.v.categoryCode": "문자, 숫자, 점, 하이픈, 밑줄로 최대 30자",
+  "acc.approvedBy": "승인자",
+  "acc.party.user": "연결된 사용자",
+  "acc.coa.allNormals": "전체 잔액 구분",
+  "acc.bank.searchPlaceholder": "예금주, 은행 또는 계좌번호",
 }
 
 export default accountingKo

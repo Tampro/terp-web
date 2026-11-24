@@ -250,6 +250,10 @@ const accountingEn = {
   "acc.v.notesOverInvoices": "Notes applied cannot exceed the invoices allocated",
   "acc.v.code": "Up to 20 letters, digits, dots, dashes or underscores",
   "acc.v.categoryCode": "Up to 30 letters, digits, dots, dashes or underscores",
+  "acc.approvedBy": "Approved by",
+  "acc.party.user": "Linked user",
+  "acc.coa.allNormals": "All balances",
+  "acc.bank.searchPlaceholder": "Holder, bank or account number",
 }
 
 export default accountingEn

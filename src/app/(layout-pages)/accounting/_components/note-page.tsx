@@ -25,7 +25,7 @@ import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 import { PurchaseReturnService } from "@/lib/purchase/purchase.service"
 import { SalesReturnService } from "@/lib/sales/sales.service"
 
-import { AccStatusBadge, attempt, Field, PlainSelect, today } from "./acc-kit"
+import { AccStatusBadge, attempt, Field, PlainSelect, today, useUserNames } from "./acc-kit"
 
 const PAGE_SIZE = 20
 const ALL = "ALL"
@@ -37,6 +37,7 @@ const STATUSES: ENoteStatus[] = ["DRAFT", "APPROVED", "PARTIAL", "APPLIED"]
  */
 export function NotePage({ kind }: { kind: ENoteKind }) {
   const t = useT()
+  const userName = useUserNames()
   const money = useMoney()
   const language = useLanguageStore((s) => s.language)
   const credit = kind === "credit-notes"
@@ -105,6 +106,7 @@ export function NotePage({ kind }: { kind: ENoteKind }) {
                   <TableHead>{t("pos.date")}</TableHead>
                   <TableHead className="text-right">{t("sales.total")}</TableHead>
                   <TableHead className="text-right">{t("sales.balance")}</TableHead>
+                  <TableHead>{t("acc.approvedBy")}</TableHead>
                   <TableHead>{t("crm.status")}</TableHead>
                   <TableHead className="w-24">
                     <span className="sr-only">{t("common.actions")}</span>
@@ -114,14 +116,14 @@ export function NotePage({ kind }: { kind: ENoteKind }) {
               <TableBody>
                 {loading && (
                   <TableRow>
-                    <TableCell colSpan={8}>
+                    <TableCell colSpan={9}>
                       <Skeleton className="h-6 w-full" />
                     </TableCell>
                   </TableRow>
                 )}
                 {!loading && rows.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
+                    <TableCell colSpan={9} className="text-muted-foreground h-24 text-center">
                       {t(`acc.${k}.empty` as TranslationKey)}
                     </TableCell>
                   </TableRow>
@@ -135,6 +137,7 @@ export function NotePage({ kind }: { kind: ENoteKind }) {
                       <TableCell>{formatDate(n.noteDate, language)}</TableCell>
                       <TableCell className="text-right">{money(n.total)}</TableCell>
                       <TableCell className="text-right font-medium">{money(n.balance)}</TableCell>
+                      <TableCell>{userName(n.approvedBy)}</TableCell>
                       <TableCell>
                         <AccStatusBadge status={n.status} />
                       </TableCell>

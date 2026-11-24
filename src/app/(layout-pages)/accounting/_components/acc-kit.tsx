@@ -4,6 +4,8 @@ import * as React from "react"
 
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useAuthStore } from "@/lib/auth/auth.store"
+import { CrmUserService, type CrmUserOption } from "@/lib/crm/crm.service"
 import { BankService, CoaService, type AccountDto, type BankAccountDto } from "@/lib/accounting/accounting.service"
 import { useT, type TranslationKey } from "@/lib/i18n"
 
@@ -26,6 +28,29 @@ export function AccStatusBadge({ status }: { status?: string | null }) {
   const t = useT()
   if (!status) return <span>-</span>
   return <Badge variant={VARIANT[status] ?? "outline"}>{t(`acc.status.${status}` as TranslationKey)}</Badge>
+}
+
+/**
+ * IAM user id → display name (approvedBy, linked users). Names need IAM_USER_VIEW; without it the id is shown.
+ */
+export function useUserNames() {
+  const [users, setUsers] = React.useState<CrmUserOption[]>([])
+  const canSee = !!useAuthStore((s) => s.me?.permissions)?.includes("IAM_USER_VIEW")
+  React.useEffect(() => {
+    if (!canSee) return
+    let cancelled = false
+    CrmUserService.users()
+      .then((p) => !cancelled && setUsers(p.content ?? []))
+      .catch(() => undefined)
+    return () => {
+      cancelled = true
+    }
+  }, [canSee])
+  return (id?: string | null) => {
+    if (!id) return "-"
+    const u = users.find((x) => x.id === id)
+    return u ? u.fullName || u.username || id : id
+  }
 }
 
 /** Bank accounts and ledger accounts used by most accounting forms. */
