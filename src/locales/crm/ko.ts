@@ -270,6 +270,7 @@ const crmKo: Record<keyof typeof crmEn, string> = {
   "crm.v.amount": "0 이상의 금액을 입력하세요",
   "crm.v.date": "날짜를 선택하세요",
   "crm.v.endBeforeStart": "종료일은 시작일과 같거나 이후여야 합니다",
+  "crm.taskCalendar": "작업 캘린더",
 }
 
 export default crmKo

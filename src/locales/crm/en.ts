@@ -269,6 +269,7 @@ const crmEn = {
   "crm.v.amount": "Enter an amount of 0 or more",
   "crm.v.date": "Choose a date",
   "crm.v.endBeforeStart": "The end date must be on or after the start date",
+  "crm.taskCalendar": "Task calendar",
 }
 
 export default crmEn
