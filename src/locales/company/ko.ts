@@ -211,6 +211,9 @@ const companyKo: Record<keyof typeof companyEn, string> = {
   "co.v.secret": "16자 이상",
   "co.webhook.create": "웹훅 추가",
   "co.webhook.testDesc": "샘플 페이로드를 URL로 전송합니다.",
+  "co.mobile": "휴대폰 번호",
+  "co.roleFilter": "역할로 필터",
+  "co.allRoles": "모든 역할",
 }
 
 export default companyKo

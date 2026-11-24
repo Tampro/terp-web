@@ -130,3 +130,23 @@ test("CO-020 thông báo email bật/tắt (ToggleForm); webhook secret ≥16 k�
   await expect.poll(() => hook.length).toBe(1)
   expect(hook[0]).toEqual({ method: "POST", eventCode: "NEW_SALES_INVOICE", url: "https://hooks.example.com/erp", secret: "e2e-secret-0123456789", active: true })
 })
+
+test("CO-020 người dùng: cột số di động, lọc theo vai trò gửi roleId; vai trò có số người dùng; lịch sử đăng nhập có thiết bị và vai trò", async ({ page }) => {
+  await base(page)
+  const users = await mockApi(page, "/v1/iam/users", { method: "GET", body: pageOf([{ id: "77", username: "e2e.thu", fullName: "E2E Thu", email: "thu@example.com", mobile: "+84 90 111 2222", status: "ACTIVE", roles: ["EMPLOYEE"] }]) })
+  await mockApi(page, "/v1/iam/login-history", { method: "GET", body: pageOf([{ id: "5", username: "e2e.thu", loginAt: "2026-11-24T08:00:00Z", ipAddress: "10.0.0.1", browser: "Chrome", os: "Windows", deviceType: "DESKTOP", timezone: "Asia/Ho_Chi_Minh", roleAtLogin: "EMPLOYEE" }]) })
+  await page.goto("/company/access")
+  await expect(page.getByRole("cell", { name: "+84 90 111 2222" })).toBeVisible()
+  await page.getByRole("combobox", { name: "Lọc theo vai trò" }).click()
+  await page.getByRole("option", { name: "Employee" }).click()
+  await expect(page).toHaveURL(/role=310/)
+  await expect.poll(() => users.requests.some((r) => r.url.searchParams.get("roleId") === "310" && r.url.searchParams.get("size") !== "1")).toBe(true)
+  await page.goto("/company/access?tab=roles")
+  // one /iam/users?roleId&size=1 per role; the mock answers 1 user each
+  await expect(page.getByRole("row", { name: /Employee/ }).getByRole("cell", { name: "1", exact: true }).first()).toBeVisible()
+  expect(users.requests.filter((r) => r.url.searchParams.get("size") === "1").map((r) => r.url.searchParams.get("roleId")).sort()).toEqual(["306", "310"])
+  await page.goto("/company/access?tab=logins")
+  await expect(page.getByRole("cell", { name: "Máy tính" })).toBeVisible()
+  await expect(page.getByRole("cell", { name: "Asia/Ho_Chi_Minh" })).toBeVisible()
+  await expect(page.getByRole("cell", { name: "EMPLOYEE" })).toBeVisible()
+})
