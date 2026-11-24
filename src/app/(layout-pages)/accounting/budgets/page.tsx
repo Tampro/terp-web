@@ -525,16 +525,30 @@ function PeriodList({ periods, manage, onChanged }: { periods: PeriodDto[]; mana
     }
   }, [viewing])
   const monitoring = mon && mon.id === viewing?.id ? mon.data : undefined
+  const { searchParams, update } = useUrlQuery()
+  const pstatus = searchParams.get("pstatus") ?? ALL
+  const count = (s: string) => (s === ALL ? periods.length : periods.filter((p) => p.status === s).length)
+  const shown = pstatus === ALL ? periods : periods.filter((p) => p.status === pstatus)
   return (
     <Card>
       <CardContent className="flex flex-col gap-4">
-        {manage && (
-          <div className="flex justify-end">
+        <div className="flex flex-wrap items-center gap-2">
+          <Tabs value={pstatus} onValueChange={(v) => update({ pstatus: v === ALL ? "" : v })}>
+            <TabsList>
+              {[ALL, "ACTIVE", "CLOSED"].map((s) => (
+                <TabsTrigger key={s} value={s}>
+                  {s === ALL ? t("companies.tabAll") : t(`bg.status.${s}` as TranslationKey)} ({count(s)})
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </Tabs>
+          <div className="flex-1" />
+          {manage && (
             <Button onClick={() => setEditing({})}>
               <Plus className="size-4" /> {t("bg.period.create")}
             </Button>
-          </div>
-        )}
+          )}
+        </div>
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -550,14 +564,14 @@ function PeriodList({ periods, manage, onChanged }: { periods: PeriodDto[]; mana
               </TableRow>
             </TableHeader>
             <TableBody>
-              {periods.length === 0 && (
+              {shown.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={6} className="text-muted-foreground h-24 text-center">
                     {t("bg.period.empty")}
                   </TableCell>
                 </TableRow>
               )}
-              {periods.map((p) => (
+              {shown.map((p) => (
                 <TableRow key={p.id}>
                   <TableCell>
                     <button type="button" className="font-medium underline-offset-4 hover:underline" onClick={() => setViewing(p)}>

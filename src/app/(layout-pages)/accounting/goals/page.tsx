@@ -129,6 +129,19 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
     }
   }, [status, type, categoryId, page, reloadKey])
 
+  // counts per status tab (no stats endpoint: totalElements of size-1 pages, loaded in parallel)
+  const [counts, setCounts] = React.useState<Record<string, number>>()
+  React.useEffect(() => {
+    let cancelled = false
+    const keys = [ALL, ...STATUSES]
+    Promise.all(keys.map((s) => GoalService.list({ status: s === ALL ? undefined : s, size: 1 })))
+      .then((pages) => !cancelled && setCounts(Object.fromEntries(keys.map((k, i) => [k, pages[i].totalElements ?? 0]))))
+      .catch(() => undefined) // the tabs simply show no count
+    return () => {
+      cancelled = true
+    }
+  }, [reloadKey])
+
   const rows = data?.content ?? []
   const catName = (id?: string | null) => categories.find((c) => c.id === id)?.name ?? "-"
   return (
@@ -137,10 +150,14 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Tabs value={status} onValueChange={(v) => update({ status: v === ALL ? "" : v, page: 0 })}>
             <TabsList>
-              <TabsTrigger value={ALL}>{t("companies.tabAll")}</TabsTrigger>
+              <TabsTrigger value={ALL}>
+                {t("companies.tabAll")}
+                {counts && ` (${counts[ALL]})`}
+              </TabsTrigger>
               {STATUSES.map((s) => (
                 <TabsTrigger key={s} value={s}>
                   {t(`bg.status.${s}`)}
+                  {counts && ` (${counts[s]})`}
                 </TabsTrigger>
               ))}
             </TabsList>

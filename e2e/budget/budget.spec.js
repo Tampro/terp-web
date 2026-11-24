@@ -153,3 +153,39 @@ test("BG-011 ngân sách: Nháp → Duyệt; theo dõi phân bổ, chỉ tài kh
   await page.getByRole("alertdialog").getByRole("button", { name: "Duyệt" }).click()
   await expect.poll(() => approve.requests.length).toBe(1)
 })
+
+test("BG-004 mục tiêu: số lượng trên tab trạng thái từ totalElements, gọi song song mọi trạng thái", async ({ page }) => {
+  await base(page)
+  const totals = { "": 10, DRAFT: 4, ACTIVE: 5, COMPLETED: 1 }
+  /** @type {string[]} */
+  const asked = []
+  await page.route(/\/api\/v1\/accounting\/goals(\?.*)?$/, (route) => {
+    const st = new URL(route.request().url()).searchParams.get("status") ?? ""
+    asked.push(st)
+    return route.fulfill({ contentType: "application/json", body: JSON.stringify(pageOf([], { total: totals[/** @type {keyof typeof totals} */ (st)] ?? 0 })) })
+  })
+  await page.goto("/accounting/goals")
+  await expect(page.getByRole("tab", { name: "Tất cả (10)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Nháp (4)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Đang áp dụng (5)" })).toBeVisible()
+  await expect(page.getByRole("tab", { name: "Hoàn thành (1)" })).toBeVisible()
+  expect(asked).toEqual(expect.arrayContaining(["", "DRAFT", "ACTIVE", "COMPLETED"]))
+})
+
+test("BG-012 kỳ ngân sách: tab Đang áp dụng / Đã đóng có số lượng, lọc danh sách, giữ trên URL", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/accounting/budget-periods", {
+    method: "GET",
+    body: pageOf([
+      { id: "5", name: "E2E FY2026", financialYear: 2026, startDate: "2026-01-01", endDate: "2026-12-31", status: "ACTIVE" },
+      { id: "4", name: "E2E FY2025", financialYear: 2025, startDate: "2025-01-01", endDate: "2025-12-31", status: "CLOSED" },
+    ]),
+  })
+  await mockApi(page, "/v1/accounting/budgets", { method: "GET", body: pageOf([]) })
+  await page.goto("/accounting/budgets?tab=periods")
+  await expect(page.getByRole("tab", { name: "Tất cả (2)" })).toBeVisible()
+  await page.getByRole("tab", { name: "Đã đóng (1)" }).click()
+  await expect(page).toHaveURL(/pstatus=CLOSED/)
+  await expect(page.getByRole("button", { name: "E2E FY2025" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "E2E FY2026" })).toHaveCount(0)
+})
