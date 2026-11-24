@@ -38,6 +38,10 @@ test("PUR-001 hóa đơn mua: số đếm tab, nhà cung cấp, kho, Quá hạn;
   await expect(row).toContainText("E2E Global Supplies")
   await expect(row).toContainText("E2E Kho Hà Nội")
   await expect(row).toContainText("880.000")
+  // subtotal and tax columns, as on the reference list
+  await expect(page.getByRole("columnheader", { name: "Thuế" })).toBeVisible()
+  await expect(row).toContainText("800.000")
+  await expect(row).toContainText("80.000")
   await expect(row).toContainText("Quá hạn")
   await page.getByRole("tab", { name: "Quá hạn" }).click()
   await expect.poll(() => list.requests.at(-1)?.url.searchParams.get("overdue")).toBe("true")
