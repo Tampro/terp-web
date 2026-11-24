@@ -54,6 +54,7 @@ function Payroll() {
   const runs: CrudConfig = {
     id: "runs",
     load: HR.runs.list,
+    countsPath: "/v1/payroll/runs/status-counts",
     keyword: true,
     statuses: ["DRAFT", "PROCESSING", "COMPLETED", "CANCELLED"],
     onRowClick: setViewRun,
@@ -110,6 +111,7 @@ function Payroll() {
   const salaries: CrudConfig = {
     id: "salaries",
     load: HR.salaries.list,
+    countsPath: "/v1/payroll/salaries/status-counts",
     keyword: true,
     statuses: ["ACTIVE", "INACTIVE"],
     reloadKey: salaryReload,
@@ -139,6 +141,7 @@ function Payroll() {
   const payslips: CrudConfig = {
     id: "payslips",
     load: HR.payslips.list,
+    countsPath: "/v1/payroll/payslips/status-counts",
     keyword: true,
     statuses: ["GENERATED", "DOWNLOADED"],
     columns: [

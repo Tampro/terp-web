@@ -66,6 +66,7 @@ function Recognition() {
   const promotions: CrudConfig = {
     id: "promotions",
     load: HR.promotions.list,
+    countsPath: "/v1/lifecycle/promotions/status-counts",
     keyword: true,
     statuses: ["PENDING", "APPROVED", "REJECTED"],
     columns: [

@@ -31,6 +31,7 @@ function Issues() {
   const complaints: CrudConfig = {
     id: "complaints",
     load: HR.complaints.list,
+    countsPath: "/v1/lifecycle/complaints/status-counts",
     keyword: true,
     statuses: ["PENDING", "IN_REVIEW", "ASSIGNED", "IN_PROGRESS", "RESOLVED"],
     columns: [
@@ -111,6 +112,7 @@ function Issues() {
   const warnings: CrudConfig = {
     id: "warnings",
     load: HR.warnings.list,
+    countsPath: "/v1/lifecycle/warnings/status-counts",
     keyword: true,
     statuses: ["PENDING", "APPROVED", "REJECTED"],
     columns: [

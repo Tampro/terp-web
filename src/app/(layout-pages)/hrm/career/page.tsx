@@ -41,6 +41,7 @@ function Career() {
   const transfers: CrudConfig = {
     id: "transfers",
     load: HR.transfers.list,
+    countsPath: "/v1/lifecycle/transfers/status-counts",
     keyword: true,
     statuses: ["PENDING", "IN_PROGRESS", "APPROVED", "REJECTED", "CANCELLED"],
     columns: [
@@ -79,6 +80,7 @@ function Career() {
   const resignations: CrudConfig = {
     id: "resignations",
     load: HR.resignations.list,
+    countsPath: "/v1/lifecycle/resignations/status-counts",
     keyword: true,
     statuses: ["PENDING", "ACCEPTED", "REJECTED"],
     columns: [
@@ -116,6 +118,7 @@ function Career() {
   const terminations: CrudConfig = {
     id: "terminations",
     load: HR.terminations.list,
+    countsPath: "/v1/lifecycle/terminations/status-counts",
     keyword: true,
     statuses: ["PENDING", "APPROVED", "REJECTED"],
     columns: [
