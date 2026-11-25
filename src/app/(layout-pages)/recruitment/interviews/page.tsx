@@ -8,9 +8,12 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
+import { useUrlQuery } from "@/hooks/use-url-query"
 import { HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { RECOMMENDATIONS, REC, RecOptions, RecruitmentService, type InterviewDetail } from "@/lib/recruitment/recruitment.service"
+import { ApiError } from "@/lib/api"
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
@@ -31,19 +34,25 @@ export default function InterviewsPage() {
 function Interviews() {
   const t = useT()
   const language = useLanguageStore((s) => s.language)
-  const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("RECRUITMENT_MANAGE")
-  const candidateOpts = useOptions("rec:candidates", RecOptions.candidates)
+  const perms = useAuthStore((s) => s.me?.permissions)
+  const manage = !!perms?.includes("RECRUITMENT_MANAGE")
+  const canView = !!perms?.includes("RECRUITMENT_VIEW")
+  // a panel member without RECRUITMENT_VIEW only sees "My interviews": the form lookups would all be 403
+  const candidateOpts = useOptions("rec:candidates", RecOptions.candidates, canView)
   const candidates = toSelect(candidateOpts)
-  const roundOpts = useOptions("rec:rounds", RecOptions.rounds)
+  const roundOpts = useOptions("rec:rounds", RecOptions.rounds, canView)
   /** rounds of the chosen candidate's job (REC_024) */
   const roundsFor = (v: Record<string, unknown>) => {
     const job = candidateOpts.find((c) => c.id === String(v.candidateId ?? ""))?.jobId
     return toSelect(roundOpts.filter((r) => !job || r.jobId === job))
   }
-  const types = toSelect(useOptions("rc:interview-types", () => RecOptions.catalog("interview-types")))
-  const employees = toSelect(useOptions("employees", HrOptions.employees))
+  const types = toSelect(useOptions("rc:interview-types", () => RecOptions.catalog("interview-types"), canView))
+  const employees = toSelect(useOptions("employees", HrOptions.employees, canView))
   const [viewing, setViewing] = React.useState<string>()
   const [reload, setReload] = React.useState(0)
+  const { searchParams, update } = useUrlQuery()
+  const myFrom = searchParams.get("from") ?? ""
+  const [noProfile, setNoProfile] = React.useState(false)
   const is = (...s: string[]) => (r: Row) => s.includes(String(r.status))
   const status = (s: string) => (r: Row) => REC.interviews.put(r.id ?? "", "status", { status: s })
 
@@ -98,12 +107,48 @@ function Interviews() {
     ],
     manage,
   }
+  // GET /interviews/my: any signed-in employee on the panel (no RECRUITMENT_VIEW); `from` = the URL's ?from (default today)
+  const mine: CrudConfig = {
+    id: "my-interviews",
+    // a user without an employee profile (EMP_001) is on no panel: an empty list and a note instead of an error
+    load: (q) =>
+      RecruitmentService.myInterviews({ from: (q.from as string | undefined) || undefined, page: q.page as number, size: q.size as number }).then(
+        (p) => {
+          setNoProfile(false)
+          return p
+        },
+        (e: unknown) => {
+          if (e instanceof ApiError && e.code === "EMP_001") {
+            setNoProfile(true)
+            return { content: [] }
+          }
+          throw e
+        },
+      ),
+    query: { from: myFrom || undefined },
+    toolbar: (
+      <div className="flex flex-wrap items-center gap-2">
+        {noProfile && <span className="text-muted-foreground text-sm">{t("rc.my.noProfile")}</span>}
+        <label htmlFor="my-from" className="text-sm">
+          {t("rc.my.from")}
+        </label>
+        <Input id="my-from" type="date" className="w-44" value={myFrom} onChange={(e) => update({ from: e.target.value || undefined, page: undefined })} />
+      </div>
+    ),
+    onRowClick: canView ? (r) => setViewing(r.id) : undefined,
+    columns: cfg.columns.filter((c) => c.label !== "rc.interviewers"),
+    rowName: cfg.rowName,
+    emptyLabel: "rc.my.empty",
+    manage: false,
+  }
   return (
     <>
       <TabbedPage title={t("menu.rc.interviews")} description={t("rc.interviews.subtitle")} tabs={[
-          { key: "list", label: "menu.rc.interviews", content: () => <CrudSection config={cfg} /> },
+          { key: "list", label: "menu.rc.interviews", visible: canView, content: () => <CrudSection config={cfg} /> },
+          { key: "my", label: "rc.my.tab", content: () => <CrudSection config={mine} /> },
           {
             key: "board",
+            visible: canView,
             label: "rc.board",
             content: () => (
               <StatusBoard

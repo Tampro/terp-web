@@ -228,6 +228,17 @@ const recruitmentVi: Record<keyof typeof recruitmentEn, string> = {
   "rc.board.of": "trên {n}",
   "rc.board.final": "Offer đã chấp nhận, từ chối hoặc hết hạn không thể đổi trạng thái nữa",
   "rc.board.notApproved": "Hãy duyệt offer trước khi gửi",
+  "rc.offer.emailLetter": "Gửi thư qua email",
+  "rc.offer.emailLetterDesc": "Thư đã điền sẽ được gửi (dạng văn bản) tới email của ứng viên. Thư được đưa vào hàng đợi, chưa chắc đã tới: xem nhật ký thông báo.",
+  "rc.my.tab": "Phỏng vấn của tôi",
+  "rc.my.from": "Từ ngày",
+  "rc.my.empty": "Bạn không có trong hội đồng phỏng vấn nào sắp tới",
+  "rc.generate": "Tạo thư",
+  "rc.generateFor": "Tạo thư từ mẫu {name}",
+  "rc.generateDesc": "Nhập giá trị cho mọi biến. Không có gì được lưu.",
+  "rc.noVariables": "Mẫu này không có biến.",
+  "rc.generated": "Thư đã tạo",
+  "rc.my.noProfile": "Tài khoản của bạn chưa có hồ sơ nhân viên nên không có trong hội đồng phỏng vấn nào.",
 }
 
 export default recruitmentVi

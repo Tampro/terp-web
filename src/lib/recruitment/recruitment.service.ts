@@ -138,6 +138,12 @@ export const RecruitmentService = {
   addFeedback: (id: string, body: unknown) => post<Row>(`${R}/interviews/${id}/feedback`, body),
   removeFeedback: (id: string, feedbackId: string) => request<void>(`${R}/interviews/${id}/feedback/${feedbackId}`, { method: "DELETE" }),
   offerLetter: (id: string, templateId: string) => request<Blob>(withQuery(`${R}/offers/${id}/letter`, { templateId }), { as: "blob" }),
+  /** emails the filled letter (plain text) to the candidate: SENT / NEGOTIATING / ACCEPTED only; 200 = queued (notification OFFER_LETTER), not delivered */
+  emailOfferLetter: (id: string, templateId: string) => post<{ offerId?: string; eventId?: string }>(withQuery(`${R}/offers/${id}/letter/send`, { templateId })),
+  /** Generate Offer: every declared variable needs a value; values are HTML-escaped, nothing is saved */
+  generateLetter: (templateId: string, values: Record<string, string>) => post<{ templateId?: string; name?: string; content?: string }>(`${R}/offer-templates/${templateId}/generate`, { values }),
+  /** interviews where my employee profile is on the panel, dated on or after `from` (default today); no RECRUITMENT_VIEW needed */
+  myInterviews: (q: { from?: string; page?: number; size?: number }) => request<IPage<Row>>(withQuery(`${R}/interviews/my`, { ...q })),
   convert: (id: string, body: unknown) => post<Row>(`${R}/offers/${id}/convert-to-employee`, body),
   onboarding: (id: string) => request<OnboardingDetail>(`${R}/onboardings/${id}`),
   settings: () => request<CareerSettings | null>(`${R}/career-settings`),

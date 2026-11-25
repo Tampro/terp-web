@@ -5,6 +5,7 @@ import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Switch } from "@/components/ui/switch"
@@ -35,6 +36,7 @@ export default function RecruitmentSetupPage() {
 function Setup() {
   const t = useT()
   const manage = !!useAuthStore((s) => s.me?.permissions)?.includes("RECRUITMENT_MANAGE")
+  const [generating, setGenerating] = React.useState<Row>()
   const postings = toSelect(useOptions("rec:postings", RecOptions.postings))
   const checklists = toSelect(useOptions("rec:checklists", RecOptions.checklists))
   const active = (["ACTIVE", "INACTIVE"] as const).map((s) => ({ value: s, label: t(`hr.status.${s}`) }))
@@ -198,6 +200,14 @@ function Setup() {
       { label: "rc.variables", render: (r) => ((r.variables as string[] | undefined) ?? []).map((v) => `{{${v}}}`).join(" ") || "-" },
       { label: "rc.preview", render: (r) => <span className="line-clamp-2 max-w-80 text-xs">{String(r.contentPreview ?? "")}</span> },
       { label: "hr.f.status", path: "status", kind: "status" },
+      {
+        label: "rc.generate",
+        render: (r) => (
+          <Button variant="outline" size="sm" aria-label={t("rc.generateFor", { name: String(r.name ?? "") })} onClick={() => setGenerating(r)}>
+            {t("rc.generate")}
+          </Button>
+        ),
+      },
     ],
     rowName: name,
     createLabel: "rc.template.create",
@@ -216,6 +226,7 @@ function Setup() {
     manage,
   }
   return (
+    <>
     <TabbedPage
       title={t("menu.rc.setup")}
       description={t("rc.setup.subtitle")}
@@ -230,6 +241,56 @@ function Setup() {
         { key: "portal", label: "rc.portal", content: () => <Portal manage={manage} /> },
       ]}
     />
+    <Dialog open={!!generating} onOpenChange={(o) => !o && setGenerating(undefined)}>
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">{generating?.id && <GenerateLetter key={generating.id} template={generating} />}</DialogContent>
+    </Dialog>
+    </>
+  )
+}
+
+/** Generate Offer: a value for every declared variable, then the filled letter (values HTML-escaped by the backend, nothing saved) shown in an inert sandboxed frame. */
+function GenerateLetter({ template }: { template: Row }) {
+  const t = useT()
+  const variables = (template.variables as string[] | undefined) ?? []
+  const [values, setValues] = React.useState<Record<string, string>>(() => Object.fromEntries(variables.map((v) => [v, ""])))
+  const [result, setResult] = React.useState<string>()
+  const [busy, setBusy] = React.useState(false)
+  const missing = variables.filter((v) => !values[v]?.trim())
+  async function generate() {
+    setBusy(true)
+    try {
+      const g = await RecruitmentService.generateLetter(String(template.id), Object.fromEntries(variables.map((v) => [v, values[v].trim()])))
+      setResult(g?.content ?? "")
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : String(e))
+    } finally {
+      setBusy(false)
+    }
+  }
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>{t("rc.generateFor", { name: String(template.name ?? "") })}</DialogTitle>
+        <DialogDescription>{t("rc.generateDesc")}</DialogDescription>
+      </DialogHeader>
+      {variables.length === 0 && <p className="text-muted-foreground text-sm">{t("rc.noVariables")}</p>}
+      <div className="grid gap-3 sm:grid-cols-2">
+        {variables.map((v) => (
+          <Field key={v} id={`gen-${v}`} label={`{{${v}}}`}>
+            <Input id={`gen-${v}`} maxLength={1000} value={values[v] ?? ""} onChange={(e) => setValues((x) => ({ ...x, [v]: e.target.value }))} />
+          </Field>
+        ))}
+      </div>
+      {result !== undefined && (
+        // the letter is template HTML: a sandbox without allow-scripts keeps it inert
+        <iframe title={t("rc.generated")} sandbox="" srcDoc={result} className="h-[45vh] w-full rounded-md border bg-white" />
+      )}
+      <DialogFooter>
+        <Button disabled={busy || missing.length > 0} onClick={generate}>
+          {t("rc.generate")}
+        </Button>
+      </DialogFooter>
+    </>
   )
 }
 

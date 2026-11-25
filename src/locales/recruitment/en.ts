@@ -227,6 +227,17 @@ const recruitmentEn = {
   "rc.board.of": "of {n}",
   "rc.board.final": "An accepted, declined or expired offer can no longer change status",
   "rc.board.notApproved": "Approve the offer before sending it",
+  "rc.offer.emailLetter": "Email the letter",
+  "rc.offer.emailLetterDesc": "The filled letter is emailed (as plain text) to the candidate's address. It is queued, not yet delivered: see the notification log.",
+  "rc.my.tab": "My interviews",
+  "rc.my.from": "From",
+  "rc.my.empty": "You are on no upcoming interview panel",
+  "rc.generate": "Generate",
+  "rc.generateFor": "Generate a letter from {name}",
+  "rc.generateDesc": "Enter a value for every variable. Nothing is saved.",
+  "rc.noVariables": "This template has no variables.",
+  "rc.generated": "Generated letter",
+  "rc.my.noProfile": "Your account has no employee profile, so you are on no interview panel.",
 }
 
 export default recruitmentEn
