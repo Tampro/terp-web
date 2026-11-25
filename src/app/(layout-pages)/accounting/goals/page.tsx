@@ -142,6 +142,17 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
   }, [type, categoryId, reloadKey])
 
   const rows = data?.content ?? []
+  // current amount / progress per row: GET /goals/{id}/tracking for the shown page (the list row has no current amount)
+  const [tracks, setTracks] = React.useState<Record<string, TrackingDto | null>>({})
+  React.useEffect(() => {
+    let cancelled = false
+    const ids = (data?.content ?? []).map((g) => g.id).filter((id): id is string => !!id)
+    Promise.all(ids.map((id) => GoalService.tracking(id).then((tr) => [id, tr ?? null] as const, () => [id, null] as const))).then((pairs) => !cancelled && setTracks(Object.fromEntries(pairs)))
+    return () => {
+      cancelled = true
+    }
+  }, [data])
+  const now = today()
   const catName = (id?: string | null) => categories.find((c) => c.id === id)?.name ?? "-"
   return (
     <Card>
@@ -187,6 +198,8 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
                 <TableHead>{t("le.type")}</TableHead>
                 <TableHead>{t("bg.priority")}</TableHead>
                 <TableHead className="text-right">{t("bg.target")}</TableHead>
+                <TableHead className="text-right">{t("bg.current")}</TableHead>
+                <TableHead className="w-40">{t("bg.progress")}</TableHead>
                 <TableHead>{t("bg.targetDate")}</TableHead>
                 <TableHead>{t("crm.status")}</TableHead>
                 <TableHead className="w-12">
@@ -197,14 +210,14 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
             <TableBody>
               {loading && (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={10}>
                     <Skeleton className="h-6 w-full" />
                   </TableCell>
                 </TableRow>
               )}
               {!loading && rows.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-muted-foreground h-24 text-center">
+                  <TableCell colSpan={10} className="text-muted-foreground h-24 text-center">
                     {t("bg.goal.empty")}
                   </TableCell>
                 </TableRow>
@@ -221,7 +234,25 @@ function GoalList({ categories, manage }: { categories: GoalCategoryDto[]; manag
                     <TableCell>{g.type ? t(`bg.goalType.${g.type}`) : "-"}</TableCell>
                     <TableCell>{g.priority ? t(`bg.priority.${g.priority}`) : "-"}</TableCell>
                     <TableCell className="text-right">{money(g.targetAmount)}</TableCell>
-                    <TableCell>{formatDate(g.targetDate, language)}</TableCell>
+                    <TableCell className="text-right">{g.id && tracks[g.id] ? money(tracks[g.id]?.currentAmount) : "-"}</TableCell>
+                    <TableCell>
+                      {g.id && tracks[g.id] ? (
+                        <div className="flex items-center gap-2" data-testid="goal-row-progress">
+                          <Progress className="h-2 flex-1" value={Math.min(100, tracks[g.id]?.progressPercent ?? 0)} aria-label={t("bg.progressOf", { name: g.name ?? "" })} />
+                          <span className="text-muted-foreground w-12 text-right text-xs">{(tracks[g.id]?.progressPercent ?? 0).toFixed(0)}%</span>
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      {formatDate(g.targetDate, language)}
+                      {g.status !== "COMPLETED" && !!g.targetDate && g.targetDate < now && (
+                        <Badge variant="destructive" className="ml-2">
+                          {t("bg.overdue")}
+                        </Badge>
+                      )}
+                    </TableCell>
                     <TableCell>
                       <GoalStatusBadge status={g.status} />
                     </TableCell>

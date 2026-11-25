@@ -118,6 +118,10 @@ const budgetVi: Record<keyof typeof budgetEn, string> = {
   "bg.confirm.period.closeDesc": "Chỉ đóng được sau ngày kết thúc; kỳ và các ngân sách của nó chỉ còn xem được.",
   "bg.confirm.period.delete": "Xóa {name}?",
   "bg.confirm.period.deleteDesc": "Kỳ đã có ngân sách không xóa được.",
+  "bg.current": "Hiện tại",
+  "bg.progressOf": "Tiến độ của {name}",
+  "bg.overdue": "Quá hạn",
+  "bg.allYears": "Tất cả các năm",
 }
 
 export default budgetVi

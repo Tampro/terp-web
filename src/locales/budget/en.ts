@@ -117,6 +117,10 @@ const budgetEn = {
   "bg.confirm.period.closeDesc": "Possible only after its end date; the period and its budgets become read-only.",
   "bg.confirm.period.delete": "Delete {name}?",
   "bg.confirm.period.deleteDesc": "A period that has budgets cannot be deleted.",
+  "bg.current": "Current",
+  "bg.progressOf": "Progress of {name}",
+  "bg.overdue": "Overdue",
+  "bg.allYears": "All years",
 }
 
 export default budgetEn
