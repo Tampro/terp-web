@@ -312,3 +312,52 @@ test("HR-041 tab trạng thái có số đếm từ /status-counts, tìm kiếm 
   await page.getByRole("textbox", { name: "Tìm kiếm" }).press("Enter")
   await expect.poll(() => counts.requests.at(-1)?.url.searchParams.get("keyword")).toBe("E2E")
 })
+
+test("HR-042 cảnh cáo: cột Người cảnh cáo và Tài liệu (FileRef mở link http(s), link khác chỉ hiện tên)", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/lifecycle/warnings/status-counts", { body: ok({ all: 2, byStatus: { PENDING: 2 } }) })
+  await mockApi(page, "/v1/lifecycle/warnings", {
+    method: "GET",
+    body: pageOf([
+      { id: "1", subject: "E2E Đi muộn", employee: { id: "35", fullName: "E2E An" }, warnedBy: { id: "36", fullName: "E2E Bình" }, warningDate: "2026-11-20", status: "PENDING", document: { id: "9", name: "bien-ban.pdf", viewUrl: "https://files.example.com/bien-ban.pdf" } },
+      { id: "2", subject: "E2E Vắng", employee: { id: "35", fullName: "E2E An" }, warningDate: "2026-11-21", status: "PENDING", document: { id: "10", name: "x.pdf", viewUrl: "javascript:alert(1)" } },
+    ]),
+  })
+  await page.goto("/hrm/issues?tab=warnings")
+  const r1 = page.getByRole("row").filter({ hasText: "E2E Đi muộn" })
+  await expect(r1).toContainText("E2E Bình")
+  await expect(r1.getByRole("link", { name: "bien-ban.pdf" })).toHaveAttribute("href", "https://files.example.com/bien-ban.pdf")
+  const r2 = page.getByRole("row").filter({ hasText: "E2E Vắng" })
+  await expect(r2.getByText("x.pdf")).toBeVisible()
+  await expect(r2.getByRole("link")).toHaveCount(0)
+})
+
+test("HR-043 danh sách chỉ có documentId: nút Mở tải GET /{id} rồi mở link tài liệu ở tab mới", async ({ page, context }) => {
+  await base(page)
+  await mockApi(page, "/v1/lifecycle/complaints/status-counts", { body: ok({ all: 1, byStatus: { PENDING: 1 } }) })
+  await mockApi(page, "/v1/lifecycle/complaints", { method: "GET", body: pageOf([{ id: "4", subject: "E2E Khiếu nại", complainant: { id: "35", fullName: "E2E An" }, complaintDate: "2026-11-20", status: "PENDING", documentId: "9", document: null }]) })
+  const detail = await mockApi(page, "/v1/lifecycle/complaints/4", { body: ok({ id: "4", subject: "E2E Khiếu nại", documentId: "9", document: { id: "9", name: "don.pdf", viewUrl: "http://127.0.0.1:4173/e2e-file.pdf" } }) })
+  await context.route("**/e2e-file.pdf", (r) => r.fulfill({ status: 200, contentType: "text/plain", body: "E2E FILE" }))
+  await page.goto("/hrm/issues")
+  const popup = context.waitForEvent("page")
+  await page.getByRole("button", { name: "Mở tệp của E2E Khiếu nại" }).click()
+  const w = await popup
+  await expect(w).toHaveURL(/e2e-file\.pdf/)
+  expect(detail.requests.length).toBe(1)
+})
+
+test("HR-044 khen thưởng: dòng chỉ có certificateMediaId → nút Mở tải GET /awards/{id} rồi mở giấy chứng nhận", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/org/award-types/options", { body: ok([{ id: "2", name: "E2E Xuất sắc" }]) })
+  await mockApi(page, "/v1/lifecycle/awards", { method: "GET", body: pageOf([
+    { id: "7", employee: { id: "35", fullName: "E2E An" }, awardType: { id: "2", name: "E2E Xuất sắc" }, awardDate: "2026-11-25", gift: "E2E Quà", certificateMediaId: "9", certificate: null },
+    { id: "8", employee: { id: "36", fullName: "E2E Bình" }, awardType: { id: "2", name: "E2E Xuất sắc" }, awardDate: "2026-11-25", gift: "E2E Không file", certificate: null },
+  ]) })
+  const detail = await mockApi(page, "/v1/lifecycle/awards/7", { body: ok({ id: "7", certificateMediaId: "9", certificate: { id: "9", name: "cn.pdf", viewUrl: "http://127.0.0.1:4173/e2e-cert.pdf" } }) })
+  await page.goto("/hrm/recognition")
+  await page.evaluate(() => { window.open = (...a) => { /** @type {any} */ (window).__opened = a; return null } })
+  await page.getByRole("button", { name: "Mở tệp của E2E An" }).click()
+  await expect.poll(() => page.evaluate(() => /** @type {any} */ (window).__opened?.[0])).toBe("http://127.0.0.1:4173/e2e-cert.pdf")
+  expect(detail.requests.length).toBe(1)
+  await expect(page.getByRole("row").filter({ hasText: "E2E Không file" }).getByRole("button", { name: /Mở tệp/ })).toHaveCount(0)
+})

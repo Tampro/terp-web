@@ -68,6 +68,7 @@ function Leave() {
           ),
       },
       { label: "hr.f.status", render: (r) => <StatusWithComment row={r} /> },
+      { label: "hr.f.appliedOn", path: "appliedOn", kind: "date" },
     ],
     rowName: (r) => `${pick(r, "employee.fullName") ?? ""} (${pick(r, "leaveType.name") ?? ""})`,
     createLabel: "hr.leave.create",

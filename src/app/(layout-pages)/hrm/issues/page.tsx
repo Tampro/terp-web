@@ -6,7 +6,7 @@ import { Check, ClipboardCheck, Eye, Play, Reply, Target, UserCheck, X } from "l
 import { HR, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { useT } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef } from "../_components/crud-kit"
+import { CrudSection, fileCol, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef } from "../_components/crud-kit"
 
 export default function IssuesPage() {
   return (
@@ -42,6 +42,7 @@ function Issues() {
       { label: "hr.f.date", path: "complaintDate", kind: "date" },
       { label: "hr.f.assignedTo", render: (r) => String(pick(r, "assignment.assignedTo.fullName") ?? "-") },
       { label: "hr.f.status", path: "status", kind: "status" },
+      fileCol("hr.f.document", "document", HR.complaints.get),
     ],
     rowName: (r) => String(r.subject ?? ""),
     createLabel: "hr.complaint.create",
@@ -118,11 +119,13 @@ function Issues() {
     columns: [
       { label: "hr.f.subject", path: "subject" },
       { label: "hr.f.employee", render: (r) => person(r, "employee") },
+      { label: "hr.f.warnedBy", render: (r) => person(r, "warnedBy") },
       { label: "hr.f.warningType", path: "warningType.name" },
       { label: "hr.f.severity", path: "severity.name" },
       { label: "hr.f.date", path: "warningDate", kind: "date" },
       { label: "hr.f.employeeResponse", render: (r) => <span className="line-clamp-2 max-w-60">{String(r.employeeResponse ?? "-")}</span> },
       { label: "hr.f.status", render: (r) => <span>{r.expired ? t("hr.status.EXPIRED") : t(`hr.status.${String(r.status)}` as "hr.status.PENDING")}</span> },
+      fileCol("hr.f.document", "document", HR.warnings.get),
     ],
     rowName: (r) => String(r.subject ?? ""),
     createLabel: "hr.warning.create",

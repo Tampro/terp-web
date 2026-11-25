@@ -122,6 +122,7 @@ function Payroll() {
         .then((full) => setSalary({ row: full }))
         .catch((e: Error) => toast.error(e.message)),
     columns: [
+      { label: "hr.f.employeeNo", path: "employee.employeeNo", kind: "mono" },
       { label: "hr.f.employee", path: "employee.fullName" },
       { label: "hr.f.basicSalary", path: "basicSalary", kind: "money" },
       { label: "hr.pay.earnings", path: "structure.totalEarnings", kind: "money" },
