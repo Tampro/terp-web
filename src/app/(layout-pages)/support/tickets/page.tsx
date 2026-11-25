@@ -18,6 +18,8 @@ import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
 import { attempt, CrudSection, Field, FileInput, FormDialogBody, HrStatus, initialValues, PlainSelect, TabbedPage, useAuthStore, useOptions, type CrudConfig, type FieldDef } from "../../hrm/_components/crud-kit"
 
+import { TicketStatsTab } from "./_components/ticket-stats"
+
 const MAX_FILES = 5
 
 export default function TicketsPage() {
@@ -111,7 +113,14 @@ function Tickets() {
   ]
   return (
     <>
-      <TabbedPage title={t("menu.sp.tickets")} description={t("sp.tickets.subtitle")} tabs={[{ key: "list", label: "menu.sp.tickets", content: () => <CrudSection config={cfg} /> }]} />
+      <TabbedPage
+        title={t("menu.sp.tickets")}
+        description={t("sp.tickets.subtitle")}
+        tabs={[
+          { key: "list", label: "menu.sp.tickets", content: () => <CrudSection config={cfg} /> },
+          { key: "stats", label: "sp.stats.tab", content: () => <TicketStatsTab /> },
+        ]}
+      />
       <Dialog open={creating} onOpenChange={setCreating}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           {creating && (

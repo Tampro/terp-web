@@ -120,6 +120,26 @@ function useOnInterviewPanel(enabled: boolean) {
   return enabled && !!state
 }
 
+/** unread messenger messages (GET /messenger/unread-count {total}), polled every 30 s; no push channel in the backend */
+function useMessengerUnread(enabled: boolean) {
+  const [total, setTotal] = React.useState(0)
+  React.useEffect(() => {
+    if (!enabled) return
+    let cancelled = false
+    const load = () =>
+      request<{ total?: number }>("/v1/messenger/unread-count")
+        .then((r) => !cancelled && setTotal(r?.total ?? 0))
+        .catch(() => undefined)
+    void load()
+    const id = setInterval(load, 30_000)
+    return () => {
+      cancelled = true
+      clearInterval(id)
+    }
+  }, [enabled])
+  return enabled ? total : 0
+}
+
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
   const publicBrand = usePublicSettings()?.brand
@@ -135,6 +155,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const superAdmin = useAuthStore((s) => s.me?.superAdmin)
   const permissions = useAuthStore((s) => s.me?.permissions)
   const can = (code: string) => !!permissions?.includes(code)
+  const unread = useMessengerUnread(can("MESSENGER_USE") && !superAdmin)
   const onPanel = useOnInterviewPanel(!!permissions && !superAdmin && !can("RECRUITMENT_VIEW"))
   // Super Admin menu (manual §3–4) and company SaaS menu (SAAS_* permissions); the backend re-checks every call.
   const navMain = [
@@ -222,7 +243,9 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
           ...(can("SUPPORT_KB_VIEW") ? [{ title: t("menu.sp.knowledge"), url: "/support/knowledge", icon: LibraryBig }] : []),
           ...(can("SUPPORT_CONTACT_VIEW") ? [{ title: t("menu.sp.contacts"), url: "/support/contacts", icon: MailOpen }] : []),
           ...(can("SUPPORT_SETTINGS_MANAGE") ? [{ title: t("menu.sp.setup"), url: "/support/setup", icon: Settings2 }] : []),
-          ...(can("MESSENGER_USE") ? [{ title: t("menu.sp.messenger"), url: "/messenger", icon: MessagesSquare }] : []),
+          // client portal: my support tickets (support-service /portal/client/tickets)
+          ...(can("PORTAL_CLIENT") ? [{ title: t("menu.portal.tickets"), url: "/portal/tickets", icon: LifeBuoy }] : []),
+          ...(can("MESSENGER_USE") ? [{ title: t("menu.sp.messenger"), url: "/messenger", icon: MessagesSquare, badge: unread }] : []),
           // §17 Recruitment
           ...(can("RECRUITMENT_VIEW")
             ? [
