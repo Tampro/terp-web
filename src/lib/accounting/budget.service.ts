@@ -160,6 +160,8 @@ export interface PeriodMonitoringDto {
 const G = `${A}/goals`
 export const GoalService = {
   list: (f: { categoryId?: string; status?: string; type?: string } & Paging) => request<IPage<GoalDto>>(withQuery(G, { ...f })),
+  /** goals per status under the same category / type filters (every status present, 0 when none) */
+  statusCounts: (f: { categoryId?: string; type?: string }) => request<Record<string, number>>(withQuery(`${G}/status-counts`, { ...f })),
   save: (id: string | undefined, body: GoalForm) => save<GoalDto>(G, id, body),
   remove: (id: string) => del(`${G}/${id}`),
   activate: (id: string) => post<GoalDto>(`${G}/${id}/activate`),
