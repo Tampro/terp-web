@@ -286,3 +286,65 @@ test("RC-052 Kanban offer: chặn gửi khi chưa duyệt và đổi trạng th�
   expect(put2[0]).toEqual({ status: "NEGOTIATING" })
   expect(put1.length + put3.length).toBe(0)
 })
+
+test("RC-053 phỏng vấn của tôi: mục menu khi /interviews/my trả lời (không cần quyền), chỉ tab này, lọc from; EMP_001 → ghi chú, không có mục menu", async ({ page }) => {
+  await mockLoggedIn(page, { permissions: ["CRM_VIEW"] }) // e.g. MANAGER: no ATTENDANCE_SELF, no RECRUITMENT_VIEW
+  const my = await mockApi(page, "/v1/recruitment/interviews/my", { body: pageOf([{ id: "4", candidate: { fullName: "E2E Ứng viên" }, round: { name: "E2E Vòng 1" }, interviewType: { name: "E2E Trực tiếp" }, date: "2026-11-26", startTime: "09:30:00", durationMinutes: 45, location: "E2E Phòng họp", status: "SCHEDULED" }]) })
+  const lookups = []
+  page.on("request", (r) => /\/v1\/(recruitment\/(candidates|interview-rounds|interview-types)|employees)/.test(r.url()) && lookups.push(r.url()))
+  await page.goto("/recruitment/interviews")
+  await expect(page.getByRole("link", { name: "Phỏng vấn của tôi" })).toBeVisible()
+  await expect(page.getByRole("row").filter({ hasText: "E2E Ứng viên" })).toContainText("E2E Phòng họp")
+  await expect(page.getByRole("tab")).toHaveCount(0) // list and board need RECRUITMENT_VIEW
+  expect(lookups).toEqual([]) // the form lookups need RECRUITMENT_VIEW: not loaded
+  await page.getByLabel("Từ ngày").fill("2026-12-01")
+  await expect.poll(() => my.requests.at(-1)?.url.searchParams.get("from")).toBe("2026-12-01")
+  await mockApi(page, "/v1/recruitment/interviews/my", { status: 404, body: fail("EMP_001", "Nhân viên không tồn tại.") })
+  await page.reload()
+  await expect(page.getByText("Tài khoản của bạn chưa có hồ sơ nhân viên nên không có trong hội đồng phỏng vấn nào.")).toBeVisible()
+  await expect(page.getByText("Nhân viên không tồn tại.")).toHaveCount(0)
+  await expect(page.getByRole("link", { name: "Phỏng vấn của tôi" })).toHaveCount(0) // no employee profile: no menu item
+})
+
+test("RC-054 gửi thư mời qua email: chỉ SENT / NEGOTIATING / ACCEPTED, chọn mẫu, POST /offers/{id}/letter/send?templateId", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/recruitment/offer-templates", { method: "GET", body: pageOf([{ id: "7", name: "E2E Mẫu", status: "ACTIVE" }]) })
+  await mockApi(page, "/v1/recruitment/offers/status-counts", { body: ok({ all: 2, byStatus: { ACCEPTED: 1, DRAFT: 1 } }) })
+  await mockApi(page, "/v1/recruitment/offers", {
+    method: "GET",
+    body: pageOf([
+      { id: "6", candidate: { fullName: "E2E Nhận" }, status: "ACCEPTED", approvalStatus: "APPROVED" },
+      { id: "5", candidate: { fullName: "E2E Nháp" }, status: "DRAFT", approvalStatus: "PENDING" },
+    ]),
+  })
+  const send = await mockApi(page, "/v1/recruitment/offers/6/letter/send", { method: "POST", body: ok({ offerId: "6", eventId: "e2e" }) })
+  await page.goto("/recruitment/offers")
+  await page.getByRole("button", { name: /Thao tác cho .*E2E Nháp/ }).click()
+  await expect(page.getByRole("menuitem", { name: "Gửi thư qua email" })).toHaveCount(0)
+  await page.keyboard.press("Escape")
+  await page.getByRole("button", { name: /Thao tác cho .*E2E Nhận/ }).click()
+  await page.getByRole("menuitem", { name: "Gửi thư qua email" }).click()
+  const d = page.getByRole("dialog")
+  await d.getByRole("combobox", { name: "Mẫu thư" }).click()
+  await page.getByRole("option", { name: "E2E Mẫu" }).click()
+  await d.getByRole("button", { name: "Gửi thư qua email" }).click()
+  await expect.poll(() => send.requests.length).toBe(1)
+  expect(send.requests[0].url.searchParams.get("templateId")).toBe("7")
+})
+
+test("RC-055 tạo thư từ mẫu: cần giá trị cho mọi biến, POST /generate {values}, thư hiện trong iframe sandbox", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/recruitment/offer-templates/status-counts", { body: ok({ all: 1, active: 1, inactive: 0 }) })
+  await mockApi(page, "/v1/recruitment/offer-templates", { method: "GET", body: pageOf([{ id: "7", name: "E2E Mẫu", status: "ACTIVE", variables: ["candidate_name", "position"], contentPreview: "Chào {{candidate_name}}" }]) })
+  const gen = await mockApi(page, "/v1/recruitment/offer-templates/7/generate", { method: "POST", body: ok({ templateId: "7", name: "E2E Mẫu", content: "<p>Chào E2E An, vị trí <b>Kế toán</b></p>" }) })
+  await page.goto("/recruitment/setup?tab=templates")
+  await page.getByRole("button", { name: "Tạo thư từ mẫu E2E Mẫu" }).click()
+  const d = page.getByRole("dialog")
+  await d.getByLabel("{{candidate_name}}").fill("E2E An")
+  await expect(d.getByRole("button", { name: "Tạo thư" })).toBeDisabled()
+  await d.getByLabel("{{position}}").fill("Kế toán")
+  await d.getByRole("button", { name: "Tạo thư" }).click()
+  await expect(d.frameLocator("iframe").locator("b")).toHaveText("Kế toán")
+  expect(gen.requests[0].body).toEqual({ values: { candidate_name: "E2E An", position: "Kế toán" } })
+  await expect(d.locator("iframe")).toHaveAttribute("sandbox", "")
+})

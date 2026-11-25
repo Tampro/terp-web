@@ -228,6 +228,17 @@ const recruitmentKo: Record<keyof typeof recruitmentEn, string> = {
   "rc.board.of": "전체 {n}",
   "rc.board.final": "수락·거절·만료된 오퍼는 더 이상 상태를 바꿀 수 없습니다",
   "rc.board.notApproved": "오퍼를 보내기 전에 먼저 승인하세요",
+  "rc.offer.emailLetter": "이메일로 제안서 발송",
+  "rc.offer.emailLetterDesc": "작성된 제안서가 지원자 이메일로 (텍스트로) 발송됩니다. 대기열에 추가될 뿐 전달이 보장되지는 않습니다: 알림 로그를 확인하세요.",
+  "rc.my.tab": "내 면접",
+  "rc.my.from": "시작일",
+  "rc.my.empty": "예정된 면접 패널이 없습니다",
+  "rc.generate": "생성",
+  "rc.generateFor": "{name}(으)로 제안서 생성",
+  "rc.generateDesc": "모든 변수의 값을 입력하세요. 저장되지 않습니다.",
+  "rc.noVariables": "이 템플릿에는 변수가 없습니다.",
+  "rc.generated": "생성된 제안서",
+  "rc.my.noProfile": "계정에 직원 프로필이 없어 면접 패널에 포함되지 않습니다.",
 }
 
 export default recruitmentKo

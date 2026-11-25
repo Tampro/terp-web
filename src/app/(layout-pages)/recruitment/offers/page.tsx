@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Check, Download, Handshake, Send, ThumbsDown, ThumbsUp, UserPlus, X } from "lucide-react"
+import { Check, Download, Handshake, Mail, Send, ThumbsDown, ThumbsUp, UserPlus, X } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
 import { EMPLOYMENT_TYPES, HrOptions, type Row } from "@/lib/hrm/hrm.service"
@@ -92,6 +92,15 @@ function Offers() {
         when: () => templates.length > 0,
         fields: [{ name: "templateId", label: "rc.template", type: "select", required: true, options: templates }],
         run: async (r, b) => saveBlob(await RecruitmentService.offerLetter(r.id ?? "", String(b.templateId)), `offer-${String(pick(r, "candidate.fullName") ?? r.id)}.pdf`),
+      },
+      {
+        key: "email-letter",
+        label: "rc.offer.emailLetter",
+        icon: <Mail className="size-4" />,
+        when: (r) => templates.length > 0 && is("SENT", "NEGOTIATING", "ACCEPTED")(r),
+        fields: [{ name: "templateId", label: "rc.template", type: "select", required: true, options: templates }],
+        confirmDesc: "rc.offer.emailLetterDesc",
+        run: (r, b) => RecruitmentService.emailOfferLetter(r.id ?? "", String(b.templateId)),
       },
       {
         key: "convert",

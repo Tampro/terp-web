@@ -90,6 +90,7 @@ import { NavUser } from "@/components/nav-user"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader } from "@/components/ui/sidebar"
 import { usePublicSettings } from "@/hooks/use-public-settings"
+import { request } from "@/lib/api"
 import { useAuthStore } from "@/lib/auth/auth.store"
 import { useT } from "@/lib/i18n"
 import { useTheme } from "@/providers/theme-provider"
@@ -98,6 +99,26 @@ import { brandImage, useBrandStore } from "@/store/brand.store"
 
 const SIDEBAR_VARIANT = { INSET: "inset", FLOATING: "floating", MINIMAL: "sidebar" } as const
 const DARK_THEMES = ["dark-blue", "gaussian-black", "semi-dark"]
+
+/**
+ * "My interviews" for a user without RECRUITMENT_VIEW: shown when the account has an employee profile, i.e. when
+ * GET /recruitment/interviews/my answers (EMP_001 = no profile, e.g. portal users). /v1/me carries no employee link and
+ * no permission marks staff (MANAGER / EXECUTIVE have no ATTENDANCE_SELF), so the backend is asked once.
+ */
+function useOnInterviewPanel(enabled: boolean) {
+  const [state, setState] = React.useState<boolean>()
+  React.useEffect(() => {
+    if (!enabled) return
+    let cancelled = false
+    request("/v1/recruitment/interviews/my?size=1")
+      .then(() => !cancelled && setState(true))
+      .catch(() => !cancelled && setState(false)) // EMP_001 (no employee profile) or any other failure: no item
+    return () => {
+      cancelled = true
+    }
+  }, [enabled])
+  return enabled && !!state
+}
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
@@ -114,6 +135,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const superAdmin = useAuthStore((s) => s.me?.superAdmin)
   const permissions = useAuthStore((s) => s.me?.permissions)
   const can = (code: string) => !!permissions?.includes(code)
+  const onPanel = useOnInterviewPanel(!!permissions && !superAdmin && !can("RECRUITMENT_VIEW"))
   // Super Admin menu (manual §3–4) and company SaaS menu (SAAS_* permissions); the backend re-checks every call.
   const navMain = [
     { title: t("menu.dashboard"), url: "/dashboard", icon: House },
@@ -211,7 +233,10 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.rc.onboarding"), url: "/recruitment/onboarding", icon: ListChecks },
                 { title: t("menu.rc.setup"), url: "/recruitment/setup", icon: SlidersHorizontal },
               ]
-            : []),
+            : // GET /recruitment/interviews/my needs no RECRUITMENT_VIEW (the panel is the authorization)
+              onPanel
+              ? [{ title: t("rc.my.tab"), url: "/recruitment/interviews", icon: CalendarClock }]
+              : []),
           ...(can("ORG_VIEW") ? [{ title: t("menu.hr.setup"), url: "/hrm/setup", icon: Wrench }] : []),
           // §11 Projects & productivity: PROJECT_VIEW, FORM_VIEW, calendar (any signed-in user; kinds by permission),
           // ZOOM_VIEW (video meetings), ATTENDANCE_VIEW (timesheets)
