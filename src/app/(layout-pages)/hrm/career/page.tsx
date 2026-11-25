@@ -6,7 +6,7 @@ import { Ban, Check, MessageSquare, Play, X } from "lucide-react"
 import { HR, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { useT } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef, orgChain } from "../_components/crud-kit"
+import { CrudSection, fileCol, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, type FieldDef, orgChain } from "../_components/crud-kit"
 
 export default function CareerPage() {
   return (
@@ -51,6 +51,7 @@ function Career() {
       { label: "hr.f.transferDate", path: "transferDate", kind: "date" },
       { label: "hr.f.effectiveDate", path: "effectiveDate", kind: "date" },
       { label: "hr.f.status", path: "status", kind: "status" },
+      fileCol("hr.f.document", "document", HR.transfers.get),
     ],
     rowName: (r) => String(pick(r, "employee.fullName") ?? ""),
     createLabel: "hr.transfer.create",
@@ -91,6 +92,7 @@ function Career() {
       { label: "hr.f.reason", path: "reason" },
       exitCol,
       { label: "hr.f.status", path: "status", kind: "status" },
+      fileCol("hr.f.document", "document", HR.resignations.get),
     ],
     rowName: (r) => String(pick(r, "employee.fullName") ?? ""),
     createLabel: "hr.resignation.create",
@@ -129,6 +131,7 @@ function Career() {
       { label: "hr.f.reason", path: "reason" },
       exitCol,
       { label: "hr.f.status", path: "status", kind: "status" },
+      fileCol("hr.f.document", "document", HR.terminations.get),
     ],
     rowName: (r) => String(pick(r, "employee.fullName") ?? ""),
     createLabel: "hr.termination.create",

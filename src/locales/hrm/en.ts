@@ -483,6 +483,9 @@ const hrmEn = {
   "hr.ev.calendarHint": "Only approved events are shown.",
   "hr.ev.prevMonth": "Previous month",
   "hr.ev.nextMonth": "Next month",
+  "hr.f.appliedOn": "Applied on",
+  "hr.openFileOf": "Open the file of {name}",
+  "hr.fileUnavailable": "The file is not available",
 }
 
 export default hrmEn

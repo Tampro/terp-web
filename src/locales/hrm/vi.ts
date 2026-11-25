@@ -484,6 +484,9 @@ const hrmVi: Record<keyof typeof hrmEn, string> = {
   "hr.ev.calendarHint": "Chỉ hiển thị sự kiện đã duyệt.",
   "hr.ev.prevMonth": "Tháng trước",
   "hr.ev.nextMonth": "Tháng sau",
+  "hr.f.appliedOn": "Ngày nộp",
+  "hr.openFileOf": "Mở tệp của {name}",
+  "hr.fileUnavailable": "Không mở được tệp",
 }
 
 export default hrmVi

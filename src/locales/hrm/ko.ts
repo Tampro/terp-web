@@ -484,6 +484,9 @@ const hrmKo: Record<keyof typeof hrmEn, string> = {
   "hr.ev.calendarHint": "승인된 이벤트만 표시됩니다.",
   "hr.ev.prevMonth": "이전 달",
   "hr.ev.nextMonth": "다음 달",
+  "hr.f.appliedOn": "신청일",
+  "hr.openFileOf": "{name} 파일 열기",
+  "hr.fileUnavailable": "파일을 열 수 없습니다",
 }
 
 export default hrmKo

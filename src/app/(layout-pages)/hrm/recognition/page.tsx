@@ -6,7 +6,7 @@ import { Check, X } from "lucide-react"
 import { HR, HrOptions, type Row } from "@/lib/hrm/hrm.service"
 import { useT } from "@/lib/i18n"
 
-import { CrudSection, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../_components/crud-kit"
+import { CrudSection, fileCol, pick, TabbedPage, toSelect, useAuthStore, useOptions, type CrudConfig, orgChain } from "../_components/crud-kit"
 
 export default function RecognitionPage() {
   return (
@@ -37,6 +37,7 @@ function Recognition() {
       { label: "hr.f.awardType", path: "awardType.name" },
       { label: "hr.f.awardDate", path: "awardDate", kind: "date" },
       { label: "hr.f.gift", path: "gift" },
+      fileCol("hr.f.certificate", "certificate", HR.awards.get, "certificateMediaId"),
       { label: "hr.f.description", render: (r) => <span className="line-clamp-2 max-w-72">{String(r.description ?? "-")}</span> },
     ],
     rowName: (r) => `${String(pick(r, "employee.fullName") ?? "")} · ${String(pick(r, "awardType.name") ?? "")}`,

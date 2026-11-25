@@ -116,6 +116,53 @@ const VARIANT: Record<string, "default" | "secondary" | "outline" | "destructive
   EXPIRED: "destructive",
   OVERDUE: "destructive",
 }
+/** a FileRef cell ({name, viewUrl, downloadUrl}): a link opening the (expiring) media URL in a new tab; only http(s) links */
+export function FileCell({ file }: { file?: unknown }) {
+  const f = (file ?? {}) as { name?: string; viewUrl?: string; downloadUrl?: string }
+  const url = f.viewUrl || f.downloadUrl
+  if (!f.name && !url) return <span>-</span>
+  return safeUrl(url) ? (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="underline">
+      {f.name || url}
+    </a>
+  ) : (
+    <span>{f.name}</span>
+  )
+}
+const safeUrl = (u?: string) => (u && /^https?:\/\//.test(u) ? u : undefined)
+
+/** list rows carry only `<path>Id` (the FileRef is filled on GET /{id}): open loads the detail, then its (expiring) link */
+function FileOpen({ row, path, load }: { row: Row; path: string; load: (id: string) => Promise<Row> }) {
+  const t = useT()
+  return (
+    <Button
+      variant="link"
+      size="sm"
+      className="h-auto p-0"
+      aria-label={t("hr.openFileOf", { name: String(row.subject ?? row.title ?? pick(row, "employee.fullName") ?? "") })}
+      onClick={() =>
+        load(String(row.id))
+          .then((d) => {
+            const f = (pick(d, path) ?? {}) as { viewUrl?: string; downloadUrl?: string }
+            const url = safeUrl(f.viewUrl) ?? safeUrl(f.downloadUrl)
+            if (!url) throw new Error(t("hr.fileUnavailable"))
+            // still inside the click's user activation window, so the new tab is not blocked
+            window.open(url, "_blank", "noopener,noreferrer")
+          })
+          .catch((e) => toast.error(errorMessage(e)))
+      }
+    >
+      {t("hr.open")}
+    </Button>
+  )
+}
+
+/** column of a FileRef field (document, certificate…); with `load`, a row that has only the file id (`idPath`, default `<path>Id`) gets an Open button */
+export const fileCol = (label: TranslationKey, path: string, load?: (id: string) => Promise<Row>, idPath = `${path}Id`): Column => ({
+  label,
+  render: (r) => (pick(r, path) || !load || !pick(r, idPath) ? <FileCell file={pick(r, path)} /> : <FileOpen row={r} path={path} load={load} />),
+})
+
 export function HrStatus({ status }: { status?: unknown }) {
   const t = useT()
   if (!status) return <span>-</span>
