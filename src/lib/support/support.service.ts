@@ -73,7 +73,25 @@ export interface PortalSettings {
   publicPath?: string
 }
 
+/** GET /support/tickets/stats: all-time totals, first response, splits, KB / FAQ counts, monthly created / closed of `year` */
+export interface TicketStats {
+  scope?: string
+  year?: number
+  total?: number
+  open?: number
+  closed?: number
+  today?: number
+  averageFirstResponseMinutes?: number | null
+  byStatus?: Record<string, number>
+  byCategory?: { categoryId?: string | null; name?: string | null; count?: number }[]
+  kbArticles?: number
+  faqs?: number
+  monthly?: { month?: number; created?: number; closed?: number }[]
+}
+
 export const SupportService = {
+  /** SUPPORT_TICKET_VIEW (company) or SUPPORT_TICKET_VIEW_OWN (my tickets); tz = IANA zone of "today" and the months */
+  stats: (year: number, tz?: string) => request<TicketStats>(withQuery(`${S}/tickets/stats`, { year, tz })),
   ticket: (id: string) => request<TicketDetail>(`${S}/tickets/${id}`),
   statusCounts: () => request<{ all?: number; inProgress?: number; onHold?: number; closed?: number }>(`${S}/tickets/status-counts`),
   setStatus: (id: string, status: string) => put<Row>(`${S}/tickets/${id}/status`, { status }),
@@ -109,6 +127,11 @@ export interface Conversation {
   lastMessage?: Message | null
   unreadCount?: number
   favorite?: boolean
+  /** personal pin: pinned conversations are listed first */
+  pinned?: boolean
+  /** true for 2 minutes after the user's last presence heartbeat */
+  online?: boolean
+  lastSeenAt?: string | null
 }
 const M = "/v1/messenger"
 export const MessengerService = {
@@ -119,6 +142,10 @@ export const MessengerService = {
   unread: () => request<{ total?: number }>(`${M}/unread-count`),
   favorites: () => request<{ userId?: string }[]>(`${M}/favorites`),
   favorite: (userId: string, on: boolean) => request<unknown>(`${M}/favorites/${userId}`, { method: on ? "PUT" : "DELETE" }),
+  /** pin / unpin my conversation with this user (idempotent, personal) */
+  pin: (userId: string, on: boolean) => request<unknown>(`${M}/conversations/${userId}/pin`, { method: on ? "PUT" : "DELETE" }),
+  /** heartbeat "I am active in the messenger": about every 60 s while it is open */
+  presence: () => request<unknown>(`${M}/presence`, { method: "PUT" }),
   /** colleagues: IAM accounts of the company (IAM_USER_VIEW) */
   users: () => request<IPage<{ id?: string; fullName?: string | null; username?: string; email?: string; status?: string }>>(withQuery("/v1/iam/users", { size: 200 })),
 }
@@ -172,4 +199,32 @@ export function htmlToText(html?: string | null) {
     .replace(/&#39;/g, "'")
     .replace(/&amp;/g, "&")
     .trim()
+}
+
+// ------------------------------------------------------------------ client portal tickets (PORTAL_CLIENT)
+
+export interface PortalTicketRow {
+  id?: string
+  ticketNumber?: string
+  subject?: string
+  categoryName?: string | null
+  status?: string
+  createdDate?: string
+  updatedDate?: string
+}
+export interface PortalTicket {
+  ticket?: PortalTicketRow
+  description?: string | null
+  attachmentNames?: string[]
+  replies?: { senderType?: "STAFF" | "CUSTOMER"; senderName?: string | null; description?: string | null; attachmentNames?: string[]; createdDate?: string }[]
+}
+const PC = "/v1/portal/client/tickets"
+/** tickets I raised (here or on the public portal with my account's email); new ones are account type CLIENT, IN_PROGRESS */
+export const PortalTicketService = {
+  list: (q: { status?: string; page?: number; size?: number }) => request<IPage<PortalTicketRow>>(withQuery(PC, { ...q })),
+  get: (id: string) => request<PortalTicket>(`${PC}/${id}`),
+  categories: () => request<{ id?: string; name?: string }[]>(`${PC}/categories`),
+  /** PortalTicketForm {categoryId, subject ≤255, description (HTML, sanitized)}; name and email are the account's */
+  create: (body: { categoryId: number; subject: string; description: string }) => post<PortalTicket>(PC, body),
+  reply: (id: string, description: string) => post<unknown>(`${PC}/${id}/replies`, { description }),
 }

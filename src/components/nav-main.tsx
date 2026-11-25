@@ -19,6 +19,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
+  SidebarMenuBadge,
 } from "@/components/ui/sidebar"
 
 // Collapsed (icon-only) sidebar width, overridden from here instead of sidebar.tsx
@@ -30,6 +31,8 @@ type MenuItem = {
   url: string
   icon?: LucideIcon
   items?: MenuItem[]
+  /** a count shown at the end of the item (e.g. unread messages); hidden when 0 */
+  badge?: number
 }
 
 // Submenu open/close animation (needs collapsible-down / collapsible-up keyframes in global CSS)
@@ -187,6 +190,7 @@ export function NavMain({ items }: { items: MenuItem[] }) {
                 <span>{item.title}</span>
               </Link>
             </SidebarMenuButton>
+            {!!item.badge && <SidebarMenuBadge aria-label={`${item.title}: ${item.badge}`}>{item.badge > 99 ? "99+" : item.badge}</SidebarMenuBadge>}
           </SidebarMenuItem>
         )
       }

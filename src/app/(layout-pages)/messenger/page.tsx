@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { Paperclip, Search, Send, Star } from "lucide-react"
+import { Paperclip, Pin, PinOff, Search, Send, Star } from "lucide-react"
 import { toast } from "sonner"
 
 import { Badge } from "@/components/ui/badge"
@@ -17,6 +17,7 @@ import { useLanguageStore, useT } from "@/lib/i18n"
 import { attempt, errorMessage, FileInput } from "../hrm/_components/crud-kit"
 
 const POLL_MS = 5000
+const PRESENCE_MS = 60_000
 type User = { id?: string; fullName?: string | null; username?: string; email?: string; status?: string }
 
 export default function MessengerPage() {
@@ -28,7 +29,8 @@ export default function MessengerPage() {
 }
 
 /**
- * §18 messenger: one-to-one chat inside the company (MESSENGER_USE), favorites first, unread badges. There is no push
+ * §18 messenger: one-to-one chat inside the company (MESSENGER_USE), pinned then favorites first, unread badges, online
+ * dot (presence heartbeat every 60 s while the page is open; peers are online for 2 minutes after it). There is no push
  * channel, so the open conversation and the list are polled every 5 s. TODO(assumption): polling is enough until the
  * backend offers a WebSocket / SSE channel.
  */
@@ -57,6 +59,12 @@ function Messenger() {
   }, [])
   React.useEffect(() => {
     const id = setInterval(() => setTick((x) => x + 1), POLL_MS)
+    return () => clearInterval(id)
+  }, [])
+  React.useEffect(() => {
+    const beat = () => void MessengerService.presence().catch(() => undefined)
+    beat()
+    const id = setInterval(beat, PRESENCE_MS)
     return () => clearInterval(id)
   }, [])
   React.useEffect(() => {
@@ -101,7 +109,7 @@ function Messenger() {
     .map((u) => ({ id: u.id ?? "", conv: byUser.get(u.id) }))
     .concat((convs ?? []).filter((c) => !users.some((u) => u.id === c.userId)).map((c) => ({ id: c.userId ?? "", conv: c })))
     .filter((p) => !filter || String(name(p.id)).toLowerCase().includes(filter.toLowerCase()))
-    .sort((a, b) => Number(!!b.conv?.favorite) - Number(!!a.conv?.favorite) || String(b.conv?.lastMessage?.createdDate ?? "").localeCompare(String(a.conv?.lastMessage?.createdDate ?? "")) || String(name(a.id)).localeCompare(String(name(b.id))))
+    .sort((a, b) => Number(!!b.conv?.pinned) - Number(!!a.conv?.pinned) || Number(!!b.conv?.favorite) - Number(!!a.conv?.favorite) || String(b.conv?.lastMessage?.createdDate ?? "").localeCompare(String(a.conv?.lastMessage?.createdDate ?? "")) || String(name(a.id)).localeCompare(String(name(b.id))))
   const activeConv = active ? byUser.get(active) : undefined
   const list = messages && messages.userId === active ? messages.list : undefined
 
@@ -141,10 +149,14 @@ function Messenger() {
             {people.map((p) => (
               <li key={p.id}>
                 <button type="button" onClick={() => setActive(p.id)} className={`hover:bg-accent flex w-full items-center gap-2 px-3 py-2 text-left ${active === p.id ? "bg-accent" : ""}`}>
-                  <span className="bg-primary/15 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">{String(name(p.id)).slice(0, 2).toUpperCase()}</span>
+                  <span className="bg-primary/15 relative flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-semibold">
+                    {String(name(p.id)).slice(0, 2).toUpperCase()}
+                    {p.conv?.online && <span className="border-background absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2 bg-emerald-500" role="img" aria-label={t("sp.online")} />}
+                  </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-center gap-1 text-sm font-medium">
-                      {name(p.id)} {p.conv?.favorite && <Star className="size-3 fill-amber-400 text-amber-400" aria-label={t("sp.favorite")} />}
+                      {name(p.id)} {p.conv?.pinned && <Pin className="text-muted-foreground size-3" aria-label={t("sp.pinned")} />}
+                      {p.conv?.favorite && <Star className="size-3 fill-amber-400 text-amber-400" aria-label={t("sp.favorite")} />}
                     </span>
                     <span className="text-muted-foreground block truncate text-xs">{p.conv?.lastMessage?.body ?? p.conv?.lastMessage?.attachmentName ?? ""}</span>
                   </span>
@@ -164,10 +176,25 @@ function Messenger() {
                   <Button variant="ghost" size="sm" className="md:hidden" onClick={() => setActive(undefined)}>
                     ←
                   </Button>
-                  <span className="font-medium" data-testid="chat-with">
-                    {name(active)}
+                  <span className="flex flex-col">
+                    <span className="font-medium" data-testid="chat-with">
+                      {name(active)}
+                    </span>
+                    <span className="text-muted-foreground text-xs" data-testid="chat-presence">
+                      {activeConv?.online ? t("sp.online") : activeConv?.lastSeenAt ? t("sp.lastSeen", { time: time(activeConv.lastSeenAt) }) : ""}
+                    </span>
                   </span>
                 </div>
+                <div className="flex items-center">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-pressed={!!activeConv?.pinned}
+                  aria-label={activeConv?.pinned ? t("sp.unpin") : t("sp.pin")}
+                  onClick={async () => (await attempt(() => MessengerService.pin(active, !activeConv?.pinned))) && setTick((x) => x + 1)}
+                >
+                  {activeConv?.pinned ? <PinOff className="size-4" /> : <Pin className="size-4" />}
+                </Button>
                 <Button
                   variant="ghost"
                   size="icon"
@@ -177,6 +204,7 @@ function Messenger() {
                 >
                   <Star className={`size-4 ${activeConv?.favorite ? "fill-amber-400 text-amber-400" : ""}`} />
                 </Button>
+                </div>
               </header>
               <div className="min-h-0 flex-1 space-y-2 overflow-y-auto p-3" role="log" aria-label={t("sp.messages")}>
                 {!list ? (
