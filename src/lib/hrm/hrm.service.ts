@@ -324,6 +324,10 @@ export const TRAINING = {
   programs: crud("/v1/training/programs"),
   sessions: crud("/v1/training/sessions"),
   trainings: crud("/v1/training/employee-trainings"),
+  /** AssessmentForm {programId, name, type QUIZ|PRACTICAL|PRESENTATION, passingScore %, description, criteria}; GET /{id} adds statistics + resultList */
+  assessments: crud("/v1/training/assessments"),
+  /** ResultForm {employeeTrainingId (a trainee of the assessment's program), score %, assessedDate, notes} */
+  removeResult: (id: string, resultId: string) => del(`/v1/training/assessments/${id}/results/${resultId}`),
 }
 export const PerfOptions = {
   cycles: () => request<Option[]>("/v1/performance/review-cycles/options"),

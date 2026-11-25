@@ -459,7 +459,7 @@ export interface CrudConfig {
   statuses?: string[]
   /** the query parameter the status tabs set (default "status"); `tab` for announcements */
   statusParam?: string
-  /** GET …/status-counts ({all | total, byStatus} or flat camelCase keys: {all, active, inactive}, {all, inProgress, onHold, closed}) for counts on the status tabs; same keyword / query filters as the list */
+  /** GET …/status-counts ({all | total, byStatus | byType} or flat camelCase keys: {all, active, inactive}, {all, inProgress, onHold, closed}) for counts on the status tabs; same keyword / query filters as the list */
   countsPath?: string
   keyword?: boolean
   /** extra query parameters always sent */
@@ -527,7 +527,7 @@ export function CrudSection({ config }: { config: CrudConfig }) {
   }, [countsKey])
   const countOf = (s: string) => {
     if (!counts || counts.key !== countsKey) return ""
-    const n = s === "ALL" ? (counts.all ?? (counts.total as number | undefined)) : (counts.byStatus?.[s] ?? (counts[s.toLowerCase().replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())] as number | undefined))
+    const n = s === "ALL" ? (counts.all ?? (counts.total as number | undefined)) : (counts.byStatus?.[s] ?? (counts.byType as Record<string, number> | undefined)?.[s] ?? (counts[s.toLowerCase().replace(/_([a-z])/g, (_, c: string) => c.toUpperCase())] as number | undefined))
     return ` (${n ?? 0})`
   }
 
