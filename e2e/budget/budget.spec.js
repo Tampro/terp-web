@@ -154,22 +154,19 @@ test("BG-011 ngân sách: Nháp → Duyệt; theo dõi phân bổ, chỉ tài kh
   await expect.poll(() => approve.requests.length).toBe(1)
 })
 
-test("BG-004 mục tiêu: số lượng trên tab trạng thái từ totalElements, gọi song song mọi trạng thái", async ({ page }) => {
+test("BG-004 mục tiêu: số lượng trên tab từ /goals/status-counts (Tất cả = tổng), gửi cùng bộ lọc loại / danh mục", async ({ page }) => {
   await base(page)
-  const totals = { "": 10, DRAFT: 4, ACTIVE: 5, COMPLETED: 1 }
-  /** @type {string[]} */
-  const asked = []
-  await page.route(/\/api\/v1\/accounting\/goals(\?.*)?$/, (route) => {
-    const st = new URL(route.request().url()).searchParams.get("status") ?? ""
-    asked.push(st)
-    return route.fulfill({ contentType: "application/json", body: JSON.stringify(pageOf([], { total: totals[/** @type {keyof typeof totals} */ (st)] ?? 0 })) })
-  })
-  await page.goto("/accounting/goals")
+  const list = await mockApi(page, "/v1/accounting/goals", { method: "GET", body: pageOf([]) })
+  const counts = await mockApi(page, "/v1/accounting/goals/status-counts", { body: ok({ DRAFT: 4, ACTIVE: 5, COMPLETED: 1 }) })
+  await page.goto("/accounting/goals?type=REVENUE&categoryId=7")
   await expect(page.getByRole("tab", { name: "Tất cả (10)" })).toBeVisible()
   await expect(page.getByRole("tab", { name: "Nháp (4)" })).toBeVisible()
   await expect(page.getByRole("tab", { name: "Đang áp dụng (5)" })).toBeVisible()
   await expect(page.getByRole("tab", { name: "Hoàn thành (1)" })).toBeVisible()
-  expect(asked).toEqual(expect.arrayContaining(["", "DRAFT", "ACTIVE", "COMPLETED"]))
+  const q = counts.requests.at(-1)?.url.searchParams
+  expect([q?.get("type"), q?.get("categoryId")]).toEqual(["REVENUE", "7"])
+  // no more size-1 list pages per status: only the list itself
+  expect(list.requests.every((r) => r.url.searchParams.get("size") !== "1")).toBe(true)
 })
 
 test("BG-012 kỳ ngân sách: tab Đang áp dụng / Đã đóng có số lượng, lọc danh sách, giữ trên URL", async ({ page }) => {
