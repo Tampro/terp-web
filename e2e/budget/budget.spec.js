@@ -186,3 +186,45 @@ test("BG-012 kỳ ngân sách: tab Đang áp dụng / Đã đóng có số lư�
   await expect(page.getByRole("button", { name: "E2E FY2025" })).toBeVisible()
   await expect(page.getByRole("button", { name: "E2E FY2026" })).toHaveCount(0)
 })
+
+test("BG-005 mục tiêu: cột Hiện tại / Tiến độ từ /goals/{id}/tracking, nhãn Quá hạn khi qua ngày đích chưa hoàn thành", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/accounting/goals/status-counts", { body: ok({ DRAFT: 0, ACTIVE: 1, COMPLETED: 1 }) })
+  await mockApi(page, "/v1/accounting/goals", {
+    method: "GET",
+    body: pageOf([
+      { id: "8", name: "E2E Quỹ dự phòng", type: "SAVINGS", priority: "HIGH", targetAmount: 10000000, startDate: "2020-01-01", targetDate: "2020-12-31", status: "ACTIVE" },
+      { id: "9", name: "E2E Đã xong", type: "SAVINGS", priority: "LOW", targetAmount: 5000000, startDate: "2020-01-01", targetDate: "2020-06-30", status: "COMPLETED" },
+    ]),
+  })
+  const t8 = await mockApi(page, "/v1/accounting/goals/8/tracking", { body: ok({ targetAmount: 10000000, currentAmount: 6000000, progressPercent: 60 }) })
+  await mockApi(page, "/v1/accounting/goals/9/tracking", { body: ok({ targetAmount: 5000000, currentAmount: 5000000, progressPercent: 100 }) })
+  await page.goto("/accounting/goals")
+  const r8 = page.getByRole("row").filter({ hasText: "E2E Quỹ dự phòng" })
+  await expect(r8.getByTestId("goal-row-progress")).toContainText("60%")
+  await expect(r8).toContainText("6.000.000")
+  await expect(r8.getByText("Quá hạn")).toBeVisible()
+  const r9 = page.getByRole("row").filter({ hasText: "E2E Đã xong" })
+  await expect(r9.getByTestId("goal-row-progress")).toContainText("100%")
+  await expect(r9.getByText("Quá hạn")).toHaveCount(0)
+  expect(t8.requests.length).toBeGreaterThan(0)
+})
+
+test("BG-013 kỳ ngân sách: lọc theo năm tài chính (số trên tab theo năm), giữ trên URL", async ({ page }) => {
+  await base(page)
+  await mockApi(page, "/v1/accounting/budget-periods", {
+    method: "GET",
+    body: pageOf([
+      { id: "5", name: "E2E FY2026", financialYear: 2026, startDate: "2026-01-01", endDate: "2026-12-31", status: "ACTIVE" },
+      { id: "4", name: "E2E FY2025", financialYear: 2025, startDate: "2025-01-01", endDate: "2025-12-31", status: "CLOSED" },
+    ]),
+  })
+  await mockApi(page, "/v1/accounting/budgets", { method: "GET", body: pageOf([]) })
+  await page.goto("/accounting/budgets?tab=periods")
+  await page.getByRole("combobox", { name: "Năm tài chính" }).click()
+  await page.getByRole("option", { name: "2025" }).click()
+  await expect(page).toHaveURL(/pyear=2025/)
+  await expect(page.getByRole("tab", { name: "Tất cả (1)" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "E2E FY2025" })).toBeVisible()
+  await expect(page.getByRole("button", { name: "E2E FY2026" })).toHaveCount(0)
+})

@@ -527,8 +527,11 @@ function PeriodList({ periods, manage, onChanged }: { periods: PeriodDto[]; mana
   const monitoring = mon && mon.id === viewing?.id ? mon.data : undefined
   const { searchParams, update } = useUrlQuery()
   const pstatus = searchParams.get("pstatus") ?? ALL
-  const count = (s: string) => (s === ALL ? periods.length : periods.filter((p) => p.status === s).length)
-  const shown = pstatus === ALL ? periods : periods.filter((p) => p.status === pstatus)
+  const pyear = searchParams.get("pyear") ?? ""
+  const years = [...new Set(periods.map((p) => p.financialYear).filter((y): y is number => y != null))].sort((x, y) => y - x)
+  const inYear = pyear ? periods.filter((p) => String(p.financialYear) === pyear) : periods
+  const count = (s: string) => (s === ALL ? inYear.length : inYear.filter((p) => p.status === s).length)
+  const shown = pstatus === ALL ? inYear : inYear.filter((p) => p.status === pstatus)
   return (
     <Card>
       <CardContent className="flex flex-col gap-4">
@@ -542,6 +545,7 @@ function PeriodList({ periods, manage, onChanged }: { periods: PeriodDto[]; mana
               ))}
             </TabsList>
           </Tabs>
+          <PlainSelect label={t("le.financialYear")} className="w-40" value={pyear} onChange={(v) => update({ pyear: v })} none={t("bg.allYears")} options={years.map((y) => ({ value: String(y), label: String(y) }))} />
           <div className="flex-1" />
           {manage && (
             <Button onClick={() => setEditing({})}>

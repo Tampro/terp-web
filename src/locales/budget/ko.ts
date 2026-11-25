@@ -118,6 +118,10 @@ const budgetKo: Record<keyof typeof budgetEn, string> = {
   "bg.confirm.period.closeDesc": "종료일 이후에만 가능하며 기간과 예산은 읽기 전용이 됩니다.",
   "bg.confirm.period.delete": "{name}을(를) 삭제할까요?",
   "bg.confirm.period.deleteDesc": "예산이 있는 기간은 삭제할 수 없습니다.",
+  "bg.current": "현재",
+  "bg.progressOf": "{name} 진행률",
+  "bg.overdue": "기한 초과",
+  "bg.allYears": "전체 연도",
 }
 
 export default budgetKo
