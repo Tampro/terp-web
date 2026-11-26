@@ -15,6 +15,7 @@ import accounting from "./accounting/en"
 import projects from "./projects/en"
 import pos from "./pos/en"
 import products from "./products/en"
+import storeItems from "./store-items/en"
 import purchase from "./purchase/en"
 import crm from "./crm/en"
 import sales from "./sales/en"
@@ -129,6 +130,7 @@ const en = {
   ...crm,
   ...purchase,
   ...products,
+  ...storeItems,
   ...pos,
   ...projects,
   ...accounting,
