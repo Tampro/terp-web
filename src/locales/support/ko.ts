@@ -167,6 +167,9 @@ const supportKo: Record<keyof typeof supportEn, string> = {
   "sp.stats.byCategory": "분류별",
   "sp.stats.noCategory": "분류 없음",
   "sp.stats.own": "내 티켓만 집계됩니다.",
+  "pt.v.required": "필수",
+  "pt.v.number": "숫자를 입력하세요",
+  "pt.pick": "선택…",
 }
 
 export default supportKo
