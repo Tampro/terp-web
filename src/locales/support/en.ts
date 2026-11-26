@@ -166,6 +166,9 @@ const supportEn = {
   "sp.stats.byCategory": "By category",
   "sp.stats.noCategory": "No category",
   "sp.stats.own": "Only your tickets are counted.",
+  "pt.v.required": "Required",
+  "pt.v.number": "Enter a number",
+  "pt.pick": "Choose…",
 }
 
 export default supportEn

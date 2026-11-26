@@ -229,6 +229,13 @@ test("SP-023 ticket của tôi (PORTAL_CLIENT): danh sách theo trạng thái, g
   await mockLoggedIn(page, { permissions: ["PORTAL_CLIENT"] })
   const list = await mockApi(page, "/v1/portal/client/tickets", { method: "GET", body: pageOf([{ id: "7", ticketNumber: "TKT-000007", subject: "E2E Không tải được hóa đơn", categoryName: "E2E Billing", status: "IN_PROGRESS", updatedDate: "2026-11-26T08:00:00Z" }, { id: "8", ticketNumber: "TKT-000008", subject: "E2E Đã xong", status: "CLOSED" }]) })
   await mockApi(page, "/v1/portal/client/tickets/categories", { body: ok([{ id: "1", name: "E2E Billing" }]) })
+  await mockApi(page, "/v1/portal/client/tickets/fields", {
+    body: ok([
+      { id: "7", label: "E2E Mức độ", type: "SELECT", options: ["Thấp", "Cao"], required: true, width: 6, order: 1, active: true },
+      { id: "8", label: "E2E Email liên hệ", type: "EMAIL", required: false, width: 6, order: 2, active: true },
+      { id: "9", label: "E2E Ghi chú", type: "TEXTAREA", required: false, width: 12, order: 3, active: true },
+    ]),
+  })
   const create = await mockApi(page, "/v1/portal/client/tickets", { method: "POST", body: ok({ ticket: { id: "9" } }) })
   await mockApi(page, "/v1/portal/client/tickets/9", { body: ok({ ticket: { id: "9", ticketNumber: "TKT-000009", subject: "E2E Mới", status: "IN_PROGRESS" }, description: "<p>a &lt;b&gt;</p>", replies: [] }) })
   await mockApi(page, "/v1/portal/client/tickets/8", { body: ok({ ticket: { id: "8", subject: "E2E Đã xong", status: "CLOSED" }, description: "<p>x</p>", replies: [{ senderType: "STAFF", description: "<p>Đã xử lý</p>", createdDate: "2026-11-25T08:00:00Z" }] }) })
@@ -248,9 +255,15 @@ test("SP-023 ticket của tôi (PORTAL_CLIENT): danh sách theo trạng thái, g
   await page.getByRole("option", { name: "E2E Billing" }).click()
   await d.getByLabel("Tiêu đề").fill("E2E Mới")
   await d.getByLabel("Nội dung").fill("dòng 1 <b>\ndòng 2")
+  await expect(d.getByRole("button", { name: "Gửi", exact: true })).toBeDisabled() // required "E2E Mức độ" not chosen
+  await d.getByLabel("E2E Email liên hệ").fill("sai")
+  await expect(d.getByText("Nhập email hợp lệ")).toBeVisible()
+  await d.getByLabel("E2E Email liên hệ").fill("")
+  await d.getByRole("combobox", { name: "E2E Mức độ" }).click()
+  await page.getByRole("option", { name: "Cao" }).click()
   await d.getByRole("button", { name: "Gửi", exact: true }).click()
   await expect.poll(() => create.requests.length).toBe(1)
-  expect(create.requests[0].body).toEqual({ categoryId: 1, subject: "E2E Mới", description: "<p>dòng 1 &lt;b&gt;</p><p>dòng 2</p>" })
+  expect(create.requests[0].body).toEqual({ categoryId: 1, subject: "E2E Mới", description: "<p>dòng 1 &lt;b&gt;</p><p>dòng 2</p>", customFields: [{ fieldId: 7, value: "Cao" }] })
   const view = page.getByRole("dialog")
   await expect(view.getByTestId("pt-description")).toHaveText("a <b>")
   await view.getByLabel("Viết phản hồi").fill("cảm ơn")

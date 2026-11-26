@@ -224,7 +224,9 @@ export const PortalTicketService = {
   list: (q: { status?: string; page?: number; size?: number }) => request<IPage<PortalTicketRow>>(withQuery(PC, { ...q })),
   get: (id: string) => request<PortalTicket>(`${PC}/${id}`),
   categories: () => request<{ id?: string; name?: string }[]>(`${PC}/categories`),
-  /** PortalTicketForm {categoryId, subject ≤255, description (HTML, sanitized)}; name and email are the account's */
-  create: (body: { categoryId: number; subject: string; description: string }) => post<PortalTicket>(PC, body),
+  /** active custom ticket fields of my company in display order (same FieldDto as the public portal's ticketFields) */
+  fields: () => request<TicketField[]>(`${PC}/fields`),
+  /** PortalTicketForm {categoryId, subject ≤255, description (HTML, sanitized), customFields}; name and email are the account's */
+  create: (body: { categoryId: number; subject: string; description: string; customFields?: { fieldId: number; value: string }[] }) => post<PortalTicket>(PC, body),
   reply: (id: string, description: string) => post<unknown>(`${PC}/${id}/replies`, { description }),
 }

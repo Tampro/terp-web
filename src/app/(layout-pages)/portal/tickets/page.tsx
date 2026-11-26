@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { useUrlQuery } from "@/hooks/use-url-query"
 import type { IPage } from "@/lib/api"
 import { textToHtml } from "@/lib/helpdesk/helpdesk.service"
-import { htmlToText, PortalTicketService, TICKET_STATUSES, type PortalTicket, type PortalTicketRow } from "@/lib/support/support.service"
+import { htmlToText, PortalTicketService, TICKET_STATUSES, type PortalTicket, type PortalTicketRow, type TicketField } from "@/lib/support/support.service"
 import { formatDate } from "@/lib/format"
 import { useLanguageStore, useT, type TranslationKey } from "@/lib/i18n"
 
@@ -156,10 +156,28 @@ function PortalTickets() {
   )
 }
 
-/** PortalTicketForm {categoryId, subject ≤255, description}: the description is sent as escaped paragraphs (the backend sanitizes HTML). */
+const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+/** a custom field value the backend would refuse (SUP_035..SUP_039): required, TEXT ≤ 255 / TEXTAREA ≤ 2000, EMAIL, NUMBER, SELECT option */
+function fieldError(f: TicketField, v: string, t: (k: TranslationKey) => string) {
+  const x = v.trim()
+  if (!x) return f.required ? t("pt.v.required") : undefined
+  if (f.type === "EMAIL" && !EMAIL.test(x)) return t("hr.v.email")
+  if (f.type === "NUMBER" && !Number.isFinite(Number(x))) return t("pt.v.number")
+  if (f.type === "SELECT" && !(f.options ?? []).includes(x)) return t("pt.v.required")
+  return undefined
+}
+
+/**
+ * PortalTicketForm {categoryId, subject ≤255, description, customFields}: the description is sent as escaped paragraphs (the
+ * backend sanitizes HTML); the company's active custom fields (GET /portal/client/tickets/fields) follow their type, width
+ * (12 = full row) and options, and only filled values are sent as {fieldId, value}.
+ */
 function CreateTicket({ onClose, onCreated }: { onClose: () => void; onCreated: (id?: string) => void }) {
   const t = useT()
   const [categories, setCategories] = React.useState<{ id?: string; name?: string }[]>()
+  const [fields, setFields] = React.useState<TicketField[]>([])
+  const [values, setValues] = React.useState<Record<string, string>>({})
+  const [touched, setTouched] = React.useState(false)
   const [f, setF] = React.useState({ categoryId: "", subject: "", description: "" })
   const [saving, setSaving] = React.useState(false)
   React.useEffect(() => {
@@ -171,16 +189,21 @@ function CreateTicket({ onClose, onCreated }: { onClose: () => void; onCreated: 
         toast.error(errorMessage(e))
         setCategories([])
       })
+    PortalTicketService.fields()
+      .then((l) => !cancelled && setFields([...(l ?? [])].filter((x) => x.active !== false).sort((a, b) => (a.order ?? 0) - (b.order ?? 0))))
+      .catch((e: unknown) => !cancelled && toast.error(errorMessage(e)))
     return () => {
       cancelled = true
     }
   }, [])
-  const valid = !!f.categoryId && !!f.subject.trim() && !!f.description.trim()
+  const errors = Object.fromEntries(fields.map((x) => [String(x.id), fieldError(x, values[String(x.id)] ?? "", t)]))
+  const valid = !!f.categoryId && !!f.subject.trim() && !!f.description.trim() && !Object.values(errors).some(Boolean)
   async function submit() {
     setSaving(true)
     let created: PortalTicket | undefined
     const ok = await attempt(async () => {
-      created = await PortalTicketService.create({ categoryId: Number(f.categoryId), subject: f.subject.trim(), description: textToHtml(f.description) })
+      const customFields = fields.map((x) => ({ fieldId: Number(x.id), value: (values[String(x.id)] ?? "").trim() })).filter((x) => x.value)
+      created = await PortalTicketService.create({ categoryId: Number(f.categoryId), subject: f.subject.trim(), description: textToHtml(f.description), ...(customFields.length ? { customFields } : {}) })
     }, t("pt.created"))
     setSaving(false)
     if (ok) {
@@ -204,6 +227,30 @@ function CreateTicket({ onClose, onCreated }: { onClose: () => void; onCreated: 
         <Field id="pt-desc" label={t("pt.description")}>
           <Textarea id="pt-desc" rows={6} maxLength={10000} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} />
         </Field>
+        {fields.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2" data-testid="pt-custom-fields">
+            {fields.map((x) => {
+              const id = `pt-cf-${x.id}`
+              const v = values[String(x.id)] ?? ""
+              const set = (nv: string) => {
+                setTouched(true)
+                setValues((o) => ({ ...o, [String(x.id)]: nv }))
+              }
+              const label = `${x.label ?? ""}${x.required ? " *" : ""}`
+              return (
+                <Field key={x.id} id={id} label={label} error={touched || v ? errors[String(x.id)] : undefined} className={(x.width ?? 12) > 6 ? "sm:col-span-2" : ""}>
+                  {x.type === "SELECT" ? (
+                    <PlainSelect id={id} label={x.label ?? ""} value={v} onChange={set} none={x.placeholder || t("pt.pick")} options={(x.options ?? []).map((o) => ({ value: o, label: o }))} />
+                  ) : x.type === "TEXTAREA" ? (
+                    <Textarea id={id} rows={3} maxLength={2000} placeholder={x.placeholder ?? undefined} value={v} onChange={(e) => set(e.target.value)} />
+                  ) : (
+                    <Input id={id} type={x.type === "EMAIL" ? "email" : x.type === "NUMBER" ? "number" : x.type === "DATE" ? "date" : "text"} step={x.type === "NUMBER" ? "any" : undefined} maxLength={x.type === "TEXT" ? 255 : undefined} placeholder={x.placeholder ?? undefined} value={v} onChange={(e) => set(e.target.value)} />
+                  )}
+                </Field>
+              )
+            })}
+          </div>
+        )}
       </div>
       <DialogFooter>
         <Button variant="outline" onClick={onClose}>

@@ -167,6 +167,9 @@ const supportVi: Record<keyof typeof supportEn, string> = {
   "sp.stats.byCategory": "Theo danh mục",
   "sp.stats.noCategory": "Không danh mục",
   "sp.stats.own": "Chỉ tính các ticket của bạn.",
+  "pt.v.required": "Bắt buộc",
+  "pt.v.number": "Nhập một số",
+  "pt.pick": "Chọn…",
 }
 
 export default supportVi
