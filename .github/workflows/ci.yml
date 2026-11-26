@@ -1,0 +1,56 @@
+# Runs on every PR into main and on pushes to main: typecheck, lint, then the UI E2E suite with /api mocked
+# (no backend, no secrets). Real-backend projects (api / setup / int) stay local: they need the ERP stack.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npx eslint . --max-warnings 0
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: UI E2E (mocked /api)
+        run: npx playwright test --project=ui
+        env:
+          # site metadata and the /api proxy point here; nothing listens in CI, mocked tests never reach it
+          API_PROXY_TARGET: http://127.0.0.1:9
+
+      - name: Upload Playwright Report On Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 7
