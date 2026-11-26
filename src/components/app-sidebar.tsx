@@ -284,6 +284,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
             ? [
                 { title: t("menu.inventory.items"), url: "/inventory/items", icon: Package },
                 { title: t("menu.inventory.warehouses"), url: "/inventory/warehouses", icon: Warehouse },
+                { title: t("menu.inventory.storeItems"), url: "/inventory/store-items", icon: Store },
                 { title: t("menu.inventory.transfers"), url: "/inventory/transfers", icon: ArrowLeftRight },
                 { title: t("menu.inventory.setup"), url: "/inventory/setup", icon: Tags },
               ]

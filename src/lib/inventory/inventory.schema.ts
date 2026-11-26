@@ -53,3 +53,17 @@ export function getAddStockSchema(t: T) {
   })
 }
 export type TAddStockSchema = z.infer<ReturnType<typeof getAddStockSchema>>
+
+// Limits from inventory-service StoreItemService.StoreItemForm / StoreItemUpdateForm (salePrice ≥ 0, purchaseLimitQty ≥ 1).
+export function getStoreItemSchema(t: T, creating: boolean) {
+  return z.object({
+    itemId: creating ? z.string().min(1, t("inventory.storeItem.v.item")) : z.string(),
+    salePrice: z.string().trim().min(1, t("purchase.v.required")).refine((v) => num(v) >= 0, t("inventory.v.amount")),
+    status: z.enum(["ON_SALE", "SUSPENDED"]),
+    purchaseLimitQty: z
+      .string()
+      .trim()
+      .refine((v) => v === "" || (/^\d+$/.test(v) && Number(v) >= 1), t("inventory.storeItem.v.limit")),
+  })
+}
+export type TStoreItemSchema = z.infer<ReturnType<typeof getStoreItemSchema>>

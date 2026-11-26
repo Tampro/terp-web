@@ -182,3 +182,68 @@ export const CatalogService = {
   taxes: crud<TaxDto, { name: string; rate: number }>("/v1/inventory/taxes"),
   units: crud<UnitDto, { name: string }>("/v1/inventory/units"),
 }
+
+// Store items: price and on-sale status of an item at one store (a store is a warehouse). Spec: inventory-service
+// StoreItemController / StoreItemService (StoreItemForm, StoreItemUpdateForm, StatusForm, BulkForm ≤ 1000 lines,
+// StoreItemDto). Errors INV_015/016/020 (refs), INV_026 (already set up), INV_027 (not found), INV_028 (bulk row n:
+// reason), INV_029 (too many lines). An item without a live row is not sold at that store.
+
+export type StoreItemStatus = "ON_SALE" | "SUSPENDED"
+
+export interface StoreItemDto {
+  id?: string
+  warehouseId?: string
+  warehouseName?: string | null
+  itemId?: string
+  itemName?: string | null
+  sku?: string | null
+  categoryId?: string | null
+  salePrice?: number
+  status?: StoreItemStatus
+  purchaseLimitQty?: number | null
+  stockQuantity?: number
+  updatedDate?: string | null
+}
+
+export interface StoreItemForm {
+  warehouseId: number
+  itemId: number
+  salePrice: number
+  status?: StoreItemStatus
+  purchaseLimitQty?: number | null
+}
+
+/** full replacement of the three fields; omitted / null limit = no limit */
+export interface StoreItemUpdateForm {
+  salePrice: number
+  status: StoreItemStatus
+  purchaseLimitQty?: number | null
+}
+
+export interface StoreItemBulkLine {
+  warehouseId: number
+  sku: string
+  salePrice: number
+  status?: StoreItemStatus
+  purchaseLimitQty?: number | null
+}
+
+export interface StoreItemBulkResult {
+  created?: number
+  updated?: number
+}
+
+export const StoreItemService = {
+  list: (f: { warehouseId: string; categoryId?: string; status?: string; keyword?: string; page?: number; size?: number }) =>
+    request<IPage<StoreItemDto>>(withQuery("/v1/inventory/store-items", { ...f })),
+  create: (body: StoreItemForm) => request<StoreItemDto>("/v1/inventory/store-items", { method: "POST", body }),
+  update: (id: string, body: StoreItemUpdateForm) =>
+    request<StoreItemDto>(`/v1/inventory/store-items/${id}`, { method: "PUT", body }),
+  status: (id: string, status: StoreItemStatus) =>
+    request<StoreItemDto>(`/v1/inventory/store-items/${id}/status`, { method: "PUT", body: { status } }),
+  /** soft delete; the pair can be set up again */
+  remove: (id: string) => request<void>(`/v1/inventory/store-items/${id}`, { method: "DELETE" }),
+  /** upsert by (warehouseId, sku), all or nothing, ≤ 1000 lines */
+  bulk: (lines: StoreItemBulkLine[]) =>
+    request<StoreItemBulkResult>("/v1/inventory/store-items/bulk", { method: "POST", body: { lines } }),
+}
