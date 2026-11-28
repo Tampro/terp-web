@@ -16,6 +16,7 @@ import projects from "./projects/vi"
 import pos from "./pos/vi"
 import products from "./products/vi"
 import storeItems from "./store-items/vi"
+import stores from "./stores/vi"
 import purchase from "./purchase/vi"
 import crm from "./crm/vi"
 import sales from "./sales/vi"
@@ -133,6 +134,7 @@ const vi: Record<keyof typeof en, string> = {
   ...purchase,
   ...products,
   ...storeItems,
+  ...stores,
   ...pos,
   ...projects,
   ...accounting,

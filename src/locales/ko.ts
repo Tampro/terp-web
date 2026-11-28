@@ -16,6 +16,7 @@ import projects from "./projects/ko"
 import pos from "./pos/ko"
 import products from "./products/ko"
 import storeItems from "./store-items/ko"
+import stores from "./stores/ko"
 import purchase from "./purchase/ko"
 import crm from "./crm/ko"
 import sales from "./sales/ko"
@@ -133,6 +134,7 @@ const ko: Record<keyof typeof en, string> = {
   ...purchase,
   ...products,
   ...storeItems,
+  ...stores,
   ...pos,
   ...projects,
   ...accounting,
