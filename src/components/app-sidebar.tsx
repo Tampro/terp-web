@@ -289,6 +289,13 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
                 { title: t("menu.inventory.setup"), url: "/inventory/setup", icon: Tags },
               ]
             : []),
+          // Homeplus stores (store-service): stores with zones and day-offs, the public shop address
+          ...(can("STORE_VIEW")
+            ? [
+                { title: t("menu.store.stores"), url: "/store/stores", icon: Store },
+                { title: t("menu.store.shopSetting"), url: "/store/shop-setting", icon: Globe },
+              ]
+            : []),
           // §7 CRM & contracts (crm-service): CRM_VIEW for pipelines, leads, deals, reports; CRM_CONTRACT_VIEW for contracts
           ...(can("CRM_VIEW")
             ? [
